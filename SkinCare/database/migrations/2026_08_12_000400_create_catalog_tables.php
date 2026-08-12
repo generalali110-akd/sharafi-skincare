@@ -19,6 +19,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true)->index();
             $table->integer('sort_order')->default(0);
             $table->timestampsTz();
+
+            $table->index('parent_id');
         });
 
         Schema::create('brands', function (Blueprint $table): void {
@@ -37,19 +39,25 @@ return new class extends Migration
             $table->string('slug', 220)->unique();
             $table->text('short_description')->nullable();
             $table->text('description')->nullable();
-            $table->string('status', 24)->default(ProductStatus::Draft->value)->index();
+            $table->string('status', 24)->default(ProductStatus::Draft->value);
             $table->boolean('is_featured')->default(false)->index();
-            $table->timestampTz('published_at')->nullable()->index();
+            $table->timestampTz('published_at')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestampsTz();
             $table->softDeletesTz();
+
+            $table->index('brand_id');
+            $table->index('created_by');
+            $table->index('updated_by');
+            $table->index(['status', 'published_at']);
         });
 
         Schema::create('category_product', function (Blueprint $table): void {
             $table->foreignId('category_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
             $table->primary(['category_id', 'product_id']);
+            $table->index('product_id');
         });
 
         Schema::create('product_variants', function (Blueprint $table): void {
@@ -60,9 +68,11 @@ return new class extends Migration
             $table->string('barcode', 100)->nullable()->unique();
             $table->unsignedBigInteger('price_irr');
             $table->unsignedBigInteger('compare_at_price_irr')->nullable();
-            $table->boolean('is_active')->default(true)->index();
+            $table->boolean('is_active')->default(true);
             $table->integer('sort_order')->default(0);
             $table->timestampsTz();
+
+            $table->index(['product_id', 'is_active', 'price_irr']);
         });
 
         Schema::create('product_images', function (Blueprint $table): void {
@@ -77,6 +87,8 @@ return new class extends Migration
             $table->timestampsTz();
 
             $table->unique(['disk', 'path']);
+            $table->index(['product_id', 'sort_order']);
+            $table->index('variant_id');
         });
 
         if (DB::getDriverName() === 'pgsql') {
