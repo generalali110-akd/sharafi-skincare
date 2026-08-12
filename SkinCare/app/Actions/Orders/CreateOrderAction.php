@@ -13,24 +13,54 @@ use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\Commerce\CheckoutPricingService;
+use App\Services\Commerce\DiscountService;
+use App\Services\Commerce\OrderStateMachine;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 final class CreateOrderAction
 {
-    public function __construct(private readonly CheckoutPricingService $pricing) {}
+    public function __construct(
+        private readonly CheckoutPricingService $pricing,
+        private readonly DiscountService $discounts,
+        private readonly OrderStateMachine $stateMachine,
+    ) {}
 
-    public function execute(User $user, int $addressId, string $shippingMethod, string $idempotencyKey): array
-    {
-        return DB::transaction(function () use ($user, $addressId, $shippingMethod, $idempotencyKey): array {
+    public function execute(
+        User $user,
+        int $addressId,
+        string $shippingMethod,
+        string $idempotencyKey,
+        ?string $couponCode = null,
+    ): array {
+        $keyHash = hash('sha256', $idempotencyKey);
+        $normalizedCoupon = $this->discounts->normalizeCode($couponCode);
+        $fingerprint = hash('sha256', json_encode([
+            'address_id' => $addressId,
+            'shipping_method' => $shippingMethod,
+            'coupon_code' => $normalizedCoupon,
+        ], JSON_THROW_ON_ERROR));
+
+        return DB::transaction(function () use (
+            $user,
+            $addressId,
+            $shippingMethod,
+            $keyHash,
+            $fingerprint,
+            $normalizedCoupon,
+        ): array {
             $user = User::query()->whereKey($user->getKey())->lockForUpdate()->firstOrFail();
 
             $existing = Order::query()
                 ->where('user_id', $user->getKey())
-                ->where('idempotency_key', $idempotencyKey)
+                ->where('idempotency_key', $keyHash)
                 ->first();
 
             if ($existing) {
+                if (! hash_equals((string) $existing->idempotency_fingerprint, $fingerprint)) {
+                    throw new CheckoutConflictException('این Idempotency-Key قبلاً برای درخواست دیگری استفاده شده است.');
+                }
+
                 return [$existing->load('items'), false];
             }
 
@@ -88,14 +118,22 @@ final class CreateOrderAction
                 $lines[] = $line;
             }
 
-            $quote = $this->pricing->totals($lines, $shippingMethod);
+            $subtotal = $this->pricing->subtotal($lines);
+            $discount = $this->discounts->lockForOrder($user, $normalizedCoupon, $subtotal);
+            $quote = $this->pricing->totals(
+                $lines,
+                $shippingMethod,
+                (int) $discount['discount_irr'],
+                $discount['coupon_code'],
+            );
             $expiresAt = now()->addMinutes((int) config('shop.order_reservation_ttl_minutes'));
 
             $order = Order::query()->create([
                 'user_id' => $user->getKey(),
                 'address_id' => $address->getKey(),
                 'order_number' => $this->orderNumber(),
-                'idempotency_key' => $idempotencyKey,
+                'idempotency_key' => $keyHash,
+                'idempotency_fingerprint' => $fingerprint,
                 'status' => OrderStatus::PendingPayment,
                 'shipping_method' => $shippingMethod,
                 'address_snapshot' => $address->snapshot(),
@@ -103,8 +141,13 @@ final class CreateOrderAction
                 'discount_irr' => $quote['discount_irr'],
                 'shipping_irr' => $quote['shipping_irr'],
                 'total_irr' => $quote['total_irr'],
+                'discount_rule_id' => $discount['rule']?->getKey(),
+                'coupon_code' => $discount['coupon_code'],
                 'reservation_expires_at' => $expiresAt,
             ]);
+
+            $this->stateMachine->recordInitial($order, $user);
+            $this->discounts->reserve($order, $user, $discount);
 
             foreach ($lines as $line) {
                 $order->items()->create($line);

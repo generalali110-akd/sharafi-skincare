@@ -12,19 +12,24 @@ use Illuminate\Support\Facades\DB;
 
 final class OrderReservationService
 {
+    public function __construct(
+        private readonly DiscountService $discounts,
+        private readonly OrderStateMachine $stateMachine,
+    ) {}
+
     public function cancel(User $user, Order $order): Order
     {
         if ($order->user_id !== $user->getKey()) {
             abort(404);
         }
 
-        return DB::transaction(function () use ($order): Order {
+        return DB::transaction(function () use ($order, $user): Order {
             $locked = Order::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
             if ($locked->status !== OrderStatus::PendingPayment) {
                 throw new CheckoutConflictException('این سفارش دیگر قابل لغو نیست.');
             }
 
-            return $this->releaseLocked($locked, OrderStatus::Cancelled);
+            return $this->releaseLocked($locked, OrderStatus::Cancelled, $user);
         }, attempts: 3);
     }
 
@@ -40,13 +45,13 @@ final class OrderReservationService
                 return false;
             }
 
-            $this->releaseLocked($locked, OrderStatus::Expired);
+            $this->releaseLocked($locked, OrderStatus::Expired, null);
 
             return true;
         }, attempts: 3);
     }
 
-    private function releaseLocked(Order $order, OrderStatus $target): Order
+    private function releaseLocked(Order $order, OrderStatus $target, ?User $actor): Order
     {
         $items = $order->items()->whereNotNull('variant_id')->orderBy('variant_id')->get();
         $variantIds = $items->pluck('variant_id')->all();
@@ -71,19 +76,15 @@ final class OrderReservationService
                 'type' => 'reservation_release',
                 'quantity' => -$item->quantity,
                 'reason' => $target->value,
-                'actor_user_id' => $order->user_id,
+                'actor_user_id' => $actor?->getKey(),
                 'reference_type' => 'order',
                 'reference_id' => $order->order_number,
                 'metadata' => ['bucket' => 'reserved'],
             ]);
         }
 
-        $order->status = $target;
-        $order->reservation_expires_at = null;
-        if ($target === OrderStatus::Cancelled) {
-            $order->cancelled_at = now();
-        }
-        $order->save();
+        $this->discounts->releaseForOrder($order);
+        $this->stateMachine->transition($order, $target, $actor, $target->value);
 
         return $order->load('items');
     }

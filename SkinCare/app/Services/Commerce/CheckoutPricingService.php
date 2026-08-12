@@ -10,7 +10,9 @@ use App\Models\User;
 
 final class CheckoutPricingService
 {
-    public function quote(User $user, string $shippingMethod): array
+    public function __construct(private readonly DiscountService $discounts) {}
+
+    public function quote(User $user, string $shippingMethod, ?string $couponCode = null): array
     {
         $cart = Cart::query()
             ->where('user_id', $user->getKey())
@@ -37,7 +39,10 @@ final class CheckoutPricingService
             $lines[] = $line;
         }
 
-        return $this->totals($lines, $shippingMethod);
+        $subtotal = $this->subtotal($lines);
+        $discount = $this->discounts->preview($user, $couponCode, $subtotal);
+
+        return $this->totals($lines, $shippingMethod, (int) $discount['discount_irr'], $discount['coupon_code']);
     }
 
     public function line(ProductVariant $variant, int $quantity): array
@@ -69,19 +74,29 @@ final class CheckoutPricingService
         ];
     }
 
-    public function totals(array $lines, string $shippingMethod): array
+    public function subtotal(array $lines): int
+    {
+        return array_sum(array_column($lines, 'line_total_irr'));
+    }
+
+    public function totals(array $lines, string $shippingMethod, int $discount = 0, ?string $couponCode = null): array
     {
         if (! in_array($shippingMethod, ['standard', 'courier'], true)) {
             throw new CheckoutConflictException('روش ارسال معتبر نیست.');
         }
 
-        $subtotal = array_sum(array_column($lines, 'line_total_irr'));
-        $discount = 0;
+        $subtotal = $this->subtotal($lines);
+        if ($discount < 0 || $discount > $subtotal) {
+            throw new CheckoutConflictException('مبلغ تخفیف محاسبه‌شده معتبر نیست.');
+        }
+
+        // Free-shipping qualification intentionally uses the pre-discount subtotal.
         $shipping = $this->shippingCost($subtotal, $shippingMethod);
 
         return [
             'currency' => (string) config('shop.currency'),
             'shipping_method' => $shippingMethod,
+            'coupon_code' => $couponCode,
             'items' => array_values($lines),
             'subtotal_irr' => $subtotal,
             'discount_irr' => $discount,
