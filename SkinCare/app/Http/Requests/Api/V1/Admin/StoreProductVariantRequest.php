@@ -15,12 +15,14 @@ class StoreProductVariantRequest extends FormRequest
 
     public function rules(): array
     {
+        $maxPrice = (int) config('shop.max_variant_price_irr');
+
         return [
             'sku' => ['required', 'string', 'max:100', Rule::unique('product_variants', 'sku')],
             'title' => ['nullable', 'string', 'max:160'],
             'barcode' => ['nullable', 'string', 'max:100', Rule::unique('product_variants', 'barcode')],
-            'price_irr' => ['required', 'integer', 'min:0'],
-            'compare_at_price_irr' => ['nullable', 'integer', 'min:0'],
+            'price_irr' => ['required', 'integer', 'min:0', 'max:'.$maxPrice],
+            'compare_at_price_irr' => ['nullable', 'integer', 'min:0', 'max:'.$maxPrice],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer', 'between:-10000,10000'],
             'on_hand' => ['prohibited'],

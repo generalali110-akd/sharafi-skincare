@@ -43,6 +43,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'address_id' => ['required', 'integer'],
             'shipping_method' => ['required', Rule::in(['standard', 'courier'])],
+            'coupon_code' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9_-]+$/'],
             'price_irr' => ['prohibited'],
             'subtotal_irr' => ['prohibited'],
             'discount_irr' => ['prohibited'],
@@ -62,6 +63,7 @@ class OrderController extends Controller
             (int) $data['address_id'],
             $data['shipping_method'],
             $idempotencyKey,
+            $data['coupon_code'] ?? null,
         );
 
         return response()->json(
@@ -94,6 +96,7 @@ class OrderController extends Controller
             'order_number' => $order->order_number,
             'status' => $order->status->value,
             'shipping_method' => $order->shipping_method,
+            'coupon_code' => $order->coupon_code,
             'address' => $order->address_snapshot,
             'currency' => (string) config('shop.currency'),
             'subtotal_irr' => $order->subtotal_irr,

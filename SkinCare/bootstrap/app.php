@@ -2,6 +2,7 @@
 
 use App\Exceptions\CheckoutConflictException;
 use App\Exceptions\InventoryConflictException;
+use App\Exceptions\PaymentUnavailableException;
 use App\Http\Middleware\EnsurePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -32,6 +33,16 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->json([
                 'message' => $exception->getMessage(),
             ], Response::HTTP_CONFLICT);
+        });
+
+        $exceptions->render(function (PaymentUnavailableException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
         });
 
         $exceptions->shouldRenderJsonWhen(

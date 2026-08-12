@@ -16,6 +16,8 @@ class CheckoutController extends Controller
     {
         $data = $request->validate([
             'shipping_method' => ['required', Rule::in(['standard', 'courier'])],
+            'coupon_code' => ['nullable', 'string', 'max:64', 'regex:/^[A-Za-z0-9_-]+$/'],
+            'price_irr' => ['prohibited'],
             'subtotal_irr' => ['prohibited'],
             'discount_irr' => ['prohibited'],
             'shipping_irr' => ['prohibited'],
@@ -23,7 +25,11 @@ class CheckoutController extends Controller
         ]);
 
         return response()->json([
-            'data' => $this->pricing->quote($request->user(), $data['shipping_method']),
+            'data' => $this->pricing->quote(
+                $request->user(),
+                $data['shipping_method'],
+                $data['coupon_code'] ?? null,
+            ),
         ]);
     }
 }
