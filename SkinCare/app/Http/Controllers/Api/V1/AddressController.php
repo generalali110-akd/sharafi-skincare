@@ -21,7 +21,8 @@ class AddressController extends Controller
             ->where('user_id', $request->user()->getKey())
             ->orderByDesc('is_default')
             ->orderByDesc('id')
-            ->get();
+            ->get()
+            ->map(fn (Address $address) => $this->payload($address));
 
         return response()->json(['data' => $addresses]);
     }
@@ -31,7 +32,7 @@ class AddressController extends Controller
         $data = $this->validated($request, false);
         $address = $this->addresses->create($request->user(), $data);
 
-        return response()->json(['data' => $address], Response::HTTP_CREATED);
+        return response()->json(['data' => $this->payload($address)], Response::HTTP_CREATED);
     }
 
     public function update(Request $request, int $address): JsonResponse
@@ -39,7 +40,7 @@ class AddressController extends Controller
         $data = $this->validated($request, true);
         $address = $this->addresses->update($request->user(), $address, $data);
 
-        return response()->json(['data' => $address]);
+        return response()->json(['data' => $this->payload($address)]);
     }
 
     public function destroy(Request $request, int $address): Response
@@ -73,5 +74,20 @@ class AddressController extends Controller
         }
 
         return $data;
+    }
+
+    private function payload(Address $address): array
+    {
+        return [
+            'id' => $address->id,
+            'title' => $address->title,
+            'recipient_name' => $address->recipient_name,
+            'mobile' => $address->mobile,
+            'province' => $address->province,
+            'city' => $address->city,
+            'postal_code' => $address->postal_code,
+            'address_line' => $address->address_line,
+            'is_default' => $address->is_default,
+        ];
     }
 }

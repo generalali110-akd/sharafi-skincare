@@ -44,7 +44,7 @@ final class AddressService
             if ($requestedDefault === true) {
                 Address::query()
                     ->where('user_id', $user->getKey())
-                    ->whereKeyNot($address->getKey())
+                    ->where('id', '<>', $address->getKey())
                     ->update(['is_default' => false]);
             }
 
@@ -54,7 +54,7 @@ final class AddressService
             if ($requestedDefault === false && $wasDefault) {
                 $replacement = Address::query()
                     ->where('user_id', $user->getKey())
-                    ->whereKeyNot($address->getKey())
+                    ->where('id', '<>', $address->getKey())
                     ->orderBy('id')
                     ->lockForUpdate()
                     ->first();

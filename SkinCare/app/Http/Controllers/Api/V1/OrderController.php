@@ -23,8 +23,10 @@ class OrderController extends Controller
     {
         $orders = Order::query()
             ->where('user_id', $request->user()->getKey())
+            ->with('items')
             ->latest('id')
-            ->paginate(20);
+            ->paginate(20)
+            ->through(fn (Order $order) => $this->payload($order));
 
         return response()->json($orders);
     }

@@ -14,7 +14,16 @@ final class CartService
 {
     public function get(User $user): Cart
     {
-        return Cart::query()->firstOrCreate(['user_id' => $user->getKey()])->load([
+        $cart = Cart::query()->where('user_id', $user->getKey())->first();
+
+        if (! $cart) {
+            $cart = new Cart(['user_id' => $user->getKey()]);
+            $cart->setRelation('items', collect());
+
+            return $cart;
+        }
+
+        return $cart->load([
             'items.variant.product:id,name,slug,status,published_at',
             'items.variant.inventory',
         ]);

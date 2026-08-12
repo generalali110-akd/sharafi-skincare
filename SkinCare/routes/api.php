@@ -1,12 +1,16 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminInventoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminTaxonomyController;
 use App\Http\Controllers\Api\V1\Auth\OtpAuthController;
+use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\Catalog\ProductController;
 use App\Http\Controllers\Api\V1\Catalog\TaxonomyController;
+use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\OrderController;
 use App\Support\Permissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +43,21 @@ Route::middleware('auth:sanctum')->group(function (): void {
     ]));
 
     Route::post('/auth/logout', [OtpAuthController::class, 'logout']);
+
+    Route::get('/addresses', [AddressController::class, 'index']);
+    Route::post('/addresses', [AddressController::class, 'store']);
+    Route::patch('/addresses/{address}', [AddressController::class, 'update']);
+    Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
+
+    Route::get('/cart', [CartController::class, 'show']);
+    Route::put('/cart/items/{variant}', [CartController::class, 'setItem']);
+    Route::delete('/cart/items/{variant}', [CartController::class, 'removeItem']);
+    Route::post('/checkout/quote', [CheckoutController::class, 'quote']);
+
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::get('/orders/{orderNumber}', [OrderController::class, 'show']);
+    Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
+    Route::post('/orders/{orderNumber}/cancel', [OrderController::class, 'cancel']);
 
     Route::prefix('admin')->group(function (): void {
         Route::get('/catalog/products', [AdminProductController::class, 'index'])
