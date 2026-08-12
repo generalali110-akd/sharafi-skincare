@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\CheckoutConflictException;
 use App\Exceptions\InventoryConflictException;
 use App\Http\Middleware\EnsurePermission;
 use Illuminate\Foundation\Application;
@@ -23,7 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (InventoryConflictException $exception, Request $request) {
+        $exceptions->render(function (InventoryConflictException|CheckoutConflictException $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
             }

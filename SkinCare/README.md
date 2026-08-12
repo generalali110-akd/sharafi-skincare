@@ -31,7 +31,7 @@ Authenticated customer modules:
 - Customer profile
 - Addresses
 - Wishlist
-- Cart synchronization
+- Server-side cart
 - Checkout quote
 - Orders and order history
 - Payment initiation/status
@@ -57,6 +57,7 @@ Admin modules:
 - CSRF protection is required for state-changing first-party browser requests.
 - Validation is performed server-side even when the frontend already validates the same field.
 - Order prices are recalculated from current server-side product/discount data.
+- Client-supplied price, discount, shipping, and total fields are rejected on cart/checkout/order write paths.
 - Payment callbacks are verified against the payment provider before an order is marked paid.
 - Inventory updates use database transactions and concurrency-safe checks.
 - Secrets live only in environment/secret storage and are never committed.
@@ -69,7 +70,7 @@ The UI displays Toman, but backend monetary values use an integer canonical unit
 
 ## Core domain model
 
-Planned entities:
+Implemented/planned entities:
 
 - users
 - roles / permissions
@@ -92,19 +93,21 @@ Planned entities:
 - shipments
 - audit_logs
 
-Order items will store a snapshot of product name, SKU, quantity, unit price, discounts, taxes/fees if applicable, and final line total so historical orders are not changed by later catalog edits.
+Order items store a snapshot of product name, SKU, quantity, unit price, discounts, and final line total so historical orders are not changed by later catalog edits.
 
 ## Transaction boundaries
 
 Critical flows that require database transactions:
 
-- reserving/decrementing stock during checkout/order creation
+- reserving stock during pending-payment order creation
 - creating order + immutable order items
+- releasing reservations on cancellation/expiry
 - applying discount usage limits
 - confirming payment and transitioning order state
+- converting a paid reservation into a physical stock decrement
 - restocking on eligible cancellation/refund
 
-Idempotency will be used for payment callbacks and other externally retried write operations.
+Idempotency is required for order creation, payment callbacks, and other externally retried write operations.
 
 ## API response conventions
 
@@ -116,8 +119,8 @@ Recommended HTTP behavior:
 - 204 for successful operations with no response body
 - 401 for unauthenticated requests
 - 403 for authenticated but unauthorized requests
-- 404 for missing resources
-- 409 for business/concurrency conflicts such as insufficient stock
+- 404 for missing or non-owned resources
+- 409 for business/concurrency conflicts such as insufficient stock or invalid order state
 - 422 for validation/business input errors
 - 429 for rate limits
 
@@ -130,7 +133,9 @@ Backend work is not considered complete without automated coverage of the critic
 - product filtering and pagination
 - cart pricing validation
 - stock concurrency
-- order creation
+- order creation and idempotent retry
+- reservation cancellation/expiry
+- address ownership
 - discount limits
 - payment callback idempotency
 - forbidden state transitions
@@ -173,7 +178,7 @@ Composer dependencies are locked for reproducible builds and audited in CI.
 - brands, products, product variants, and product image metadata
 - SKU and price stored at variant level so future size/color/volume variants do not require a schema rewrite
 - IRR integer pricing and PostgreSQL constraints that reject invalid prices
-- inventory items with physical `on_hand`, `reserved`, derived availability, and immutable-style movement history foundation
+- inventory items with physical `on_hand`, `reserved`, derived availability, and movement history
 - PostgreSQL constraints that reject invalid reservation states and zero-quantity inventory movements
 - indexes for high-frequency RBAC, catalog, and inventory query paths
 - public product listing/detail APIs that expose stock availability without leaking exact inventory counts
@@ -195,6 +200,41 @@ Administrative writes are separated by permission and executed transactionally:
 - category parent updates reject hierarchy cycles
 - an active product cannot lose its last active variant
 - no physical delete API is exposed for catalog taxonomies in this slice; `is_active` is used for safe deactivation
+
+## Implemented customer commerce foundation
+
+Customer purchase state is server-side and transaction-safe:
+
+- customer address CRUD is ownership-scoped; PostgreSQL enforces at most one default address per user
+- cart state is stored server-side as `variant_id + quantity`; prices are never persisted from browser input
+- cart mutations reject financial fields and validate current publication, variant activity, quantity, and availability
+- checkout quote recalculates product prices and shipping from server configuration every time
+- standard shipping becomes free at the configured threshold; courier pricing remains a separate explicit method
+- order creation requires a per-user `Idempotency-Key` and returns the existing order on safe retries instead of creating a duplicate
+- order numbers use ULIDs and are independent from internal database IDs
+- address and commercial product details are snapshotted into the order so future edits do not rewrite history
+- pending-payment orders increase `inventory_items.reserved` without decrementing physical `on_hand`
+- variant and inventory rows are locked in deterministic ID order during order creation to prevent overselling races
+- reservation hold/release operations append `inventory_movements` entries
+- cancellation releases a reservation exactly once; invalid state transitions return HTTP 409
+- stale pending-payment reservations are released by `orders:expire-reservations`, scheduled every minute with overlap prevention
+- reservation TTL, quantity limits, and shipping rules are centralized in `config/shop.php` and environment settings
+- order/customer API payloads do not expose internal idempotency keys or another user's resources
+
+Current customer commerce endpoints (authentication required):
+
+- `GET /api/v1/addresses`
+- `POST /api/v1/addresses`
+- `PATCH /api/v1/addresses/{address}`
+- `DELETE /api/v1/addresses/{address}`
+- `GET /api/v1/cart`
+- `PUT /api/v1/cart/items/{variant}`
+- `DELETE /api/v1/cart/items/{variant}`
+- `POST /api/v1/checkout/quote`
+- `GET /api/v1/orders`
+- `GET /api/v1/orders/{orderNumber}`
+- `POST /api/v1/orders` (`Idempotency-Key` required)
+- `POST /api/v1/orders/{orderNumber}/cancel`
 
 Current public catalog endpoints:
 
