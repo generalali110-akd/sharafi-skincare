@@ -4,6 +4,8 @@
   const STANDARD_SHIPPING = 45000;
   const COURIER_SHIPPING = 65000;
 
+  const safe = (value) => typeof escapeHTML === 'function' ? escapeHTML(value) : String(value ?? '');
+
   function renderCartV2() {
     const list = document.querySelector('.js-cart-list');
     if (!list || typeof getCart !== 'function') return;
@@ -30,32 +32,39 @@
       return;
     }
 
-    list.innerHTML = cart.map((item) => `
-      <article class="cart-item-v2">
-        <div class="thumb" aria-hidden="true">${item.icon || '🧴'}</div>
-        <div>
-          <h4>${item.name}</h4>
-          <div class="meta">${item.brand || ''}</div>
-          <div class="cart-qty" aria-label="تعداد ${item.name}">
-            <button type="button" aria-label="کم کردن تعداد" data-cart-delta="-1" data-cart-id="${item.id}">−</button>
-            <span>${Number(item.qty).toLocaleString('fa-IR')}</span>
-            <button type="button" aria-label="زیاد کردن تعداد" data-cart-delta="1" data-cart-id="${item.id}">+</button>
+    list.innerHTML = cart.map((item) => {
+      const id = safe(item.id);
+      const name = safe(item.name);
+      const brand = safe(item.brand);
+      const icon = safe(item.icon || '🧴');
+      const qty = Number(item.qty).toLocaleString('fa-IR');
+      return `
+        <article class="cart-item-v2">
+          <div class="thumb" aria-hidden="true">${icon}</div>
+          <div>
+            <h4>${name}</h4>
+            <div class="meta">${brand}</div>
+            <div class="cart-qty" aria-label="تعداد ${name}">
+              <button type="button" aria-label="کم کردن تعداد" data-cart-delta="-1" data-cart-id="${id}">−</button>
+              <span>${qty}</span>
+              <button type="button" aria-label="زیاد کردن تعداد" data-cart-delta="1" data-cart-id="${id}">+</button>
+            </div>
           </div>
-        </div>
-        <div class="price-col">${fmtPrice(item.price * item.qty)}</div>
-        <button class="cart-remove" type="button" aria-label="حذف ${item.name} از سبد" data-cart-remove="${item.id}">✕</button>
-      </article>`).join('');
+          <div class="price-col">${fmtPrice(item.price * item.qty)}</div>
+          <button class="cart-remove" type="button" aria-label="حذف ${name} از سبد" data-cart-remove="${id}">✕</button>
+        </article>`;
+    }).join('');
 
     list.querySelectorAll('[data-cart-delta]').forEach((button) => {
       button.addEventListener('click', () => {
-        changeQty(Number(button.dataset.cartId), Number(button.dataset.cartDelta));
+        changeQty(button.dataset.cartId, Number(button.dataset.cartDelta));
         renderCartV2();
       });
     });
 
     list.querySelectorAll('[data-cart-remove]').forEach((button) => {
       button.addEventListener('click', () => {
-        removeFromCart(Number(button.dataset.cartRemove));
+        removeFromCart(button.dataset.cartRemove);
         renderCartV2();
       });
     });
@@ -104,7 +113,7 @@
     } else {
       summary.innerHTML = cart.map((item) => `
         <div class="checkout-summary-item">
-          <span>${item.name} × ${Number(item.qty).toLocaleString('fa-IR')}</span>
+          <span>${safe(item.name)} × ${Number(item.qty).toLocaleString('fa-IR')}</span>
           <strong>${fmtPrice(item.price * item.qty)}</strong>
         </div>`).join('');
       if (submit) submit.disabled = false;
