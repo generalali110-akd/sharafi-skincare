@@ -6,20 +6,68 @@
   const resetButtons = document.querySelectorAll('.js-filter-reset');
   const forms = document.querySelectorAll('.js-filter-form');
   const sort = document.querySelector('.js-category-sort');
+  let lastFocusedElement = null;
 
-  const setDrawer = (open) => {
+  const focusableSelector = [
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(',');
+
+  const getDrawerFocusable = () => drawer
+    ? [...drawer.querySelectorAll(focusableSelector)].filter((element) => !element.hidden)
+    : [];
+
+  const setDrawer = (open, trigger = null) => {
     if (!drawer) return;
+
+    if (open) lastFocusedElement = trigger || document.activeElement;
+
     drawer.classList.toggle('is-open', open);
     drawer.setAttribute('aria-hidden', String(!open));
     document.body.classList.toggle('filters-open', open);
     openButtons.forEach((button) => button.setAttribute('aria-expanded', String(open)));
+
+    if (open) {
+      window.setTimeout(() => {
+        const focusable = getDrawerFocusable();
+        focusable[0]?.focus();
+      }, 0);
+    } else if (lastFocusedElement instanceof HTMLElement) {
+      lastFocusedElement.focus();
+      lastFocusedElement = null;
+    }
   };
 
-  openButtons.forEach((button) => button.addEventListener('click', () => setDrawer(true)));
+  openButtons.forEach((button) => button.addEventListener('click', () => setDrawer(true, button)));
   closeButtons.forEach((button) => button.addEventListener('click', () => setDrawer(false)));
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setDrawer(false);
+    if (!drawer?.classList.contains('is-open')) return;
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      setDrawer(false);
+      return;
+    }
+
+    if (event.key !== 'Tab') return;
+    const focusable = getDrawerFocusable();
+    if (!focusable.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   });
 
   const paramsToForm = (form) => {
@@ -36,7 +84,25 @@
 
   forms.forEach(paramsToForm);
 
+  const hasValidPriceRange = (form) => {
+    const minInput = form.querySelector('input[name="min_price"]');
+    const maxInput = form.querySelector('input[name="max_price"]');
+    if (!minInput || !maxInput) return true;
+
+    const min = minInput.value === '' ? null : Number(minInput.value);
+    const max = maxInput.value === '' ? null : Number(maxInput.value);
+    const invalid = min !== null && max !== null && Number.isFinite(min) && Number.isFinite(max) && min > max;
+
+    maxInput.setCustomValidity(invalid ? 'حداکثر قیمت باید بزرگ‌تر یا مساوی حداقل قیمت باشد.' : '');
+    return !invalid;
+  };
+
   const applyForm = (form) => {
+    if (!hasValidPriceRange(form)) {
+      form.reportValidity();
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     ['category', 'brand', 'skin', 'min_price', 'max_price'].forEach((key) => params.delete(key));
 
@@ -48,6 +114,7 @@
     if (sort?.value && sort.value !== 'default') params.set('sort', sort.value);
     else params.delete('sort');
 
+    params.delete('page');
     const query = params.toString();
     window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
     setDrawer(false);
@@ -75,6 +142,7 @@
       const params = new URLSearchParams(window.location.search);
       if (sort.value === 'default') params.delete('sort');
       else params.set('sort', sort.value);
+      params.delete('page');
       const query = params.toString();
       window.history.replaceState({}, '', `${window.location.pathname}${query ? `?${query}` : ''}`);
     });
