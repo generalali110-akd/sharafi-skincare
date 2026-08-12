@@ -7,6 +7,7 @@ use App\Exceptions\CheckoutConflictException;
 use App\Models\Cart;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Support\MoneyMath;
 
 final class CheckoutPricingService
 {
@@ -61,6 +62,9 @@ final class CheckoutPricingService
         }
 
         $unitPrice = (int) $variant->price_irr;
+        if ($unitPrice < 0 || $unitPrice > (int) config('shop.max_variant_price_irr')) {
+            throw new CheckoutConflictException('قیمت یکی از اقلام معتبر نیست.');
+        }
 
         return [
             'variant_id' => $variant->getKey(),
@@ -70,13 +74,16 @@ final class CheckoutPricingService
             'quantity' => $quantity,
             'unit_price_irr' => $unitPrice,
             'discount_irr' => 0,
-            'line_total_irr' => $unitPrice * $quantity,
+            'line_total_irr' => MoneyMath::multiply($unitPrice, $quantity),
         ];
     }
 
     public function subtotal(array $lines): int
     {
-        return array_sum(array_column($lines, 'line_total_irr'));
+        return MoneyMath::add(...array_map(
+            static fn (array $line): int => (int) $line['line_total_irr'],
+            $lines,
+        ));
     }
 
     public function totals(array $lines, string $shippingMethod, int $discount = 0, ?string $couponCode = null): array
@@ -92,6 +99,8 @@ final class CheckoutPricingService
 
         // Free-shipping qualification intentionally uses the pre-discount subtotal.
         $shipping = $this->shippingCost($subtotal, $shippingMethod);
+        $payableBeforeShipping = $subtotal - $discount;
+        $total = MoneyMath::add($payableBeforeShipping, $shipping);
 
         return [
             'currency' => (string) config('shop.currency'),
@@ -101,7 +110,7 @@ final class CheckoutPricingService
             'subtotal_irr' => $subtotal,
             'discount_irr' => $discount,
             'shipping_irr' => $shipping,
-            'total_irr' => $subtotal - $discount + $shipping,
+            'total_irr' => $total,
         ];
     }
 

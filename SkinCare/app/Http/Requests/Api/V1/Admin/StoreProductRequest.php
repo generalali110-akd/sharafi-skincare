@@ -16,6 +16,8 @@ class StoreProductRequest extends FormRequest
 
     public function rules(): array
     {
+        $maxPrice = (int) config('shop.max_variant_price_irr');
+
         return [
             'name' => ['required', 'string', 'min:2', 'max:180'],
             'slug' => ['required', 'string', 'max:220', 'regex:/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u', Rule::unique('products', 'slug')],
@@ -31,8 +33,8 @@ class StoreProductRequest extends FormRequest
             'variants.*.sku' => ['required', 'string', 'max:100', 'distinct', Rule::unique('product_variants', 'sku')],
             'variants.*.title' => ['nullable', 'string', 'max:160'],
             'variants.*.barcode' => ['nullable', 'string', 'max:100', 'distinct', Rule::unique('product_variants', 'barcode')],
-            'variants.*.price_irr' => ['required', 'integer', 'min:0'],
-            'variants.*.compare_at_price_irr' => ['nullable', 'integer', 'min:0'],
+            'variants.*.price_irr' => ['required', 'integer', 'min:0', 'max:'.$maxPrice],
+            'variants.*.compare_at_price_irr' => ['nullable', 'integer', 'min:0', 'max:'.$maxPrice],
             'variants.*.is_active' => ['sometimes', 'boolean'],
             'variants.*.sort_order' => ['sometimes', 'integer', 'between:-10000,10000'],
             'variants.*.on_hand' => ['prohibited'],

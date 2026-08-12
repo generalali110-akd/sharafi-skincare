@@ -16,13 +16,14 @@ class UpdateProductVariantRequest extends FormRequest
     public function rules(): array
     {
         $variant = $this->route('variant');
+        $maxPrice = (int) config('shop.max_variant_price_irr');
 
         return [
             'sku' => ['sometimes', 'string', 'max:100', Rule::unique('product_variants', 'sku')->ignore($variant)],
             'title' => ['sometimes', 'nullable', 'string', 'max:160'],
             'barcode' => ['sometimes', 'nullable', 'string', 'max:100', Rule::unique('product_variants', 'barcode')->ignore($variant)],
-            'price_irr' => ['sometimes', 'integer', 'min:0'],
-            'compare_at_price_irr' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'price_irr' => ['sometimes', 'integer', 'min:0', 'max:'.$maxPrice],
+            'compare_at_price_irr' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:'.$maxPrice],
             'is_active' => ['sometimes', 'boolean'],
             'sort_order' => ['sometimes', 'integer', 'between:-10000,10000'],
             'on_hand' => ['prohibited'],
