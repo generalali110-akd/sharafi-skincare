@@ -17,7 +17,7 @@ Primary priorities:
 
 ## API boundary
 
-All application endpoints will be versioned under `/api/v1`.
+All application endpoints are versioned under `/api/v1`.
 
 Public Storefront modules:
 
@@ -52,7 +52,7 @@ Admin modules:
 
 - Authentication and authorization are enforced server-side on every protected route.
 - Admin access is role/permission based; hiding a UI control is never considered authorization.
-- OTP codes are generated server-side, expire quickly, are rate-limited, and are never logged in plaintext.
+- OTP codes are generated server-side, expire quickly, are rate-limited, and are never logged or stored in plaintext.
 - Session/auth cookies must be Secure, HttpOnly, and SameSite-aware in production.
 - CSRF protection is required for state-changing first-party browser requests.
 - Validation is performed server-side even when the frontend already validates the same field.
@@ -65,7 +65,7 @@ Admin modules:
 
 ## Money and currency
 
-The UI displays Toman, but backend monetary values should use an integer canonical unit. Recommended canonical unit: Iranian Rial (IRR) as integer values, with explicit conversion at the presentation boundary. Floating point types must not be used for money.
+The UI displays Toman, but backend monetary values use an integer canonical unit. The selected canonical unit is Iranian Rial (IRR) as integer values, with explicit conversion at the presentation boundary. Floating point types must not be used for money.
 
 ## Core domain model
 
@@ -108,7 +108,7 @@ Idempotency will be used for payment callbacks and other externally retried writ
 
 ## API response conventions
 
-Success responses should use stable resource/data structures. Validation errors should expose machine-readable field errors and a user-safe message. Internal exception details, SQL errors, stack traces, and secrets must never be returned in production.
+Success responses use stable resource/data structures. Validation errors expose machine-readable field errors and a user-safe message. Internal exception details, SQL errors, stack traces, and secrets must never be returned in production.
 
 Recommended HTTP behavior:
 
@@ -135,14 +135,38 @@ Backend work is not considered complete without automated coverage of the critic
 - payment callback idempotency
 - forbidden state transitions
 
-## Proposed stack (pending final approval)
+## Selected stack
 
-Recommended implementation stack:
+The backend foundation is implemented with:
 
 - Laravel 13
-- PHP 8.5
-- PostgreSQL
-- Redis for cache, queues, rate-limit/ephemeral workloads where appropriate
-- Laravel Sanctum / first-party cookie-based authentication for the storefront
+- PHP 8.4+; CI currently verifies PHP 8.5
+- PostgreSQL; CI verifies migrations against PostgreSQL 18
+- Laravel Sanctum with first-party cookie/session authentication
+- Database-backed cache, queue, and sessions for the initial phase
+- Redis-ready configuration for cache/queue/rate-limit workloads when operationally justified
 
-No framework-specific application files should be scaffolded until this stack choice is confirmed.
+Composer dependencies are locked for reproducible builds and audited in CI.
+
+## Implemented foundation
+
+The first backend slice currently includes:
+
+- versioned `/api/v1` routing and health endpoint
+- PostgreSQL configuration and migrations
+- Sanctum stateful authentication foundation
+- Iranian mobile normalization and validation
+- OTP request/verify/logout flow
+- server-generated six-digit OTP codes
+- HMAC-SHA256 OTP storage using a secret server-side pepper
+- expiry, resend window, attempt limits, and mobile/IP rate limiting
+- session regeneration after successful authentication
+- `SmsGateway` abstraction with a fail-closed null provider
+- PHPUnit feature/unit coverage
+- Composer security audit, PostgreSQL migration check, tests, and Laravel Pint in GitHub Actions
+
+## SMS provider status
+
+The application contract for SMS is implemented, but no commercial SMS provider is hard-coded. `SMS_DRIVER=null` intentionally fails closed until a provider is selected and credentials are supplied through secret storage. A provider-specific adapter will implement `SmsGateway` without changing the OTP domain logic.
+
+Plaintext OTP values must not be written to database-backed queues, logs, exceptions, analytics, or audit records.
