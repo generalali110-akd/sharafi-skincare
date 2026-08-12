@@ -82,10 +82,5 @@ jobs:
       - name: Run test suite
         run: vendor/bin/phpunit --display-warnings --display-notices --display-deprecations --fail-on-warning --fail-on-risky --fail-on-deprecation
 
-      - name: Show Laravel Pint formatting diff
-        run: |
-          vendor/bin/pint
-          if ! git diff --quiet -- .; then
-            git diff -- .
-            exit 1
-          fi
+      - name: Check Laravel code style
+        run: vendor/bin/pint --test
