@@ -4,7 +4,6 @@ namespace Tests\Feature\Commerce;
 
 use App\Enums\OrderStatus;
 use App\Models\Address;
-use App\Models\CartItem;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\Order;
