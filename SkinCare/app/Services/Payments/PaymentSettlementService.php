@@ -29,6 +29,8 @@ final class PaymentSettlementService
         string $payloadHash,
         array $metadata = [],
     ): Order {
+        $this->assertIdentifiers($transactionId, $dedupeKey, $payloadHash);
+
         return DB::transaction(function () use ($attempt, $transactionId, $dedupeKey, $payloadHash, $metadata): Order {
             $attempt = PaymentAttempt::query()->whereKey($attempt->getKey())->lockForUpdate()->firstOrFail();
             $payment = $attempt->payment()->lockForUpdate()->firstOrFail();
@@ -36,8 +38,13 @@ final class PaymentSettlementService
 
             $existingEvent = PaymentEvent::query()->where('dedupe_key', $dedupeKey)->first();
             if ($existingEvent) {
-                if ($existingEvent->payment_id !== $payment->getKey()) {
-                    throw new CheckoutConflictException('شناسه رویداد پرداخت با پرداخت دیگری تداخل دارد.');
+                if ($existingEvent->payment_id !== $payment->getKey()
+                    || $existingEvent->attempt_id !== $attempt->getKey()
+                    || $existingEvent->provider !== $attempt->provider) {
+                    throw new CheckoutConflictException('شناسه رویداد پرداخت با رویداد دیگری تداخل دارد.');
+                }
+                if (! hash_equals($existingEvent->payload_hash, $payloadHash)) {
+                    throw new CheckoutConflictException('Payload رویداد تکراری پرداخت با نسخه قبلی سازگار نیست.');
                 }
 
                 return $order;
@@ -123,6 +130,19 @@ final class PaymentSettlementService
 
             return $order;
         }, attempts: 3);
+    }
+
+    private function assertIdentifiers(string $transactionId, string $dedupeKey, string $payloadHash): void
+    {
+        if ($transactionId === '' || mb_strlen($transactionId) > 190) {
+            throw new CheckoutConflictException('شناسه تراکنش پرداخت معتبر نیست.');
+        }
+        if (! preg_match('/^[a-f0-9]{64}$/', $dedupeKey)) {
+            throw new CheckoutConflictException('کلید یکتای رویداد پرداخت معتبر نیست.');
+        }
+        if (! preg_match('/^[a-f0-9]{64}$/', $payloadHash)) {
+            throw new CheckoutConflictException('Hash رویداد پرداخت معتبر نیست.');
+        }
     }
 
     private function recordEvent(

@@ -193,7 +193,9 @@ class DiscountPaymentFlowTest extends TestCase
         $attempt = PaymentAttempt::query()->where('public_id', $attemptResponse->json('data.attempt.attempt_id'))->firstOrFail();
 
         $service = app(PaymentSettlementService::class);
-        $service->settleSuccessful($attempt, 'TX-10001', 'event-dedupe-10001', hash('sha256', 'payload-1'));
+        $dedupeKey = hash('sha256', 'event-dedupe-10001');
+        $payloadHash = hash('sha256', 'payload-1');
+        $service->settleSuccessful($attempt, 'TX-10001', $dedupeKey, $payloadHash);
 
         $this->assertSame(OrderStatus::Paid, $order->refresh()->status);
         $this->assertSame(3, $inventory->refresh()->on_hand);
@@ -203,10 +205,29 @@ class DiscountPaymentFlowTest extends TestCase
         $this->assertSame(1, PaymentEvent::query()->count());
         $this->assertSame(1, InventoryMovement::query()->where('type', 'sale_settlement')->count());
 
-        $service->settleSuccessful($attempt->refresh(), 'TX-10001', 'event-dedupe-10001', hash('sha256', 'payload-1'));
+        $service->settleSuccessful($attempt->refresh(), 'TX-10001', $dedupeKey, $payloadHash);
         $this->assertSame(3, $inventory->refresh()->on_hand);
         $this->assertSame(1, PaymentEvent::query()->count());
         $this->assertSame(1, InventoryMovement::query()->where('type', 'sale_settlement')->count());
+    }
+
+    public function test_replayed_payment_event_with_same_dedupe_key_and_different_payload_is_rejected(): void
+    {
+        $this->app->instance(PaymentGateway::class, new FakePaymentGateway);
+        $user = User::factory()->create();
+        $order = $this->createPendingOrder($user, 'replay-order-key-01');
+        $attemptResponse = $this->actingAs($user)
+            ->withHeader('Idempotency-Key', 'replay-payment-key-1')
+            ->postJson("/api/v1/orders/{$order->order_number}/payment-attempts")
+            ->assertCreated();
+        $attempt = PaymentAttempt::query()->where('public_id', $attemptResponse->json('data.attempt.attempt_id'))->firstOrFail();
+        $dedupeKey = hash('sha256', 'provider-event-replay-1');
+
+        $service = app(PaymentSettlementService::class);
+        $service->settleSuccessful($attempt, 'TX-REPLAY-1', $dedupeKey, hash('sha256', 'payload-a'));
+
+        $this->expectException(CheckoutConflictException::class);
+        $service->settleSuccessful($attempt->refresh(), 'TX-REPLAY-1', $dedupeKey, hash('sha256', 'payload-b'));
     }
 
     public function test_late_verified_payment_after_cancel_goes_to_refund_pending_without_reselling_stock(): void
@@ -234,7 +255,7 @@ class DiscountPaymentFlowTest extends TestCase
         app(PaymentSettlementService::class)->settleSuccessful(
             $attempt,
             'TX-LATE-1',
-            'event-late-1',
+            hash('sha256', 'event-late-1'),
             hash('sha256', 'late-payload'),
         );
 
