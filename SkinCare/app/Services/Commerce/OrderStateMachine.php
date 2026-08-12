@@ -16,9 +16,9 @@ final class OrderStateMachine
         'processing' => ['shipped', 'refund_pending'],
         'shipped' => ['delivered', 'refund_pending'],
         'delivered' => ['refund_pending'],
+        'cancelled' => ['refund_pending'],
+        'expired' => ['refund_pending'],
         'refund_pending' => ['refunded'],
-        'cancelled' => [],
-        'expired' => [],
         'refunded' => [],
     ];
 

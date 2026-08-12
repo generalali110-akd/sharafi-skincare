@@ -14,7 +14,7 @@ class PaymentAttempt extends Model
 
     protected $fillable = [
         'payment_id', 'attempt_number', 'public_id', 'idempotency_key_hash', 'provider',
-        'status', 'amount_irr', 'authority', 'transaction_id', 'failure_code',
+        'status', 'amount_irr', 'authority', 'transaction_id', 'redirect_url', 'failure_code',
         'failure_message', 'requested_at', 'verified_at', 'failed_at', 'metadata',
     ];
 
