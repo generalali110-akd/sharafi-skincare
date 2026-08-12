@@ -24,6 +24,8 @@ final class Permissions
 
     public const DISCOUNTS_WRITE = 'discounts.write';
 
+    public const AUDIT_READ = 'audit.read';
+
     public static function all(): array
     {
         return [
@@ -37,6 +39,7 @@ final class Permissions
             self::CUSTOMERS_READ,
             self::DISCOUNTS_READ,
             self::DISCOUNTS_WRITE,
+            self::AUDIT_READ,
         ];
     }
 }

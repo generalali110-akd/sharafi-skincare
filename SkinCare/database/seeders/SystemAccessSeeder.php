@@ -22,6 +22,7 @@ class SystemAccessSeeder extends Seeder
             Permissions::CUSTOMERS_READ => 'Read customer management data',
             Permissions::DISCOUNTS_READ => 'Read discounts',
             Permissions::DISCOUNTS_WRITE => 'Create and edit discounts',
+            Permissions::AUDIT_READ => 'Read administrative audit logs',
         ];
 
         foreach ($permissionNames as $slug => $name) {
@@ -35,6 +36,11 @@ class SystemAccessSeeder extends Seeder
                 Permissions::CATALOG_READ,
                 Permissions::CATALOG_WRITE,
                 Permissions::INVENTORY_READ,
+            ]],
+            'inventory-manager' => ['Inventory Manager', [
+                Permissions::CATALOG_READ,
+                Permissions::INVENTORY_READ,
+                Permissions::INVENTORY_WRITE,
             ]],
             'order-manager' => ['Order Manager', [
                 Permissions::ORDERS_READ,
