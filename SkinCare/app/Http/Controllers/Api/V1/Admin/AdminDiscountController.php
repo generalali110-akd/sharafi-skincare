@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Enums\DiscountKind;
 use App\Enums\DiscountRedemptionStatus;
 use App\Exceptions\CheckoutConflictException;
 use App\Http\Controllers\Controller;
@@ -21,19 +22,25 @@ class AdminDiscountController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $validated = $request->validate([
+            'search' => ['nullable', 'string', 'max:160'],
+            'is_active' => ['nullable', 'boolean'],
+            'per_page' => ['nullable', 'integer', 'between:1,100'],
+        ]);
+
         $query = DiscountRule::query()->latest('id');
 
-        if ($search = trim((string) $request->query('search'))) {
+        if ($search = trim((string) ($validated['search'] ?? ''))) {
             $query->where(function ($builder) use ($search): void {
                 $builder->where('code', 'ilike', "%{$search}%")
                     ->orWhere('name', 'ilike', "%{$search}%");
             });
         }
-        if ($request->query->has('is_active')) {
-            $query->where('is_active', filter_var($request->query('is_active'), FILTER_VALIDATE_BOOL));
+        if (array_key_exists('is_active', $validated)) {
+            $query->where('is_active', (bool) $validated['is_active']);
         }
 
-        $rules = $query->paginate(min(max((int) $request->query('per_page', 25), 1), 100))
+        $rules = $query->paginate((int) ($validated['per_page'] ?? 25))
             ->through(fn (DiscountRule $rule) => $this->payload($rule));
 
         return response()->json($rules);
@@ -42,7 +49,7 @@ class AdminDiscountController extends Controller
     public function store(StoreDiscountRuleRequest $request): JsonResponse
     {
         $rule = DB::transaction(function () use ($request): DiscountRule {
-            $data = $request->validated();
+            $data = $this->mapApiValues($request->validated(), null);
             $data['created_by'] = $request->user()->getKey();
             $data['updated_by'] = $request->user()->getKey();
             $rule = DiscountRule::query()->create($data);
@@ -66,7 +73,7 @@ class AdminDiscountController extends Controller
     {
         $rule = DB::transaction(function () use ($request, $discountRule): DiscountRule {
             $rule = DiscountRule::query()->whereKey($discountRule->getKey())->lockForUpdate()->firstOrFail();
-            $data = $request->validated();
+            $data = $this->mapApiValues($request->validated(), $rule);
             $this->assertUsageLimits($rule, $data);
 
             $before = $this->auditable($rule);
@@ -90,6 +97,22 @@ class AdminDiscountController extends Controller
         });
 
         return response()->json(['data' => $this->payload($rule)]);
+    }
+
+    private function mapApiValues(array $data, ?DiscountRule $existing): array
+    {
+        $kind = $data['kind'] ?? $existing?->kind->value;
+
+        if ($kind === DiscountKind::Fixed->value && array_key_exists('amount_irr', $data)) {
+            $data['value'] = $data['amount_irr'];
+        }
+        if ($kind === DiscountKind::Percentage->value && array_key_exists('percentage_bps', $data)) {
+            $data['value'] = $data['percentage_bps'];
+        }
+
+        unset($data['amount_irr'], $data['percentage_bps']);
+
+        return $data;
     }
 
     private function assertUsageLimits(DiscountRule $rule, array $data): void
@@ -130,7 +153,8 @@ class AdminDiscountController extends Controller
             'code' => $rule->code,
             'name' => $rule->name,
             'kind' => $rule->kind->value,
-            'value' => $rule->value,
+            'amount_irr' => $rule->kind === DiscountKind::Fixed ? $rule->value : null,
+            'percentage_bps' => $rule->kind === DiscountKind::Percentage ? $rule->value : null,
             'min_subtotal_irr' => $rule->min_subtotal_irr,
             'max_discount_irr' => $rule->max_discount_irr,
             'starts_at' => $rule->starts_at?->toISOString(),
@@ -143,9 +167,6 @@ class AdminDiscountController extends Controller
 
     private function auditable(DiscountRule $rule): array
     {
-        return $rule->only([
-            'code', 'name', 'kind', 'value', 'min_subtotal_irr', 'max_discount_irr',
-            'starts_at', 'ends_at', 'usage_limit_total', 'usage_limit_per_user', 'is_active',
-        ]);
+        return $this->payload($rule);
     }
 }

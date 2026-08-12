@@ -24,16 +24,20 @@ class AdminDiscountTest extends TestCase
             'code' => ' summer_20 ',
             'name' => 'Summer 20',
             'kind' => 'percentage',
-            'value' => 2_000,
+            'percentage_bps' => 2_000,
             'min_subtotal_irr' => 1_000_000,
             'max_discount_irr' => 500_000,
             'usage_limit_total' => 100,
             'usage_limit_per_user' => 1,
             'is_active' => true,
-        ])->assertCreated()->assertJsonPath('data.code', 'SUMMER_20');
+        ])->assertCreated()
+            ->assertJsonPath('data.code', 'SUMMER_20')
+            ->assertJsonPath('data.percentage_bps', 2_000)
+            ->assertJsonPath('data.amount_irr', null);
 
         $this->assertDatabaseHas('discount_rules', [
             'code' => 'SUMMER_20',
+            'value' => 2_000,
             'created_by' => $admin->id,
             'updated_by' => $admin->id,
         ]);
@@ -54,11 +58,11 @@ class AdminDiscountTest extends TestCase
             'code' => 'ENDS_ONLY',
             'name' => 'Ends only',
             'kind' => 'fixed',
-            'value' => 100_000,
+            'amount_irr' => 100_000,
             'ends_at' => now()->addDay()->toISOString(),
         ])->assertCreated()->assertJsonPath('data.code', 'ENDS_ONLY');
 
-        $this->assertDatabaseHas('discount_rules', ['code' => 'ENDS_ONLY']);
+        $this->assertDatabaseHas('discount_rules', ['code' => 'ENDS_ONLY', 'value' => 100_000]);
     }
 
     public function test_zero_max_discount_is_rejected(): void
@@ -71,11 +75,25 @@ class AdminDiscountTest extends TestCase
             'code' => 'ZEROCAP',
             'name' => 'Zero cap',
             'kind' => 'percentage',
-            'value' => 1_000,
+            'percentage_bps' => 1_000,
             'max_discount_irr' => 0,
         ])->assertUnprocessable();
 
         $this->assertDatabaseMissing('discount_rules', ['code' => 'ZEROCAP']);
+    }
+
+    public function test_ambiguous_internal_value_field_is_rejected(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
+
+        $this->actingAs($admin)->postJson('/api/v1/admin/discounts', [
+            'code' => 'AMBIGUOUS',
+            'name' => 'Ambiguous',
+            'kind' => 'percentage',
+            'value' => 2_000,
+        ])->assertUnprocessable();
     }
 
     public function test_support_role_cannot_write_discounts(): void
@@ -88,7 +106,7 @@ class AdminDiscountTest extends TestCase
             'code' => 'NOACCESS',
             'name' => 'No access',
             'kind' => 'fixed',
-            'value' => 100_000,
+            'amount_irr' => 100_000,
         ])->assertForbidden();
 
         $this->assertSame(0, DiscountRule::query()->count());
@@ -104,7 +122,7 @@ class AdminDiscountTest extends TestCase
             'code' => 'TOOMUCH',
             'name' => 'Too much',
             'kind' => 'percentage',
-            'value' => 10_001,
+            'percentage_bps' => 10_001,
         ])->assertUnprocessable();
 
         $this->assertSame(0, DiscountRule::query()->count());

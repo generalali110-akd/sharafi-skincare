@@ -30,7 +30,9 @@ class UpdateDiscountRuleRequest extends FormRequest
             'code' => ['sometimes', 'string', 'min:3', 'max:64', 'regex:/^[A-Z0-9_-]+$/', Rule::unique('discount_rules', 'code')->ignore($rule)],
             'name' => ['sometimes', 'string', 'min:2', 'max:160'],
             'kind' => ['sometimes', Rule::in(['fixed', 'percentage'])],
-            'value' => ['sometimes', 'integer', 'min:1'],
+            'amount_irr' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            'percentage_bps' => ['sometimes', 'nullable', 'integer', 'between:1,10000'],
+            'value' => ['prohibited'],
             'min_subtotal_irr' => ['sometimes', 'integer', 'min:0'],
             'max_discount_irr' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'starts_at' => ['sometimes', 'nullable', 'date'],
@@ -47,14 +49,30 @@ class UpdateDiscountRuleRequest extends FormRequest
     {
         return [function ($validator): void {
             $rule = $this->route('discountRule');
-            if (! $rule instanceof DiscountRule || $validator->errors()->hasAny(['kind', 'value', 'starts_at', 'ends_at'])) {
+            if (! $rule instanceof DiscountRule
+                || $validator->errors()->hasAny(['kind', 'amount_irr', 'percentage_bps', 'starts_at', 'ends_at'])) {
                 return;
             }
 
             $kind = (string) $this->input('kind', $rule->kind->value);
-            $value = (int) $this->input('value', $rule->value);
-            if ($kind === 'percentage' && $value > 10_000) {
-                $validator->errors()->add('value', 'درصد تخفیف نمی‌تواند بیشتر از ۱۰۰٪ باشد.');
+            $kindChanged = $this->has('kind') && $kind !== $rule->kind->value;
+
+            if ($kind === 'fixed') {
+                if (($kindChanged || $this->has('amount_irr')) && ! $this->filled('amount_irr')) {
+                    $validator->errors()->add('amount_irr', 'مبلغ تخفیف ثابت الزامی است.');
+                }
+                if ($this->filled('percentage_bps')) {
+                    $validator->errors()->add('percentage_bps', 'برای تخفیف ثابت، درصد ارسال نکنید.');
+                }
+            }
+
+            if ($kind === 'percentage') {
+                if (($kindChanged || $this->has('percentage_bps')) && ! $this->filled('percentage_bps')) {
+                    $validator->errors()->add('percentage_bps', 'درصد تخفیف الزامی است.');
+                }
+                if ($this->filled('amount_irr')) {
+                    $validator->errors()->add('amount_irr', 'برای تخفیف درصدی، مبلغ ثابت ارسال نکنید.');
+                }
             }
 
             $startsAt = $this->has('starts_at')
