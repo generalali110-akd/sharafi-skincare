@@ -86,8 +86,16 @@ final class PaymentService
             return [$payment, $attempt, true];
         }, attempts: 3);
 
-        if (! $created || $attempt->status !== PaymentAttemptStatus::Created) {
+        if (! $created) {
+            if ($attempt->status === PaymentAttemptStatus::Created) {
+                throw new PaymentUnavailableException('وضعیت شروع پرداخت قبلی نامشخص است؛ برای تلاش جدید شناسه جدید ایجاد کنید.');
+            }
+
             return [$payment, $attempt, false];
+        }
+
+        if ($attempt->status !== PaymentAttemptStatus::Created) {
+            throw new PaymentUnavailableException('وضعیت تلاش پرداخت برای شروع معتبر نیست.');
         }
 
         try {
