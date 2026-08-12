@@ -1,0 +1,36 @@
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Laravel / PHP
+/vendor/
+storage/logs/*
+bootstrap/cache/*
+.env
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Coverage / temp
+coverage/
+tmp/
+temp/
+*.docx

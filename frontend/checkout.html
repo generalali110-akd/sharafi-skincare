@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تکمیل خرید | فروشگاه مراقبت از پوست شرفی</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-row">
+    <div class="logo">شرفی<span class="dot">.</span></div>
+    <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-light);">
+      <span style="color:var(--rose-dark);font-weight:700;">۱. سبد خرید</span> ←
+      <span style="color:var(--rose-dark);font-weight:700;">۲. اطلاعات ارسال</span> ←
+      <span>۳. پرداخت</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="live-clock-pill" style="background:var(--cream-2);color:var(--text-light);">📅 <span class="js-live-date"></span> &nbsp;·&nbsp; 🕐 <span class="js-live-time"></span></span>
+      <a href="cart.html" class="icon-btn">🛒<span class="badge js-cart-count">0</span></a>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <h2 style="margin:24px 0 6px;font-size:24px;font-weight:800;">تکمیل خرید</h2>
+  <p style="color:var(--text-light);font-size:14px;margin:0 0 10px;">اطلاعات ارسال و روش پرداخت را تکمیل کنید</p>
+
+  <form class="js-checkout-form">
+    <div class="checkout-layout">
+      <div class="checkout-form">
+
+        <div class="form-card">
+          <h3><span class="num">۱</span> اطلاعات گیرنده</h3>
+          <div class="form-grid">
+            <div class="form-field"><label>نام و نام خانوادگی</label><input type="text" required placeholder="مثلاً مریم احمدی"></div>
+            <div class="form-field"><label>شماره موبایل</label><input type="tel" required placeholder="۰۹۱۲۳۴۵۶۷۸۹"></div>
+            <div class="form-field full"><label>استان و شهر</label><input type="text" required placeholder="تهران، تهران"></div>
+            <div class="form-field full"><label>آدرس دقیق پستی</label><textarea rows="3" required placeholder="خیابان، کوچه، پلاک، واحد..."></textarea></div>
+            <div class="form-field"><label>کد پستی</label><input type="text" placeholder="۱۲۳۴۵۶۷۸۹۰"></div>
+            <div class="form-field"><label>توضیحات ارسال (اختیاری)</label><input type="text" placeholder="مثلاً تحویل عصر"></div>
+          </div>
+        </div>
+
+        <div class="form-card">
+          <h3><span class="num">۲</span> روش ارسال</h3>
+          <label class="pay-option selected">
+            <input type="radio" name="shipping" checked>
+            <span class="ic">🚚</span>
+            <div><div class="name">پست پیشتاز</div><div class="desc">تحویل ۲ تا ۳ روز کاری — ۴۵,۰۰۰ تومان (رایگان بالای ۸۰۰ هزار تومان)</div></div>
+          </label>
+          <label class="pay-option">
+            <input type="radio" name="shipping">
+            <span class="ic">🏍️</span>
+            <div><div class="name">پیک موتوری (فقط تهران)</div><div class="desc">تحویل همان روز — ۶۵,۰۰۰ تومان</div></div>
+          </label>
+        </div>
+
+        <div class="form-card">
+          <h3><span class="num">۳</span> روش پرداخت</h3>
+          <label class="pay-option selected">
+            <input type="radio" name="payment" checked>
+            <span class="ic">💳</span>
+            <div><div class="name">درگاه زرین‌پال</div><div class="desc">پرداخت مستقیم و آنی با کلیه کارت‌های بانکی عضو شتاب</div></div>
+          </label>
+          <label class="pay-option">
+            <input type="radio" name="payment">
+            <span class="ic">🏦</span>
+            <div><div class="name">درگاه آیدی‌پی</div><div class="desc">پرداخت واسط، مناسب کارت‌های غیرفعال در زرین‌پال</div></div>
+          </label>
+          <label class="pay-option">
+            <input type="radio" name="payment">
+            <span class="ic">💰</span>
+            <div><div class="name">پرداخت در محل (فقط تهران)</div><div class="desc">پرداخت نقدی یا کارت‌خوان هنگام تحویل</div></div>
+          </label>
+        </div>
+
+      </div>
+
+      <div class="summary-box">
+        <h3>خلاصه سفارش</h3>
+        <div class="js-checkout-items"></div>
+        <div class="summary-row" style="border-top:1px dashed #f0dde2;padding-top:12px;margin-top:6px;"><span>جمع کالاها</span><span class="js-subtotal">۰ تومان</span></div>
+        <div class="summary-row"><span>هزینه ارسال</span><span class="js-shipping">۰ تومان</span></div>
+        <div class="summary-row total"><span>مبلغ نهایی</span><span class="js-total">۰ تومان</span></div>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px;">پرداخت و ثبت سفارش</button>
+        <p style="font-size:12px;color:var(--text-light);text-align:center;margin-top:12px;">با ثبت سفارش، فاکتور خرید به‌صورت PDF برای شما ارسال می‌شود</p>
+      </div>
+    </div>
+  </form>
+</div>
+
+<footer style="margin-top:40px;">
+  <div class="footer-bottom">© ۱۴۰۵ فروشگاه مراقبت از پوست شرفی — تمامی حقوق محفوظ است</div>
+</footer>
+
+<script src="assets/js/main.js"></script>
+<script src="assets/js/clock.js"></script>
+</body>
+</html>

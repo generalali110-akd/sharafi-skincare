@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مدیریت محصولات | پنل شرفی</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body class="admin-body">
+
+<aside class="admin-sidebar">
+  <div class="logo">شرفی<span style="color:var(--gold);">.</span> <span style="font-size:12px;color:var(--text-light);font-weight:400;">پنل مدیریت</span></div>
+  <nav class="admin-nav">
+    <a href="dashboard.html"><span class="ic">📊</span> داشبورد</a>
+    <a href="products.html" class="active"><span class="ic">🧴</span> محصولات</a>
+    <a href="users.html"><span class="ic">👥</span> مشتریان</a>
+    <a href="#"><span class="ic">📦</span> سفارش‌ها</a>
+    <a href="#"><span class="ic">🧾</span> فاکتورها</a>
+    <a href="#"><span class="ic">⚙️</span> تنظیمات</a>
+  </nav>
+  <div class="bottom">
+    <a href="../index.html"><span class="ic">🏠</span> بازگشت به فروشگاه</a>
+    <a href="login.html"><span class="ic">🚪</span> خروج</a>
+  </div>
+</aside>
+
+<div class="admin-main">
+  <div class="admin-topbar">
+    <h1>مدیریت محصولات</h1>
+    <div class="right">
+      <span style="font-size:13px;color:var(--text-light);">📅 <span class="js-live-date"></span> &nbsp;·&nbsp; 🕐 <span class="js-live-time" style="direction:ltr;unicode-bidi:isolate;"></span></span>
+      <span style="font-size:13px;color:var(--text-light);">۲۴ محصول</span>
+      <div class="notif-wrap">
+        <button class="notif-bell js-notif-bell">🔔<span class="notif-dot">۲</span></button>
+        <div class="notif-dropdown js-notif-dropdown"></div>
+      </div>
+      <div class="admin-avatar">👩‍💼</div>
+    </div>
+  </div>
+
+  <div class="admin-content">
+
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="kpi-card"><div class="ic rose">📦</div><div><div class="label">کل محصولات</div><div class="value">۲۴ مورد</div></div></div>
+      <div class="kpi-card"><div class="ic gold">⚠️</div><div><div class="label">کالای رو به اتمام</div><div class="value">۳ مورد</div></div></div>
+      <div class="kpi-card"><div class="ic green">✅</div><div><div class="label">محصولات فعال</div><div class="value">۲۲ مورد</div></div></div>
+    </div>
+
+    <div class="table-card">
+      <div class="table-card-head">
+        <h3>لیست محصولات</h3>
+        <button class="btn btn-primary btn-sm js-add-product">+ افزودن محصول جدید</button>
+      </div>
+      <div class="table-toolbar">
+        <input type="text" class="js-table-search" data-target="#productsTable" placeholder="جستجوی نام محصول یا برند...">
+        <select>
+          <option>همه دسته‌بندی‌ها</option>
+          <option>مراقبت پوست</option>
+          <option>مراقبت مو</option>
+          <option>آرایش صورت</option>
+          <option>عطر و ادکلن</option>
+        </select>
+        <select>
+          <option>همه وضعیت‌ها</option>
+          <option>فعال</option>
+          <option>غیرفعال</option>
+          <option>رو به اتمام</option>
+        </select>
+      </div>
+      <table class="admin-table" id="productsTable">
+        <thead>
+          <tr><th>محصول</th><th>دسته‌بندی</th><th>قیمت</th><th>موجودی</th><th>وضعیت</th><th>اقدامات</th></tr>
+        </thead>
+        <tbody>
+
+          <tr data-name="سرم آبرسان اسید هیالورونیک" data-category="مراقبت پوست" data-price="485000" data-stock="42">
+            <td><div class="row-prod"><div class="thumb">🧴</div><div>سرم آبرسان اسید هیالورونیک<br><span style="color:var(--text-light);font-size:11.5px;">برند: سی‌رو</span></div></div></td>
+            <td>مراقبت پوست</td>
+            <td>۴۸۵,۰۰۰ تومان</td>
+            <td>۴۲ عدد</td>
+            <td><span class="pill green">فعال</span></td>
+            <td><div class="row-actions">
+              <button class="icon-action js-edit-product">✎</button>
+              <button class="icon-action danger js-delete-product">🗑</button>
+            </div></td>
+          </tr>
+
+          <tr class="low-stock" data-name="ماسک شب ترمیم‌کننده" data-category="مراقبت پوست" data-price="420000" data-stock="3">
+            <td><div class="row-prod"><div class="thumb">🧴</div><div>ماسک شب ترمیم‌کننده<br><span style="color:var(--text-light);font-size:11.5px;">برند: لورآل</span></div></div></td>
+            <td>مراقبت پوست</td>
+            <td>۴۲۰,۰۰۰ تومان</td>
+            <td style="color:#c14a4a;font-weight:700;">۳ عدد ⚠</td>
+            <td><span class="pill gold">رو به اتمام</span></td>
+            <td><div class="row-actions">
+              <button class="icon-action js-edit-product">✎</button>
+              <button class="icon-action danger js-delete-product">🗑</button>
+            </div></td>
+          </tr>
+
+          <tr data-name="رژلب مات سان‌کیس" data-category="آرایش صورت" data-price="210000" data-stock="78">
+            <td><div class="row-prod"><div class="thumb">💄</div><div>رژلب مات سان‌کیس<br><span style="color:var(--text-light);font-size:11.5px;">برند: میبلین</span></div></div></td>
+            <td>آرایش صورت</td>
+            <td>۲۱۰,۰۰۰ تومان</td>
+            <td>۷۸ عدد</td>
+            <td><span class="pill green">فعال</span></td>
+            <td><div class="row-actions">
+              <button class="icon-action js-edit-product">✎</button>
+              <button class="icon-action danger js-delete-product">🗑</button>
+            </div></td>
+          </tr>
+
+          <tr data-name="ادو پرفیوم رز شرفی" data-category="عطر و ادکلن" data-price="620000" data-stock="15">
+            <td><div class="row-prod"><div class="thumb">🌸</div><div>ادو پرفیوم رز شرفی<br><span style="color:var(--text-light);font-size:11.5px;">برند: ادریسی</span></div></div></td>
+            <td>عطر و ادکلن</td>
+            <td>۶۲۰,۰۰۰ تومان</td>
+            <td>۱۵ عدد</td>
+            <td><span class="pill green">فعال</span></td>
+            <td><div class="row-actions">
+              <button class="icon-action js-edit-product">✎</button>
+              <button class="icon-action danger js-delete-product">🗑</button>
+            </div></td>
+          </tr>
+
+          <tr class="low-stock" data-name="ژل شوینده ملایم صورت" data-category="مراقبت پوست" data-price="215000" data-stock="2">
+            <td><div class="row-prod"><div class="thumb">🧼</div><div>ژل شوینده ملایم صورت<br><span style="color:var(--text-light);font-size:11.5px;">برند: سی‌رو</span></div></div></td>
+            <td>مراقبت پوست</td>
+            <td>۲۱۵,۰۰۰ تومان</td>
+            <td style="color:#c14a4a;font-weight:700;">۲ عدد ⚠</td>
+            <td><span class="pill gold">رو به اتمام</span></td>
+            <td><div class="row-actions">
+              <button class="icon-action js-edit-product">✎</button>
+              <button class="icon-action danger js-delete-product">🗑</button>
+            </div></td>
+          </tr>
+
+          <tr data-name="شامپو تقویت‌کننده ضدریزش" data-category="مراقبت مو" data-price="315000" data-stock="56">
+            <td><div class="row-prod"><div class="thumb">💇‍♀️</div><div>شامپو تقویت‌کننده ضدریزش<br><span style="color:var(--text-light);font-size:11.5px;">برند: لورآل</span></div></div></td>
+            <td>مراقبت مو</td>
+            <td>۳۱۵,۰۰۰ تومان</td>
+            <td>۵۶ عدد</td>
+            <td><span class="pill gray">غیرفعال</span></td>
+            <td><div class="row-actions">
+              <button class="icon-action js-edit-product">✎</button>
+              <button class="icon-action danger js-delete-product">🗑</button>
+            </div></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- مودال افزودن/ویرایش محصول -->
+<div class="modal-overlay" id="productModal">
+  <div class="modal-box">
+    <h3><span class="js-modal-title">افزودن محصول جدید</span><span class="modal-close js-modal-close">✕</span></h3>
+    <form class="js-product-form">
+      <div class="form-grid">
+        <div class="form-field full"><label>نام محصول</label><input type="text" name="name" required placeholder="مثلاً سرم آبرسان..."></div>
+        <div class="form-field"><label>دسته‌بندی</label>
+          <select name="category">
+            <option>مراقبت پوست</option><option>مراقبت مو</option><option>آرایش صورت</option><option>عطر و ادکلن</option><option>بهداشت شخصی</option>
+          </select>
+        </div>
+        <div class="form-field"><label>برند</label><input type="text" placeholder="مثلاً سی‌رو"></div>
+        <div class="form-field"><label>قیمت (تومان)</label><input type="number" name="price" required placeholder="۴۸۵۰۰۰"></div>
+        <div class="form-field"><label>موجودی انبار</label><input type="number" name="stock" required placeholder="۴۲"></div>
+        <div class="form-field full"><label>توضیحات محصول</label><textarea rows="3" placeholder="توضیح کوتاه..."></textarea></div>
+        <div class="form-field full"><label>تصویر محصول</label><input type="file" accept="image/*"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-primary" style="flex:1;">ذخیره محصول</button>
+        <button type="button" class="btn btn-outline js-modal-close">انصراف</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="../assets/js/clock.js"></script>
+<script src="../assets/js/admin.js"></script>
+</body>
+</html>

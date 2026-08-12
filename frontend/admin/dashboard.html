@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>داشبورد مدیریت | شرفی</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+</head>
+<body class="admin-body">
+
+<aside class="admin-sidebar">
+  <div class="logo">شرفی<span style="color:var(--gold);">.</span> <span style="font-size:12px;color:var(--text-light);font-weight:400;">پنل مدیریت</span></div>
+  <nav class="admin-nav">
+    <a href="dashboard.html" class="active"><span class="ic">📊</span> داشبورد</a>
+    <a href="products.html"><span class="ic">🧴</span> محصولات</a>
+    <a href="users.html"><span class="ic">👥</span> مشتریان</a>
+    <a href="#"><span class="ic">📦</span> سفارش‌ها</a>
+    <a href="#"><span class="ic">🧾</span> فاکتورها</a>
+    <a href="#"><span class="ic">⚙️</span> تنظیمات</a>
+  </nav>
+  <div class="bottom">
+    <a href="../index.html"><span class="ic">🏠</span> بازگشت به فروشگاه</a>
+    <a href="login.html"><span class="ic">🚪</span> خروج</a>
+  </div>
+</aside>
+
+<div class="admin-main">
+  <div class="admin-topbar">
+    <h1><button class="js-sidebar-toggle" style="display:none;font-size:20px;">☰</button> داشبورد مدیریت</h1>
+    <div class="right">
+      <span style="font-size:13px;color:var(--text-light);">📅 <span class="js-live-date"></span> &nbsp;·&nbsp; 🕐 <span class="js-live-time" style="direction:ltr;unicode-bidi:isolate;"></span></span>
+      <div class="notif-wrap">
+        <button class="notif-bell js-notif-bell">🔔<span class="notif-dot">۲</span></button>
+        <div class="notif-dropdown js-notif-dropdown"></div>
+      </div>
+      <div class="admin-avatar">👩‍💼</div>
+    </div>
+  </div>
+
+  <div class="admin-content">
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="ic rose">💰</div>
+        <div>
+          <div class="label">فروش امروز</div>
+          <div class="value">۳,۶۵۰,۰۰۰ تومان</div>
+          <div class="delta up">↑ ۱۲٪ نسبت به دیروز</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="ic gold">🗓️</div>
+        <div>
+          <div class="label">فروش این هفته</div>
+          <div class="value">۲۲,۷۰۰,۰۰۰ تومان</div>
+          <div class="delta up">↑ ۸٪ نسبت به هفته قبل</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="ic green">📦</div>
+        <div>
+          <div class="label">سفارش‌های امروز</div>
+          <div class="value">۱۸ سفارش</div>
+          <div class="delta down">↓ ۳٪ نسبت به دیروز</div>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="ic blue">👥</div>
+        <div>
+          <div class="label">مشتریان جدید (این ماه)</div>
+          <div class="value">۴۶ نفر</div>
+          <div class="delta up">↑ ۲۰٪ نسبت به ماه قبل</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-head">
+        <h3>نمودار فروش</h3>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <div class="period-tabs">
+            <button class="active" data-period="daily">روزانه</button>
+            <button data-period="weekly">هفتگی</button>
+            <button data-period="monthly">ماهانه</button>
+            <button data-period="custom">دوره دلخواه</button>
+          </div>
+          <div class="custom-range">
+            <input type="date">
+            <span style="font-size:12px;color:var(--text-light);">تا</span>
+            <input type="date">
+            <button class="btn btn-primary btn-sm js-apply-range">اعمال</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
+    </div>
+
+    <div class="dash-split">
+      <div class="table-card">
+        <div class="table-card-head"><h3>آخرین سفارش‌ها</h3><a href="#" style="font-size:13px;color:var(--rose-dark);font-weight:700;">مشاهده همه</a></div>
+        <table class="admin-table">
+          <thead><tr><th>شماره سفارش</th><th>مشتری</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th></tr></thead>
+          <tbody>
+            <tr><td>SH-1058</td><td>مریم احمدی</td><td>۱۴۰۵/۰۳/۲۰</td><td>۶۸۵,۰۰۰ تومان</td><td><span class="pill green">تکمیل‌شده</span></td></tr>
+            <tr><td>SH-1057</td><td>نگین رضایی</td><td>۱۴۰۵/۰۳/۲۰</td><td>۴۲۰,۰۰۰ تومان</td><td><span class="pill gold">در حال ارسال</span></td></tr>
+            <tr><td>SH-1056</td><td>سارا کریمی</td><td>۱۴۰۵/۰۳/۱۹</td><td>۱,۲۵۰,۰۰۰ تومان</td><td><span class="pill gold">در حال پردازش</span></td></tr>
+            <tr><td>SH-1055</td><td>زهرا محمدی</td><td>۱۴۰۵/۰۳/۱۸</td><td>۳۱۰,۰۰۰ تومان</td><td><span class="pill red">مرجوع‌شده</span></td></tr>
+            <tr><td>SH-1054</td><td>فاطمه نوری</td><td>۱۴۰۵/۰۳/۱۸</td><td>۵۴۰,۰۰۰ تومان</td><td><span class="pill green">تکمیل‌شده</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-card" style="padding:24px;">
+        <h3 style="margin:0 0 18px;font-size:16px;font-weight:800;">پرفروش‌ترین محصولات</h3>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="row-prod .thumb" style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">🧴</div>
+            <div style="flex:1;font-size:13px;">سرم آبرسان اسید هیالورونیک<div style="color:var(--text-light);font-size:11.5px;">۸۶ فروش این ماه</div></div>
+            <b style="font-size:13px;">۴۱,۷۱۰,۰۰۰</b>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">💄</div>
+            <div style="flex:1;font-size:13px;">رژلب مات سان‌کیس<div style="color:var(--text-light);font-size:11.5px;">۶۲ فروش این ماه</div></div>
+            <b style="font-size:13px;">۱۳,۰۲۰,۰۰۰</b>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">🌸</div>
+            <div style="flex:1;font-size:13px;">ادو پرفیوم رز شرفی<div style="color:var(--text-light);font-size:11.5px;">۳۴ فروش این ماه</div></div>
+            <b style="font-size:13px;">۲۱,۰۸۰,۰۰۰</b>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">💇‍♀️</div>
+            <div style="flex:1;font-size:13px;">شامپو ضدریزش<div style="color:var(--text-light);font-size:11.5px;">۲۹ فروش این ماه</div></div>
+            <b style="font-size:13px;">۹,۱۳۵,۰۰۰</b>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="../assets/js/clock.js"></script>
+<script src="../assets/js/admin.js"></script>
+</body>
+</html>
