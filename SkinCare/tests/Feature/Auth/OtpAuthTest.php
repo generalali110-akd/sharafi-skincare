@@ -31,7 +31,7 @@ class OtpAuthTest extends TestCase
 
     public function test_otp_can_authenticate_a_customer_without_exposing_plaintext_code(): void
     {
-        $gateway = new FakeSmsGateway();
+        $gateway = new FakeSmsGateway;
         $this->app->instance(SmsGateway::class, $gateway);
 
         $response = $this->fromStorefront()->postJson('/api/v1/auth/otp/request', [
@@ -61,7 +61,7 @@ class OtpAuthTest extends TestCase
 
     public function test_resend_window_returns_too_many_requests(): void
     {
-        $gateway = new FakeSmsGateway();
+        $gateway = new FakeSmsGateway;
         $this->app->instance(SmsGateway::class, $gateway);
 
         $payload = ['mobile' => '09121234567'];

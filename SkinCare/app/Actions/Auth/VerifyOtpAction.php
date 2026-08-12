@@ -11,9 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 final class VerifyOtpAction
 {
-    public function __construct(private readonly OtpCodeHasher $hasher)
-    {
-    }
+    public function __construct(private readonly OtpCodeHasher $hasher) {}
 
     public function execute(string $challengeId, string $code): User
     {

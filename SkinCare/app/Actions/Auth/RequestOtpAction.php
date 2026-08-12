@@ -16,8 +16,7 @@ final class RequestOtpAction
     public function __construct(
         private readonly SmsGateway $smsGateway,
         private readonly OtpCodeHasher $hasher,
-    ) {
-    }
+    ) {}
 
     public function execute(string $mobile, ?string $name, ?string $ipAddress): OtpChallenge
     {

@@ -7,7 +7,9 @@ use App\Contracts\SmsGateway;
 class FakeSmsGateway implements SmsGateway
 {
     public ?string $mobile = null;
+
     public ?string $code = null;
+
     public ?int $ttlSeconds = null;
 
     public function sendOtp(string $mobile, string $code, int $ttlSeconds): void

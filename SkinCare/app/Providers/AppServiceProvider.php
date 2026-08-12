@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(SmsGateway::class, function () {
             return match (config('sms.driver')) {
-                'null' => new NullSmsGateway(),
+                'null' => new NullSmsGateway,
                 default => throw new LogicException('Unsupported SMS driver configured.'),
             };
         });
