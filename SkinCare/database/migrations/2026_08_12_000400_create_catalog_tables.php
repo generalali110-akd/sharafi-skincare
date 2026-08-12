@@ -81,6 +81,7 @@ return new class extends Migration
 
         if (DB::getDriverName() === 'pgsql') {
             DB::statement("ALTER TABLE products ADD CONSTRAINT products_status_check CHECK (status IN ('draft', 'active', 'archived'))");
+            DB::statement('ALTER TABLE product_variants ADD CONSTRAINT product_variants_price_check CHECK (price_irr >= 0)');
             DB::statement('ALTER TABLE product_variants ADD CONSTRAINT product_variants_compare_price_check CHECK (compare_at_price_irr IS NULL OR compare_at_price_irr >= price_irr)');
         }
     }
