@@ -44,6 +44,40 @@ class AdminDiscountTest extends TestCase
         $this->assertSame(1, AuditLog::query()->count());
     }
 
+    public function test_discount_can_have_an_end_time_without_a_start_time(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
+
+        $this->actingAs($admin)->postJson('/api/v1/admin/discounts', [
+            'code' => 'ENDS_ONLY',
+            'name' => 'Ends only',
+            'kind' => 'fixed',
+            'value' => 100_000,
+            'ends_at' => now()->addDay()->toISOString(),
+        ])->assertCreated()->assertJsonPath('data.code', 'ENDS_ONLY');
+
+        $this->assertDatabaseHas('discount_rules', ['code' => 'ENDS_ONLY']);
+    }
+
+    public function test_zero_max_discount_is_rejected(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::query()->where('slug', 'admin')->firstOrFail());
+
+        $this->actingAs($admin)->postJson('/api/v1/admin/discounts', [
+            'code' => 'ZEROCAP',
+            'name' => 'Zero cap',
+            'kind' => 'percentage',
+            'value' => 1_000,
+            'max_discount_irr' => 0,
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseMissing('discount_rules', ['code' => 'ZEROCAP']);
+    }
+
     public function test_support_role_cannot_write_discounts(): void
     {
         $this->seed(SystemAccessSeeder::class);
