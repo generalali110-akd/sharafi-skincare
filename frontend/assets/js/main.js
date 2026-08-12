@@ -11,13 +11,16 @@ function saveCart(cart) {
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
   updateCartBadge();
 }
-function addToCart(product) {
+function addToCart(product, quantity = 1) {
+  const qty = Math.max(1, Number.parseInt(quantity, 10) || 1);
   const cart = getCart();
   const existing = cart.find(i => i.id === product.id);
-  if (existing) existing.qty += 1;
-  else cart.push({ ...product, qty: 1 });
+  if (existing) existing.qty += qty;
+  else cart.push({ ...product, qty });
   saveCart(cart);
-  toast(`«${product.name}» به سبد خرید اضافه شد`);
+  toast(qty > 1
+    ? `${qty.toLocaleString("fa-IR")} عدد «${product.name}» به سبد خرید اضافه شد`
+    : `«${product.name}» به سبد خرید اضافه شد`);
 }
 function removeFromCart(id) {
   saveCart(getCart().filter(i => i.id !== id));
