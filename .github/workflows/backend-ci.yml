@@ -1,0 +1,83 @@
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'SkinCare/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    paths:
+      - 'SkinCare/**'
+      - '.github/workflows/backend-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: sharafi_test
+          POSTGRES_USER: sharafi
+          POSTGRES_PASSWORD: sharafi_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sharafi -d sharafi_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    defaults:
+      run:
+        working-directory: SkinCare
+
+    env:
+      APP_ENV: testing
+      APP_DEBUG: 'false'
+      APP_KEY: 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='
+      OTP_PEPPER: 'ci-only-otp-pepper-that-is-at-least-32-characters'
+      SMS_DRIVER: 'null'
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_DATABASE: sharafi_test
+      DB_USERNAME: sharafi
+      DB_PASSWORD: sharafi_test_password
+      DB_SSLMODE: disable
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      SESSION_SECURE_COOKIE: 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, openssl, pdo_pgsql, pdo_sqlite
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer manifest
+        run: composer validate --strict --no-check-publish
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Verify PostgreSQL migrations
+        run: php artisan migrate --force
+
+      - name: Run test suite
+        run: php artisan test
+
+      - name: Check code style
+        run: vendor/bin/pint --test

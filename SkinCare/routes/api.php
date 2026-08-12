@@ -12,7 +12,7 @@ Route::get('/health', static fn () => response()->json([
     ],
 ]));
 
-Route::middleware('web')->prefix('auth/otp')->group(function (): void {
+Route::prefix('auth/otp')->group(function (): void {
     Route::post('/request', [OtpAuthController::class, 'requestOtp'])
         ->middleware('throttle:10,1');
     Route::post('/verify', [OtpAuthController::class, 'verifyOtp'])

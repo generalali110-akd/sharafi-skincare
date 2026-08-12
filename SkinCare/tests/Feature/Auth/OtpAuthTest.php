@@ -12,9 +12,18 @@ class OtpAuthTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function fromStorefront(): static
+    {
+        return $this->withHeaders([
+            'Origin' => 'http://localhost:8000',
+            'Referer' => 'http://localhost:8000/login.html',
+            'Accept' => 'application/json',
+        ]);
+    }
+
     public function test_invalid_iran_mobile_is_rejected(): void
     {
-        $this->postJson('/api/v1/auth/otp/request', [
+        $this->fromStorefront()->postJson('/api/v1/auth/otp/request', [
             'mobile' => '12345',
         ])->assertUnprocessable()
             ->assertJsonValidationErrors('mobile');
@@ -25,7 +34,7 @@ class OtpAuthTest extends TestCase
         $gateway = new FakeSmsGateway();
         $this->app->instance(SmsGateway::class, $gateway);
 
-        $response = $this->postJson('/api/v1/auth/otp/request', [
+        $response = $this->fromStorefront()->postJson('/api/v1/auth/otp/request', [
             'mobile' => '۰۹۱۲۱۲۳۴۵۶۷',
             'name' => 'کاربر تست',
         ])->assertCreated();
@@ -36,7 +45,7 @@ class OtpAuthTest extends TestCase
         $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $gateway->code);
         $this->assertNotSame($gateway->code, OtpChallenge::query()->findOrFail($challengeId)->code_hash);
 
-        $this->postJson('/api/v1/auth/otp/verify', [
+        $this->fromStorefront()->postJson('/api/v1/auth/otp/verify', [
             'challenge_id' => $challengeId,
             'code' => $gateway->code,
         ])->assertOk()
@@ -57,7 +66,7 @@ class OtpAuthTest extends TestCase
 
         $payload = ['mobile' => '09121234567'];
 
-        $this->postJson('/api/v1/auth/otp/request', $payload)->assertCreated();
-        $this->postJson('/api/v1/auth/otp/request', $payload)->assertStatus(429);
+        $this->fromStorefront()->postJson('/api/v1/auth/otp/request', $payload)->assertCreated();
+        $this->fromStorefront()->postJson('/api/v1/auth/otp/request', $payload)->assertStatus(429);
     }
 }
