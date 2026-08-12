@@ -30,6 +30,11 @@ class GrantRoleCommandTest extends TestCase
 
         $role = Role::query()->where('slug', 'catalog-manager')->firstOrFail();
         $this->assertTrue($user->fresh()->roles()->whereKey($role->id)->exists());
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_user_id' => null,
+            'action' => 'access.role.granted',
+            'subject_id' => (string) $user->id,
+        ]);
     }
 
     public function test_unverified_user_cannot_receive_role(): void
@@ -48,5 +53,6 @@ class GrantRoleCommandTest extends TestCase
         ])->assertFailed();
 
         $this->assertCount(0, $user->fresh()->roles);
+        $this->assertDatabaseCount('audit_logs', 0);
     }
 }

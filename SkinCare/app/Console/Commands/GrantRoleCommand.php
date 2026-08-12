@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
 use App\Support\IranMobile;
 use Illuminate\Console\Command;
 
@@ -16,7 +17,7 @@ class GrantRoleCommand extends Command
 
     protected $description = 'Grant an existing role to an active, mobile-verified user';
 
-    public function handle(): int
+    public function handle(AuditLogger $auditLogger): int
     {
         $mobile = IranMobile::normalize((string) $this->argument('mobile'));
         $roleSlug = trim((string) $this->argument('role'));
@@ -61,7 +62,23 @@ class GrantRoleCommand extends Command
             return self::SUCCESS;
         }
 
-        $user->roles()->syncWithoutDetaching([$role->id]);
+        $result = $user->roles()->syncWithoutDetaching([$role->id]);
+
+        if ($result['attached'] !== []) {
+            $auditLogger->record(
+                actor: null,
+                action: 'access.role.granted',
+                subject: $user,
+                changes: [
+                    'role' => $role->slug,
+                    'source' => 'console',
+                ],
+                metadata: [
+                    'command' => 'access:grant-role',
+                ],
+            );
+        }
+
         $this->info("Role [{$role->slug}] granted to [{$mobile}].");
 
         return self::SUCCESS;

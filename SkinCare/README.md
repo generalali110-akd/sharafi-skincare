@@ -178,8 +178,23 @@ Composer dependencies are locked for reproducible builds and audited in CI.
 - indexes for high-frequency RBAC, catalog, and inventory query paths
 - public product listing/detail APIs that expose stock availability without leaking exact inventory counts
 - category, brand, price range, search, sorting, and pagination foundations
-- Admin product list API protected by `catalog.read`
 - PostgreSQL integration tests for price and inventory constraints
+
+## Implemented audited Admin mutations
+
+Administrative writes are separated by permission and executed transactionally:
+
+- `catalog.write` manages product metadata, variants, brands, and categories
+- `inventory.write` is the only permission that may change physical stock or inventory settings
+- catalog write endpoints explicitly reject `on_hand`, `reserved`, and `reorder_level` fields
+- inventory adjustments use row locking and append an `inventory_movements` ledger entry
+- stock adjustments that would make `on_hand` negative or lower than `reserved` return HTTP 409 and roll back completely
+- product/category/brand/variant/inventory mutations create audit records in the same database transaction
+- operational role grants are audited with a system/CLI source and never create an implicit user or default administrator
+- audit payloads recursively redact sensitive credential/OTP/token keys
+- category parent updates reject hierarchy cycles
+- an active product cannot lose its last active variant
+- no physical delete API is exposed for catalog taxonomies in this slice; `is_active` is used for safe deactivation
 
 Current public catalog endpoints:
 
@@ -188,9 +203,21 @@ Current public catalog endpoints:
 - `GET /api/v1/catalog/categories`
 - `GET /api/v1/catalog/brands`
 
-Current Admin catalog endpoint:
+Current Admin endpoints:
 
-- `GET /api/v1/admin/catalog/products` (`catalog.read` permission required)
+- `GET /api/v1/admin/catalog/products` — `catalog.read`
+- `POST /api/v1/admin/catalog/products` — `catalog.write`
+- `PATCH /api/v1/admin/catalog/products/{product}` — `catalog.write`
+- `POST /api/v1/admin/catalog/products/{product}/variants` — `catalog.write`
+- `PATCH /api/v1/admin/catalog/variants/{variant}` — `catalog.write`
+- `POST /api/v1/admin/catalog/brands` — `catalog.write`
+- `PATCH /api/v1/admin/catalog/brands/{brand}` — `catalog.write`
+- `POST /api/v1/admin/catalog/categories` — `catalog.write`
+- `PATCH /api/v1/admin/catalog/categories/{category}` — `catalog.write`
+- `GET /api/v1/admin/inventory` — `inventory.read`
+- `POST /api/v1/admin/inventory/{variant}/adjust` — `inventory.write`
+- `PATCH /api/v1/admin/inventory/{variant}/settings` — `inventory.write`
+- `GET /api/v1/admin/audit-logs` — `audit.read`
 
 System roles/permissions can be created with `php artisan db:seed --class=SystemAccessSeeder`. Administrative access is then granted to an already verified user with `php artisan access:grant-role <mobile> <role>`. The command intentionally does not create or verify users and no default admin credentials are shipped with the application.
 
