@@ -13,20 +13,29 @@
   const isValidIranMobile = (value) => /^09\d{9}$/.test(normalizeDigits(value).replace(/\s|-/g, ''));
 
   const showView = (name) => {
-    views.forEach((view) => view.classList.toggle('is-active', view.dataset.authView === name));
+    views.forEach((view) => {
+      const active = view.dataset.authView === name;
+      view.classList.toggle('is-active', active);
+      view.setAttribute('aria-hidden', String(!active));
+    });
     const firstField = document.querySelector(`[data-auth-view="${name}"] input:not([type="checkbox"])`);
     window.setTimeout(() => firstField?.focus(), 0);
   };
 
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
-      tabs.forEach((item) => item.classList.remove('is-active'));
-      tab.classList.add('is-active');
+      tabs.forEach((item) => {
+        const active = item === tab;
+        item.classList.toggle('is-active', active);
+        item.setAttribute('aria-selected', String(active));
+        item.tabIndex = active ? 0 : -1;
+      });
       showView(tab.dataset.authTarget);
     });
   });
 
   const setFieldError = (input, message = '') => {
+    if (!input) return;
     input.setAttribute('aria-invalid', String(Boolean(message)));
     const error = input.closest('.auth-field')?.querySelector('.auth-error');
     if (error) error.textContent = message;
@@ -134,4 +143,12 @@
       showView(activeTab?.dataset.authTarget || 'login');
     });
   });
+
+  const initialTab = document.querySelector('.auth-tab-v2.is-active') || tabs[0];
+  tabs.forEach((tab) => {
+    const active = tab === initialTab;
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+  });
+  showView(initialTab?.dataset.authTarget || 'login');
 })();
