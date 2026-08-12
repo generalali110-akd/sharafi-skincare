@@ -11,9 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 final class UpdateProductAction
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function execute(
         Product $product,
