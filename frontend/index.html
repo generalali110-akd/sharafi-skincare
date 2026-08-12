@@ -6,6 +6,7 @@
 <title>فروشگاه مراقبت از پوست شرفی</title>
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/header.css">
+<link rel="stylesheet" href="assets/css/product-card.css">
 </head>
 <body>
 
@@ -140,60 +141,122 @@
       </div>
       <a href="category.html" class="btn btn-outline btn-sm">مشاهده همه</a>
     </div>
+
     <div class="prod-grid">
-
-      <div class="prod-card">
-        <div class="thumb">🧴<span class="badge-tag">پرفروش</span><span class="wish">♡</span></div>
-        <div class="prod-info">
-          <span class="brand">سرم سی‌رو</span>
-          <h3>سرم آبرسان اسید هیالورونیک</h3>
-          <div class="stars">★★★★☆ <span style="color:var(--text-light)">(۱۲۴)</span></div>
-          <div class="price-row">
-            <div class="price">۴۸۵,۰۰۰<del>۵۹۰,۰۰۰</del></div>
-            <button class="add-cart-btn" onclick='addToCart({id:1,name:"سرم آبرسان اسید هیالورونیک",brand:"سی‌رو",price:485000,icon:"🧴"})'>+</button>
+      <article class="product-card-v2">
+        <div class="product-card-media">
+          <span class="product-card-badge product-card-badge--discount">۱۸٪ تخفیف</span>
+          <button class="product-wishlist" type="button" aria-label="افزودن سرم آبرسان به علاقه‌مندی‌ها">♡</button>
+          <div class="product-placeholder" aria-hidden="true">🧴</div>
+        </div>
+        <div class="product-card-body">
+          <span class="product-card-brand">سی‌رو</span>
+          <a class="product-card-link" href="product.html">
+            <h3 class="product-card-title">سرم آبرسان اسید هیالورونیک</h3>
+          </a>
+          <div class="product-card-meta">
+            <span class="product-rating"><span class="product-rating-star">★</span> ۴.۵ <span>(۱۲۴)</span></span>
+          </div>
+          <div class="product-card-price-area">
+            <div class="product-price-stack">
+              <span class="product-old-price">۵۹۰,۰۰۰ تومان</span>
+              <span class="product-current-price">۴۸۵,۰۰۰ <span class="currency">تومان</span></span>
+            </div>
+          </div>
+          <div class="product-card-actions">
+            <button class="product-card-add" type="button" aria-label="افزودن سرم آبرسان اسید هیالورونیک به سبد خرید" onclick='addToCart({id:1,name:"سرم آبرسان اسید هیالورونیک",brand:"سی‌رو",price:485000,icon:"🧴"})'>
+              <span class="product-card-add-icon" aria-hidden="true">🛒</span>
+              افزودن به سبد
+            </button>
           </div>
         </div>
-      </div>
+      </article>
 
-      <div class="prod-card">
-        <div class="thumb">💄<span class="wish">♡</span></div>
-        <div class="prod-info">
-          <span class="brand">میبلین</span>
-          <h3>رژلب مات مدل سان‌کیس</h3>
-          <div class="stars">★★★★★ <span style="color:var(--text-light)">(۸۹)</span></div>
-          <div class="price-row">
-            <div class="price">۲۱۰,۰۰۰</div>
-            <button class="add-cart-btn" onclick='addToCart({id:2,name:"رژلب مات سان‌کیس",brand:"میبلین",price:210000,icon:"💄"})'>+</button>
+      <article class="product-card-v2">
+        <div class="product-card-media">
+          <button class="product-wishlist" type="button" aria-label="افزودن رژلب مات سان‌کیس به علاقه‌مندی‌ها">♡</button>
+          <div class="product-placeholder" aria-hidden="true">💄</div>
+        </div>
+        <div class="product-card-body">
+          <span class="product-card-brand">میبلین</span>
+          <a class="product-card-link" href="product.html">
+            <h3 class="product-card-title">رژلب مات مدل سان‌کیس</h3>
+          </a>
+          <div class="product-card-meta">
+            <span class="product-rating"><span class="product-rating-star">★</span> ۵.۰ <span>(۸۹)</span></span>
+          </div>
+          <div class="product-card-price-area">
+            <div class="product-price-stack">
+              <span class="product-old-price" aria-hidden="true">&nbsp;</span>
+              <span class="product-current-price">۲۱۰,۰۰۰ <span class="currency">تومان</span></span>
+            </div>
+          </div>
+          <div class="product-card-actions">
+            <button class="product-card-add" type="button" aria-label="افزودن رژلب مات سان‌کیس به سبد خرید" onclick='addToCart({id:2,name:"رژلب مات سان‌کیس",brand:"میبلین",price:210000,icon:"💄"})'>
+              <span class="product-card-add-icon" aria-hidden="true">🛒</span>
+              افزودن به سبد
+            </button>
           </div>
         </div>
-      </div>
+      </article>
 
-      <div class="prod-card">
-        <div class="thumb">🌸<span class="badge-tag">جدید</span><span class="wish">♡</span></div>
-        <div class="prod-info">
-          <span class="brand">ادریسی</span>
-          <h3>ادو پرفیوم رز شرفی ۵۰ میل</h3>
-          <div class="stars">★★★★☆ <span style="color:var(--text-light)">(۵۶)</span></div>
-          <div class="price-row">
-            <div class="price">۶۲۰,۰۰۰</div>
-            <button class="add-cart-btn" onclick='addToCart({id:3,name:"ادو پرفیوم رز شرفی",brand:"ادریسی",price:620000,icon:"🌸"})'>+</button>
+      <article class="product-card-v2">
+        <div class="product-card-media">
+          <span class="product-card-badge product-card-badge--new">جدید</span>
+          <button class="product-wishlist" type="button" aria-label="افزودن ادو پرفیوم رز شرفی به علاقه‌مندی‌ها">♡</button>
+          <div class="product-placeholder" aria-hidden="true">🌸</div>
+        </div>
+        <div class="product-card-body">
+          <span class="product-card-brand">ادریسی</span>
+          <a class="product-card-link" href="product.html">
+            <h3 class="product-card-title">ادو پرفیوم رز شرفی ۵۰ میل</h3>
+          </a>
+          <div class="product-card-meta">
+            <span class="product-rating"><span class="product-rating-star">★</span> ۴.۴ <span>(۵۶)</span></span>
+          </div>
+          <div class="product-card-price-area">
+            <div class="product-price-stack">
+              <span class="product-old-price" aria-hidden="true">&nbsp;</span>
+              <span class="product-current-price">۶۲۰,۰۰۰ <span class="currency">تومان</span></span>
+            </div>
+          </div>
+          <div class="product-card-actions">
+            <button class="product-card-add" type="button" aria-label="افزودن ادو پرفیوم رز شرفی به سبد خرید" onclick='addToCart({id:3,name:"ادو پرفیوم رز شرفی",brand:"ادریسی",price:620000,icon:"🌸"})'>
+              <span class="product-card-add-icon" aria-hidden="true">🛒</span>
+              افزودن به سبد
+            </button>
           </div>
         </div>
-      </div>
+      </article>
 
-      <div class="prod-card">
-        <div class="thumb">💇‍♀️<span class="wish">♡</span></div>
-        <div class="prod-info">
-          <span class="brand">لورآل</span>
-          <h3>شامپو تقویت‌کننده ضدریزش</h3>
-          <div class="stars">★★★★☆ <span style="color:var(--text-light)">(۲۰۳)</span></div>
-          <div class="price-row">
-            <div class="price">۳۱۵,۰۰۰<del>۳۶۰,۰۰۰</del></div>
-            <button class="add-cart-btn" onclick='addToCart({id:4,name:"شامپو تقویت‌کننده ضدریزش",brand:"لورآل",price:315000,icon:"💇‍♀️"})'>+</button>
+      <article class="product-card-v2">
+        <div class="product-card-media">
+          <span class="product-card-badge product-card-badge--discount">۱۳٪ تخفیف</span>
+          <button class="product-wishlist" type="button" aria-label="افزودن شامپو تقویت‌کننده ضدریزش به علاقه‌مندی‌ها">♡</button>
+          <div class="product-placeholder" aria-hidden="true">💇‍♀️</div>
+        </div>
+        <div class="product-card-body">
+          <span class="product-card-brand">لورآل</span>
+          <a class="product-card-link" href="product.html">
+            <h3 class="product-card-title">شامپو تقویت‌کننده ضدریزش</h3>
+          </a>
+          <div class="product-card-meta">
+            <span class="product-rating"><span class="product-rating-star">★</span> ۴.۲ <span>(۲۰۳)</span></span>
+          </div>
+          <div class="product-card-price-area">
+            <div class="product-price-stack">
+              <span class="product-old-price">۳۶۰,۰۰۰ تومان</span>
+              <span class="product-current-price">۳۱۵,۰۰۰ <span class="currency">تومان</span></span>
+            </div>
+          </div>
+          <div class="product-card-actions">
+            <button class="product-card-add" type="button" aria-label="افزودن شامپو تقویت‌کننده ضدریزش به سبد خرید" onclick='addToCart({id:4,name:"شامپو تقویت‌کننده ضدریزش",brand:"لورآل",price:315000,icon:"💇‍♀️"})'>
+              <span class="product-card-add-icon" aria-hidden="true">🛒</span>
+              افزودن به سبد
+            </button>
           </div>
         </div>
-      </div>
-
+      </article>
     </div>
   </div>
 </section>
