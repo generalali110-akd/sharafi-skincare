@@ -12,7 +12,7 @@ class AuditLoggerTest extends TestCase
 
     public function test_sensitive_keys_are_redacted_recursively(): void
     {
-        $log = (new AuditLogger())->record(
+        $log = (new AuditLogger)->record(
             actor: null,
             action: 'security.test',
             changes: [
