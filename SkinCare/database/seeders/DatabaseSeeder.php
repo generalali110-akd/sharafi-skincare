@@ -8,6 +8,6 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Production data must not be seeded implicitly.
+        $this->call(SystemAccessSeeder::class);
     }
 }
