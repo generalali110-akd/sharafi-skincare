@@ -133,6 +133,6 @@ final class CreateOrderAction
 
     private function orderNumber(): string
     {
-        return 'SHR-'.now()->format('Ymd').'-'.Str::upper(Str::random(10));
+        return 'SHR-'.Str::upper((string) Str::ulid());
     }
 }
