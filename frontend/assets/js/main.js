@@ -111,4 +111,22 @@ function toast(message) {
   box._t = setTimeout(() => { box.style.opacity = "0"; }, 1800);
 }
 
-document.addEventListener("DOMContentLoaded", updateCartBadge);
+function initProductCardCartActions() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".product-card-add[data-cart-id]");
+    if (!button) return;
+
+    addToCart({
+      id: button.dataset.cartId,
+      name: button.dataset.cartName,
+      brand: button.dataset.cartBrand,
+      price: Number(button.dataset.cartPrice),
+      icon: button.dataset.cartIcon || "🧴",
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  updateCartBadge();
+  initProductCardCartActions();
+});
