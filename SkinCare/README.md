@@ -148,9 +148,7 @@ The backend foundation is implemented with:
 
 Composer dependencies are locked for reproducible builds and audited in CI.
 
-## Implemented foundation
-
-The first backend slice currently includes:
+## Implemented authentication foundation
 
 - versioned `/api/v1` routing and health endpoint
 - PostgreSQL configuration and migrations
@@ -164,6 +162,37 @@ The first backend slice currently includes:
 - `SmsGateway` abstraction with a fail-closed null provider
 - PHPUnit feature/unit coverage
 - Composer security audit, PostgreSQL migration check, tests, and Laravel Pint in GitHub Actions
+
+## Implemented authorization, catalog, and inventory foundation
+
+- database-backed roles and granular permissions
+- protected Admin API routes enforced by server-side permission middleware
+- idempotent system access seeder with no default admin account or predictable credentials
+- `access:grant-role` operational command that only grants roles to existing, active, mobile-verified users
+- category hierarchy and many-to-many product categorization
+- brands, products, product variants, and product image metadata
+- SKU and price stored at variant level so future size/color/volume variants do not require a schema rewrite
+- IRR integer pricing and PostgreSQL constraints that reject invalid prices
+- inventory items with physical `on_hand`, `reserved`, derived availability, and immutable-style movement history foundation
+- PostgreSQL constraints that reject invalid reservation states and zero-quantity inventory movements
+- indexes for high-frequency RBAC, catalog, and inventory query paths
+- public product listing/detail APIs that expose stock availability without leaking exact inventory counts
+- category, brand, price range, search, sorting, and pagination foundations
+- Admin product list API protected by `catalog.read`
+- PostgreSQL integration tests for price and inventory constraints
+
+Current public catalog endpoints:
+
+- `GET /api/v1/catalog/products`
+- `GET /api/v1/catalog/products/{slug}`
+- `GET /api/v1/catalog/categories`
+- `GET /api/v1/catalog/brands`
+
+Current Admin catalog endpoint:
+
+- `GET /api/v1/admin/catalog/products` (`catalog.read` permission required)
+
+System roles/permissions can be created with `php artisan db:seed --class=SystemAccessSeeder`. Administrative access is then granted to an already verified user with `php artisan access:grant-role <mobile> <role>`. The command intentionally does not create or verify users and no default admin credentials are shipped with the application.
 
 ## SMS provider status
 
