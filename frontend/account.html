@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>حساب کاربری | فروشگاه شرفی</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/header.css">
+<link rel="stylesheet" href="assets/css/account.css">
+</head>
+<body class="account-page">
+
+<div class="announce-bar">
+  <div class="announce-inner announce-inner--simple">
+    <div class="announce-content">
+      <span class="announce-msg">ارسال رایگان برای خریدهای بالای ۸۰۰,۰۰۰ تومان 🌸</span>
+      <a class="announce-link" href="index.html#shipping-benefits">شرایط ارسال</a>
+    </div>
+    <div class="announce-meta" aria-label="تاریخ و ساعت به وقت تهران">
+      <span class="date-time-pill"><span class="date-time-icon" aria-hidden="true">📅</span><span class="js-live-date"></span></span>
+      <span class="date-time-pill date-time-pill--time"><span class="date-time-icon" aria-hidden="true">🕐</span><span class="js-live-time"></span><span class="time-zone-label">تهران</span></span>
+    </div>
+  </div>
+</div>
+
+<header class="site-header">
+  <div class="container header-row">
+    <a href="index.html" class="logo logo--link" aria-label="صفحه اصلی فروشگاه شرفی">شرفی<span class="dot">.</span></a>
+    <nav class="main-nav main-nav--store" aria-label="منوی اصلی فروشگاه">
+      <div class="nav-dropdown js-nav-dropdown">
+        <button class="nav-dropdown-toggle js-nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">محصولات <span class="nav-chevron" aria-hidden="true">⌄</span></button>
+        <div class="nav-dropdown-menu">
+          <a href="category.html">همه محصولات</a>
+          <a href="category.html?category=skin">مراقبت پوست</a>
+          <a href="category.html?category=hair">مراقبت مو</a>
+          <a href="category.html?category=makeup">آرایش</a>
+          <a href="category.html?category=fragrance">عطر و ادکلن</a>
+          <a href="category.html?category=personal-care">بهداشت شخصی</a>
+        </div>
+      </div>
+      <a href="category.html?view=brands">برندها</a>
+      <a href="category.html?sort=bestseller">پرفروش‌ها</a>
+      <a href="category.html?discount=1">تخفیف‌ها</a>
+    </nav>
+    <form class="search-box search-box--store js-site-search-form" role="search">
+      <span aria-hidden="true">🔍</span>
+      <label class="sr-only" for="account-search">جستجوی محصول یا برند</label>
+      <input id="account-search" type="search" placeholder="جستجوی محصول، برند..." autocomplete="off">
+    </form>
+    <div class="header-actions">
+      <button class="store-mobile-toggle js-store-mobile-toggle" type="button" aria-label="باز کردن منوی فروشگاه" aria-expanded="false">☰</button>
+      <button class="mobile-search-toggle js-mobile-search-toggle" type="button" aria-label="باز کردن جستجو" aria-expanded="false">🔍</button>
+      <a href="account.html" class="icon-btn user-account-link" aria-label="حساب کاربری">👤</a>
+      <a href="cart.html" class="icon-btn" aria-label="مشاهده سبد خرید">🛒<span class="badge js-cart-count">0</span></a>
+    </div>
+  </div>
+  <div class="mobile-search-panel js-mobile-search-panel">
+    <form class="mobile-search-form js-site-search-form" role="search">
+      <div class="search-box"><span aria-hidden="true">🔍</span><label class="sr-only" for="account-mobile-search">جستجوی محصول یا برند</label><input id="account-mobile-search" type="search" placeholder="جستجوی محصول یا برند..." autocomplete="off"></div>
+      <button class="mobile-search-close js-mobile-search-close" type="button" aria-label="بستن جستجو">✕</button>
+    </form>
+  </div>
+  <div class="mobile-nav-panel js-mobile-nav-panel">
+    <nav class="mobile-nav-inner" aria-label="منوی موبایل فروشگاه">
+      <a href="category.html">همه محصولات <span aria-hidden="true">←</span></a>
+      <div class="mobile-nav-section-label">دسته‌بندی‌ها</div>
+      <a href="category.html?category=skin">مراقبت پوست</a>
+      <a href="category.html?category=hair">مراقبت مو</a>
+      <a href="category.html?category=makeup">آرایش</a>
+      <a href="category.html?category=fragrance">عطر و ادکلن</a>
+      <a href="category.html?category=personal-care">بهداشت شخصی</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container account-wrap">
+  <div class="breadcrumb"><a href="index.html">صفحه اصلی</a> / حساب کاربری</div>
+  <div class="account-heading">
+    <div><h1>حساب کاربری من</h1><p>مدیریت سفارش‌ها، آدرس‌ها و علاقه‌مندی‌ها</p></div>
+  </div>
+
+  <div class="account-shell">
+    <nav class="account-nav" aria-label="منوی حساب کاربری">
+      <a class="is-active" href="#overview">🏠 پیشخوان</a>
+      <a href="#orders">📦 سفارش‌های من</a>
+      <a href="#addresses">📍 آدرس‌ها</a>
+      <a href="#wishlist">♡ علاقه‌مندی‌ها</a>
+      <a href="#profile">👤 اطلاعات حساب</a>
+      <a href="#support">💬 پشتیبانی</a>
+      <a class="danger" href="login.html">↪ خروج از حساب</a>
+    </nav>
+
+    <div class="account-content">
+      <section class="account-hero" id="overview">
+        <div class="account-user">
+          <div class="account-avatar" aria-hidden="true">ش</div>
+          <div><h2>خوش آمدید</h2><p>اطلاعات هویتی پس از اتصال Backend در این بخش نمایش داده می‌شود.</p></div>
+        </div>
+        <div class="account-security-badge">🛡️ آماده اتصال به احراز هویت سروری</div>
+      </section>
+
+      <div class="account-stats" aria-label="خلاصه حساب">
+        <div class="account-stat"><span class="value">۰</span><span class="label">سفارش ثبت‌شده</span></div>
+        <div class="account-stat"><span class="value">۰</span><span class="label">آدرس ذخیره‌شده</span></div>
+        <div class="account-stat"><span class="value">۰</span><span class="label">محصول موردعلاقه</span></div>
+      </div>
+
+      <section class="account-card" id="orders">
+        <div class="account-card-head"><h3>سفارش‌های اخیر</h3></div>
+        <div class="account-empty"><div><div class="icon">📦</div><h4>هنوز سفارشی ثبت نشده</h4><p>بعد از اتصال Backend، سفارش‌های واقعی شما در این قسمت نمایش داده می‌شوند.</p><a class="btn btn-primary btn-sm" href="category.html">مشاهده محصولات</a></div></div>
+      </section>
+
+      <div class="account-actions-grid">
+        <section class="account-card" id="addresses">
+          <div class="account-card-head"><h3>آدرس‌ها</h3></div>
+          <div class="account-empty"><div><div class="icon">📍</div><h4>آدرسی ذخیره نشده</h4><p>ثبت و ویرایش آدرس‌ها بعد از اتصال API حساب کاربری فعال می‌شود.</p></div></div>
+        </section>
+        <section class="account-card" id="wishlist">
+          <div class="account-card-head"><h3>علاقه‌مندی‌ها</h3></div>
+          <div class="account-empty"><div><div class="icon">♡</div><h4>لیست علاقه‌مندی خالی است</h4><p>محصولات موردعلاقه بعد از اتصال حساب کاربری همگام‌سازی می‌شوند.</p></div></div>
+        </section>
+      </div>
+
+      <section class="account-card" id="profile">
+        <div class="account-card-head"><h3>تنظیمات حساب</h3></div>
+        <div class="account-actions-grid">
+          <div class="account-action"><span class="icon">👤</span><div><strong>اطلاعات شخصی</strong><span>نام، موبایل و مشخصات حساب</span></div></div>
+          <div class="account-action"><span class="icon">🔐</span><div><strong>امنیت حساب</strong><span>جلسات ورود و احراز هویت OTP</span></div></div>
+        </div>
+      </section>
+
+      <section class="account-card" id="support">
+        <div class="account-card-head"><h3>پشتیبانی</h3></div>
+        <div class="account-action"><span class="icon">💬</span><div><strong>تیکت پشتیبانی</strong><span>این قابلیت پس از آماده شدن Backend و پنل پشتیبانی فعال می‌شود.</span></div></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="assets/js/header.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/clock.js"></script>
+</body>
+</html>
