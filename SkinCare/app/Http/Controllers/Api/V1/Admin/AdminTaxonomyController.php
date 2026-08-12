@@ -20,8 +20,7 @@ class AdminTaxonomyController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly CategoryHierarchyGuard $hierarchyGuard,
-    ) {
-    }
+    ) {}
 
     public function storeBrand(StoreBrandRequest $request): JsonResponse
     {
