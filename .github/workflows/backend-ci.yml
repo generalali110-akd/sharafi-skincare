@@ -11,7 +11,7 @@ on:
       - '.github/workflows/backend-ci.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   backend:
@@ -70,7 +70,7 @@ jobs:
       - name: Validate Composer manifest
         run: composer validate --strict --no-check-publish
 
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Audit Composer dependencies
@@ -79,24 +79,8 @@ jobs:
       - name: Verify PostgreSQL migrations
         run: php artisan migrate --force
 
-      - name: Run test suite with warnings
-        run: vendor/bin/phpunit --display-warnings --display-notices --display-deprecations
+      - name: Run test suite
+        run: vendor/bin/phpunit --display-warnings --display-notices --display-deprecations --fail-on-warning --fail-on-risky --fail-on-deprecation
 
-      - name: Apply Laravel code style on foundation branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/agent/backend-foundation'
-        run: vendor/bin/pint
-
-      - name: Persist formatting on foundation branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/agent/backend-foundation'
-        run: |
-          if git diff --quiet -- '*.php'; then
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- '*.php'
-          git commit -m "style(backend): apply Laravel Pint"
-          git push
-
-      - name: Check code style
+      - name: Check Laravel code style
         run: vendor/bin/pint --test
