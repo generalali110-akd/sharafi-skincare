@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentAttemptStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\CheckoutConflictException;
+use App\Exceptions\PaymentUnavailableException;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentAttempt;
@@ -23,6 +24,9 @@ final class PaymentService
     {
         if ($order->user_id !== $user->getKey()) {
             abort(404);
+        }
+        if ($this->gateway->name() === 'null') {
+            throw new PaymentUnavailableException('درگاه پرداخت هنوز پیکربندی نشده است.');
         }
 
         [$payment, $attempt, $created] = DB::transaction(function () use ($order, $idempotencyKey): array {
@@ -88,13 +92,16 @@ final class PaymentService
 
         try {
             $result = $this->gateway->initiate($attempt, (string) config('payment.callback_url'));
+            $this->assertValidInitiation($result->authority, $result->redirectUrl);
         } catch (Throwable $exception) {
             DB::transaction(function () use ($attempt, $exception): void {
                 $locked = PaymentAttempt::query()->whereKey($attempt->getKey())->lockForUpdate()->firstOrFail();
                 if ($locked->status === PaymentAttemptStatus::Created) {
                     $locked->status = PaymentAttemptStatus::Failed;
                     $locked->failure_code = 'initiation_failed';
-                    $locked->failure_message = mb_substr($exception->getMessage(), 0, 500);
+                    $locked->failure_message = $exception instanceof PaymentUnavailableException
+                        ? mb_substr($exception->getMessage(), 0, 500)
+                        : 'Payment gateway initiation failed.';
                     $locked->failed_at = now();
                     $locked->save();
                 }
@@ -118,5 +125,16 @@ final class PaymentService
         });
 
         return [$payment->refresh(), $attempt, true];
+    }
+
+    private function assertValidInitiation(string $authority, string $redirectUrl): void
+    {
+        $scheme = strtolower((string) parse_url($redirectUrl, PHP_URL_SCHEME));
+        if ($authority === '' || ! filter_var($redirectUrl, FILTER_VALIDATE_URL) || ! in_array($scheme, ['http', 'https'], true)) {
+            throw new PaymentUnavailableException('پاسخ درگاه پرداخت معتبر نیست.');
+        }
+        if (app()->environment('production') && $scheme !== 'https') {
+            throw new PaymentUnavailableException('آدرس هدایت درگاه پرداخت امن نیست.');
+        }
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Catalog\ProductController;
 use App\Http\Controllers\Api\V1\Catalog\TaxonomyController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\PaymentController;
 use App\Support\Permissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -58,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/orders/{orderNumber}', [OrderController::class, 'show']);
     Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:20,1');
     Route::post('/orders/{orderNumber}/cancel', [OrderController::class, 'cancel']);
+    Route::get('/orders/{orderNumber}/payment', [PaymentController::class, 'show']);
+    Route::post('/orders/{orderNumber}/payment-attempts', [PaymentController::class, 'store'])
+        ->middleware('throttle:10,1');
 
     Route::prefix('admin')->group(function (): void {
         Route::get('/catalog/products', [AdminProductController::class, 'index'])
