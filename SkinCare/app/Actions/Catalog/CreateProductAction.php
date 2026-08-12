@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 final class CreateProductAction
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function execute(
         array $data,
