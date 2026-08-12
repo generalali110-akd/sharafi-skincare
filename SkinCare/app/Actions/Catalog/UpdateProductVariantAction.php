@@ -11,9 +11,7 @@ use Illuminate\Validation\ValidationException;
 
 final class UpdateProductVariantAction
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function execute(
         ProductVariant $variant,
