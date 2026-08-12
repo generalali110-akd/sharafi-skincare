@@ -30,6 +30,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestampsTz();
 
+            $table->index(['variant_id', 'created_at']);
+            $table->index('actor_user_id');
             $table->index(['reference_type', 'reference_id']);
         });
 
