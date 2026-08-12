@@ -3,203 +3,95 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ورود | ثبت‌نام | فروشگاه مراقبت از پوست شرفی</title>
+<title>ورود و ثبت‌نام | فروشگاه شرفی</title>
 <link rel="stylesheet" href="assets/css/style.css">
-<style>
-  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
-  .auth-wrap{
-    display:flex;max-width:980px;width:100%;background:#fff;border-radius:28px;box-shadow:var(--shadow);overflow:hidden;
-  }
-  .auth-benefits{
-    flex:1;background:linear-gradient(150deg,var(--rose) 0%, var(--rose-dark) 100%);color:#fff;
-    padding:46px 38px;display:flex;flex-direction:column;justify-content:center;
-  }
-  .auth-benefits .tag{
-    display:inline-block;background:rgba(255,255,255,.18);padding:6px 14px;border-radius:999px;font-size:12.5px;
-    font-weight:700;margin-bottom:16px;width:fit-content;
-  }
-  .auth-benefits h2{font-size:23px;margin:0 0 26px;font-weight:800;line-height:1.7;}
-  .benefit-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px;}
-  .benefit-item .ic{
-    width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;
-    justify-content:center;font-size:17px;flex-shrink:0;
-  }
-  .benefit-item .t{font-size:14px;font-weight:700;margin-bottom:2px;}
-  .benefit-item .d{font-size:12.5px;opacity:.85;}
-
-  .auth-form-side{flex:1;padding:46px 40px;display:flex;flex-direction:column;}
-  .auth-logo{font-size:22px;font-weight:800;color:var(--rose-dark);margin-bottom:6px;}
-  .auth-tabs{display:flex;gap:6px;background:var(--cream-2);border-radius:999px;padding:4px;margin:20px 0 28px;}
-  .auth-tabs button{flex:1;padding:11px 0;border-radius:999px;font-weight:700;font-size:14px;color:var(--text-light);}
-  .auth-tabs button.active{background:var(--rose);color:#fff;}
-  .auth-step{display:none;}
-  .auth-step.active{display:block;}
-  .otp-row{display:flex;gap:10px;direction:ltr;justify-content:center;margin:20px 0;}
-  .otp-row input{
-    width:48px;height:54px;text-align:center;font-size:20px;border:1.5px solid #f0dde2;border-radius:12px;
-    font-family:inherit;background:var(--cream);
-  }
-  .otp-row input:focus{border-color:var(--rose);outline:none;background:#fff;}
-  .timer-row{text-align:center;font-size:12.5px;color:var(--text-light);margin-bottom:18px;}
-  .timer-row b{color:var(--rose-dark);}
-  .form-field{margin-bottom:16px;}
-  .form-field label{font-size:13px;font-weight:600;color:var(--text-light);display:block;margin-bottom:6px;}
-  .form-field input{width:100%;border:1px solid #f0dde2;border-radius:12px;padding:13px 16px;font-family:inherit;font-size:14px;background:var(--cream);}
-  .form-field input:focus{outline:none;border-color:var(--rose);background:#fff;}
-  .easy-note{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-light);margin-top:14px;justify-content:center;}
-</style>
+<link rel="stylesheet" href="assets/css/auth.css">
 </head>
-<body>
+<body class="auth-page">
 
-  <div class="auth-wrap">
+<main class="auth-shell">
+  <section class="auth-brand-panel" aria-label="مزایای حساب کاربری شرفی">
+    <a href="index.html" class="logo" aria-label="بازگشت به فروشگاه شرفی">شرفی<span class="dot">.</span></a>
+    <h1>خرید ساده‌تر، پیگیری بهتر و تجربه شخصی‌تر</h1>
+    <p>با حساب کاربری شرفی می‌توانید سفارش‌ها، آدرس‌ها و محصولات موردعلاقه‌تان را یک‌جا مدیریت کنید.</p>
 
-    <div class="auth-benefits">
-      <span class="tag">🎉 ویژه مشتریان تازه‌وارد</span>
-      <h2>با ثبت‌نام در شرفی، خرید برات راحت‌تر و باصرفه‌تر می‌شه</h2>
+    <div class="auth-benefit-list">
+      <div class="auth-benefit"><span class="icon">📦</span><div><strong>پیگیری سفارش‌ها</strong><span>وضعیت سفارش‌های ثبت‌شده را در حساب خود ببینید.</span></div></div>
+      <div class="auth-benefit"><span class="icon">📍</span><div><strong>ذخیره آدرس‌ها</strong><span>برای خریدهای بعدی، اطلاعات ارسال را دوباره وارد نکنید.</span></div></div>
+      <div class="auth-benefit"><span class="icon">♡</span><div><strong>علاقه‌مندی‌ها</strong><span>محصولاتی که می‌پسندید برای بعد نگه دارید.</span></div></div>
+      <div class="auth-benefit"><span class="icon">🔐</span><div><strong>ورود بدون رمز ثابت</strong><span>احراز هویت با کد یکبارمصرف پس از اتصال سرویس Backend انجام می‌شود.</span></div></div>
+    </div>
+  </section>
 
-      <div class="benefit-item">
-        <span class="ic">🎁</span>
-        <div><div class="t">۱۰٪ تخفیف اولین خرید</div><div class="d">بلافاصله بعد از ثبت‌نام برات فعال می‌شه</div></div>
-      </div>
-      <div class="benefit-item">
-        <span class="ic">🚚</span>
-        <div><div class="t">پیگیری لحظه‌ای سفارش</div><div class="d">وضعیت سفارش رو همیشه در حساب کاربری ببین</div></div>
-      </div>
-      <div class="benefit-item">
-        <span class="ic">📍</span>
-        <div><div class="t">ذخیره آدرس‌ها</div><div class="d">دفعات بعد فقط با یک کلیک خریدت رو تکمیل کن</div></div>
-      </div>
-      <div class="benefit-item">
-        <span class="ic">🌟</span>
-        <div><div class="t">باشگاه مشتریان شرفی</div><div class="d">با هر خرید امتیاز جمع کن و با تخفیف بیشتر بخر</div></div>
-      </div>
-      <div class="benefit-item">
-        <span class="ic">⚡</span>
-        <div><div class="t">ثبت‌نام فقط ۳۰ ثانیه</div><div class="d">بدون رمز عبور، فقط با شماره موبایل</div></div>
-      </div>
+  <section class="auth-form-panel" aria-labelledby="auth-title">
+    <div class="auth-topline">
+      <a href="index.html">← بازگشت به فروشگاه</a>
+      <span aria-label="تاریخ و ساعت تهران">📅 <span class="js-live-date"></span> · 🕐 <span class="js-live-time"></span></span>
     </div>
 
-    <div class="auth-form-side">
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div class="auth-logo">شرفی<span style="color:var(--gold);">.</span></div>
-        <span style="font-size:11.5px;color:var(--text-light);">📅 <span class="js-live-date"></span> · 🕐 <span class="js-live-time" style="direction:ltr;unicode-bidi:isolate;"></span></span>
-      </div>
-      <p style="color:var(--text-light);font-size:13.5px;margin:0;">به فروشگاه مراقبت از پوست شرفی خوش آمدید</p>
-
-      <div class="auth-tabs">
-        <button class="active js-tab-btn" data-tab="login">ورود</button>
-        <button class="js-tab-btn" data-tab="register">ثبت‌نام سریع</button>
-      </div>
-
-      <!-- ===== ورود ===== -->
-      <div class="auth-step active" data-step="login-1">
-        <div class="form-field">
-          <label>شماره موبایل</label>
-          <input type="tel" id="loginMobile" placeholder="۰۹۱۲۳۴۵۶۷۸۹" maxlength="11">
-        </div>
-        <button class="btn btn-primary btn-block js-send-otp" data-next="login-2">دریافت کد ورود</button>
-        <p class="easy-note">🔒 بدون نیاز به رمز عبور</p>
-      </div>
-
-      <div class="auth-step" data-step="login-2">
-        <p style="font-size:13px;color:var(--text-light);text-align:center;margin-bottom:6px;">کد ۴ رقمی ارسال‌شده به <b class="js-mobile-echo"></b> را وارد کنید</p>
-        <div class="otp-row">
-          <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
-          <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
-        </div>
-        <div class="timer-row">ارسال مجدد کد تا <b class="js-timer">۰۰:۴۵</b> دیگر</div>
-        <button class="btn btn-primary btn-block js-verify-otp">تایید و ورود به حساب</button>
-      </div>
-
-      <!-- ===== ثبت‌نام ===== -->
-      <div class="auth-step" data-step="register-1">
-        <div class="form-field">
-          <label>نام شما</label>
-          <input type="text" id="regName" placeholder="مثلاً مریم احمدی">
-        </div>
-        <div class="form-field">
-          <label>شماره موبایل</label>
-          <input type="tel" id="regMobile" placeholder="۰۹۱۲۳۴۵۶۷۸۹" maxlength="11">
-        </div>
-        <button class="btn btn-primary btn-block js-send-otp" data-next="register-2">دریافت کد و فعال‌سازی ۱۰٪ تخفیف</button>
-        <p class="easy-note">⚡ فقط همین یک مرحله — بدون رمز عبور</p>
-      </div>
-
-      <div class="auth-step" data-step="register-2">
-        <p style="font-size:13px;color:var(--text-light);text-align:center;margin-bottom:6px;">کد ۴ رقمی ارسال‌شده به <b class="js-mobile-echo"></b> را وارد کنید</p>
-        <div class="otp-row">
-          <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
-          <input maxlength="1" inputmode="numeric"><input maxlength="1" inputmode="numeric">
-        </div>
-        <div class="timer-row">ارسال مجدد کد تا <b class="js-timer">۰۰:۴۵</b> دیگر</div>
-        <button class="btn btn-primary btn-block js-verify-otp">تایید و دریافت ۱۰٪ تخفیف 🎁</button>
-      </div>
-
+    <div class="auth-heading">
+      <h2 id="auth-title">حساب کاربری شرفی</h2>
+      <p>برای ورود یا ساخت حساب، شماره موبایل خود را وارد کنید.</p>
     </div>
-  </div>
+
+    <div class="auth-tabs-v2" role="tablist" aria-label="ورود یا ثبت‌نام">
+      <button class="auth-tab-v2 is-active" type="button" data-auth-target="login" role="tab" aria-selected="true">ورود</button>
+      <button class="auth-tab-v2" type="button" data-auth-target="register" role="tab" aria-selected="false">ثبت‌نام</button>
+    </div>
+
+    <section class="auth-view is-active" data-auth-view="login">
+      <div class="auth-field">
+        <label for="login-mobile">شماره موبایل</label>
+        <input id="login-mobile" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="۰۹۱۲۳۴۵۶۷۸۹" aria-describedby="login-mobile-error">
+        <div class="auth-error" id="login-mobile-error" aria-live="polite"></div>
+      </div>
+      <button class="auth-primary js-auth-request-otp" type="button">دریافت کد ورود</button>
+      <div class="auth-note">🔐 کد تأیید واقعی در نسخه نهایی فقط از طریق Backend و سرویس OTP ارسال و اعتبارسنجی می‌شود.</div>
+    </section>
+
+    <section class="auth-view" data-auth-view="register">
+      <div class="auth-field">
+        <label for="register-name">نام و نام خانوادگی</label>
+        <input id="register-name" name="name" type="text" autocomplete="name" placeholder="مثلاً علی محمدی">
+        <div class="auth-error" aria-live="polite"></div>
+      </div>
+      <div class="auth-field">
+        <label for="register-mobile">شماره موبایل</label>
+        <input id="register-mobile" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="۰۹۱۲۳۴۵۶۷۸۹">
+        <div class="auth-error" aria-live="polite"></div>
+      </div>
+      <label class="auth-terms"><input name="terms" type="checkbox"> <span>قوانین استفاده و سیاست حریم خصوصی فروشگاه را می‌پذیرم.</span></label>
+      <button class="auth-primary js-auth-request-otp" type="button">ادامه و دریافت کد تأیید</button>
+    </section>
+
+    <section class="auth-view" data-auth-view="otp">
+      <div class="otp-head">
+        <h3>تأیید شماره موبایل</h3>
+        <p>کد ۶ رقمی ارسال‌شده به <strong class="js-auth-mobile-echo"></strong> را وارد کنید.</p>
+      </div>
+      <div class="otp-row-v2" aria-label="کد تأیید شش رقمی">
+        <input maxlength="1" inputmode="numeric" autocomplete="one-time-code" aria-label="رقم اول">
+        <input maxlength="1" inputmode="numeric" aria-label="رقم دوم">
+        <input maxlength="1" inputmode="numeric" aria-label="رقم سوم">
+        <input maxlength="1" inputmode="numeric" aria-label="رقم چهارم">
+        <input maxlength="1" inputmode="numeric" aria-label="رقم پنجم">
+        <input maxlength="1" inputmode="numeric" aria-label="رقم ششم">
+      </div>
+      <div class="auth-timer">ارسال مجدد تا <strong class="js-auth-timer">۰۰:۴۵</strong> · <button class="js-auth-resend" type="button" disabled>ارسال مجدد</button></div>
+      <button class="auth-primary js-auth-verify" type="button">تأیید و ادامه</button>
+      <button class="auth-back js-auth-back" type="button">← ویرایش شماره موبایل</button>
+    </section>
+
+    <div class="auth-security" aria-label="اعتماد و امنیت">
+      <div><span>🔒</span>عدم ذخیره رمز ثابت</div>
+      <div><span>🛡️</span>آماده احراز هویت سروری</div>
+      <div><span>📱</span>بهینه برای موبایل</div>
+    </div>
+  </section>
+</main>
 
 <script src="assets/js/main.js"></script>
 <script src="assets/js/clock.js"></script>
-<script>
-  const tabs = document.querySelectorAll(".js-tab-btn");
-  const steps = document.querySelectorAll(".auth-step");
-  function showStep(name) {
-    steps.forEach(s => s.classList.toggle("active", s.dataset.step === name));
-  }
-  tabs.forEach(btn => btn.addEventListener("click", () => {
-    tabs.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    showStep(btn.dataset.tab + "-1");
-  }));
-
-  let timerInterval;
-  function startTimer() {
-    let s = 45;
-    clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-      s--;
-      document.querySelectorAll(".js-timer").forEach(el => {
-        el.textContent = "00:" + String(Math.max(s,0)).padStart(2,"0");
-      });
-      if (s <= 0) clearInterval(timerInterval);
-    }, 1000);
-  }
-
-  document.querySelectorAll(".js-send-otp").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const step = btn.closest(".auth-step");
-      const mobileInput = step.querySelector('input[type="tel"]');
-      if (!mobileInput.value || mobileInput.value.length < 10) {
-        toast("لطفاً شماره موبایل صحیح وارد کنید");
-        return;
-      }
-      const next = btn.dataset.next;
-      document.querySelectorAll(`[data-step="${next}"] .js-mobile-echo`).forEach(el => el.textContent = mobileInput.value);
-      showStep(next);
-      startTimer();
-      toast("کد تایید ارسال شد (نمونه: 1234)");
-    });
-  });
-
-  // حرکت خودکار بین خانه‌های کد تایید
-  document.querySelectorAll(".otp-row").forEach(row => {
-    const inputs = [...row.querySelectorAll("input")];
-    inputs.forEach((inp, idx) => {
-      inp.addEventListener("input", () => {
-        if (inp.value && idx < inputs.length - 1) inputs[idx + 1].focus();
-      });
-      inp.addEventListener("keydown", (e) => {
-        if (e.key === "Backspace" && !inp.value && idx > 0) inputs[idx - 1].focus();
-      });
-    });
-  });
-
-  document.querySelectorAll(".js-verify-otp").forEach(btn => {
-    btn.addEventListener("click", () => {
-      toast("ورود موفق! در حال انتقال به فروشگاه...");
-      setTimeout(() => location.href = "index.html", 1200);
-    });
-  });
-</script>
+<script src="assets/js/auth.js"></script>
 </body>
 </html>
