@@ -34,6 +34,7 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE inventory_items ADD CONSTRAINT inventory_values_check CHECK (on_hand >= 0 AND reserved >= 0 AND reorder_level >= 0)');
             DB::statement('ALTER TABLE inventory_items ADD CONSTRAINT inventory_reserved_check CHECK (reserved <= on_hand)');
             DB::statement('ALTER TABLE inventory_movements ADD CONSTRAINT inventory_movement_quantity_check CHECK (quantity <> 0)');
         }
