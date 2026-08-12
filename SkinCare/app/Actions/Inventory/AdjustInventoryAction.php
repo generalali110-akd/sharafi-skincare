@@ -12,9 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 final class AdjustInventoryAction
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function execute(
         ProductVariant $variant,
