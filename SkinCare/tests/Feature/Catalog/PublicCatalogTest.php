@@ -55,6 +55,20 @@ class PublicCatalogTest extends TestCase
             'reserved' => 2,
         ]);
 
+        $straddling = Product::factory()->published()->create([
+            'name' => 'No Variant In Range',
+            'brand_id' => $brand->id,
+        ]);
+        $straddling->categories()->attach($category);
+        ProductVariant::factory()->create([
+            'product_id' => $straddling->id,
+            'price_irr' => 1_000_000,
+        ]);
+        ProductVariant::factory()->create([
+            'product_id' => $straddling->id,
+            'price_irr' => 10_000_000,
+        ]);
+
         $other = Product::factory()->published()->create([
             'brand_id' => $otherBrand->id,
         ]);
