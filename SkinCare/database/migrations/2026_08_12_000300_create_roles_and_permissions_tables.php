@@ -27,12 +27,14 @@ return new class extends Migration
             $table->foreignId('permission_id')->constrained()->cascadeOnDelete();
             $table->foreignId('role_id')->constrained()->cascadeOnDelete();
             $table->primary(['permission_id', 'role_id']);
+            $table->index('role_id');
         });
 
         Schema::create('role_user', function (Blueprint $table): void {
             $table->foreignId('role_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->primary(['role_id', 'user_id']);
+            $table->index('user_id');
         });
     }
 
