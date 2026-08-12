@@ -6,142 +6,82 @@
 <title>داشبورد مدیریت | شرفی</title>
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="../assets/css/admin.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body class="admin-body">
-
-<aside class="admin-sidebar">
-  <div class="logo">شرفی<span style="color:var(--gold);">.</span> <span style="font-size:12px;color:var(--text-light);font-weight:400;">پنل مدیریت</span></div>
-  <nav class="admin-nav">
-    <a href="dashboard.html" class="active"><span class="ic">📊</span> داشبورد</a>
-    <a href="products.html"><span class="ic">🧴</span> محصولات</a>
-    <a href="users.html"><span class="ic">👥</span> مشتریان</a>
-    <a href="#"><span class="ic">📦</span> سفارش‌ها</a>
-    <a href="#"><span class="ic">🧾</span> فاکتورها</a>
-    <a href="#"><span class="ic">⚙️</span> تنظیمات</a>
-  </nav>
-  <div class="bottom">
-    <a href="../index.html"><span class="ic">🏠</span> بازگشت به فروشگاه</a>
-    <a href="login.html"><span class="ic">🚪</span> خروج</a>
-  </div>
-</aside>
-
-<div class="admin-main">
-  <div class="admin-topbar">
-    <h1><button class="js-sidebar-toggle" style="display:none;font-size:20px;">☰</button> داشبورد مدیریت</h1>
-    <div class="right">
-      <span style="font-size:13px;color:var(--text-light);">📅 <span class="js-live-date"></span> &nbsp;·&nbsp; 🕐 <span class="js-live-time" style="direction:ltr;unicode-bidi:isolate;"></span></span>
-      <div class="notif-wrap">
-        <button class="notif-bell js-notif-bell">🔔<span class="notif-dot">۲</span></button>
-        <div class="notif-dropdown js-notif-dropdown"></div>
-      </div>
-      <div class="admin-avatar">👩‍💼</div>
+<div class="admin-shell">
+  <aside class="admin-sidebar" aria-label="منوی مدیریت">
+    <div class="admin-brand"><div><a href="dashboard.html" class="logo">شرفی<span class="dot">.</span></a><small>پنل مدیریت فروشگاه</small></div><span aria-hidden="true">🌷</span></div>
+    <nav class="admin-nav">
+      <a class="active" href="dashboard.html"><span class="ic">▦</span>داشبورد</a>
+      <a href="orders.html"><span class="ic">🛍️</span>سفارش‌ها</a>
+      <a href="products.html"><span class="ic">□</span>محصولات</a>
+      <a href="inventory.html"><span class="ic">📦</span>موجودی</a>
+      <a href="users.html"><span class="ic">♙</span>مشتریان</a>
+      <a href="discounts.html"><span class="ic">🏷️</span>تخفیف‌ها</a>
+      <a href="#" data-backend-action><span class="ic">▥</span>گزارش‌ها</a>
+      <a href="#" data-backend-action><span class="ic">⚙️</span>تنظیمات</a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <a href="../index.html"><span>🏠</span>مشاهده فروشگاه</a>
+      <a href="login.html"><span>↪</span>خروج</a>
     </div>
-  </div>
+  </aside>
 
-  <div class="admin-content">
+  <main class="admin-main">
+    <header class="admin-topbar">
+      <button class="admin-menu-toggle js-sidebar-toggle" type="button" aria-label="باز کردن منوی مدیریت" aria-expanded="false">☰</button>
+      <form class="admin-search js-admin-global-search" role="search"><span aria-hidden="true">⌕</span><input type="search" placeholder="جستجو در سفارش‌ها، محصولات و مشتریان..." aria-label="جستجوی مدیریت"></form>
+      <div class="admin-top-actions">
+        <button class="admin-icon-btn" type="button" data-backend-action aria-label="اعلان‌های مدیریت">🔔</button>
+        <button class="admin-icon-btn" type="button" data-backend-action aria-label="پیام‌های پشتیبانی">💬</button>
+        <div class="admin-profile"><span class="admin-avatar">👤</span><div><strong>مدیر فروشگاه</strong><span>سطح دسترسی: مدیر کل</span></div></div>
+      </div>
+    </header>
 
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="ic rose">💰</div>
-        <div>
-          <div class="label">فروش امروز</div>
-          <div class="value">۳,۶۵۰,۰۰۰ تومان</div>
-          <div class="delta up">↑ ۱۲٪ نسبت به دیروز</div>
-        </div>
+    <div class="admin-content">
+      <div class="admin-page-head">
+        <div><h1>خوش آمدید 👋</h1><p>نمای کلی عملکرد فروشگاه؛ مقادیر واقعی بعد از اتصال Backend نمایش داده می‌شوند.</p></div>
+        <div class="admin-page-actions"><span class="status-pill gray">📅 <span class="js-live-date"></span></span><span class="status-pill gray">🕐 <span class="js-live-time"></span></span></div>
       </div>
-      <div class="kpi-card">
-        <div class="ic gold">🗓️</div>
-        <div>
-          <div class="label">فروش این هفته</div>
-          <div class="value">۲۲,۷۰۰,۰۰۰ تومان</div>
-          <div class="delta up">↑ ۸٪ نسبت به هفته قبل</div>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="ic green">📦</div>
-        <div>
-          <div class="label">سفارش‌های امروز</div>
-          <div class="value">۱۸ سفارش</div>
-          <div class="delta down">↓ ۳٪ نسبت به دیروز</div>
-        </div>
-      </div>
-      <div class="kpi-card">
-        <div class="ic blue">👥</div>
-        <div>
-          <div class="label">مشتریان جدید (این ماه)</div>
-          <div class="value">۴۶ نفر</div>
-          <div class="delta up">↑ ۲۰٪ نسبت به ماه قبل</div>
-        </div>
-      </div>
+
+      <section class="kpi-grid" aria-label="شاخص‌های کلیدی فروشگاه">
+        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">فروش امروز</span><span class="kpi-icon">💳</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر داده فروش از API</div></article>
+        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">سفارش‌های جدید</span><span class="kpi-icon blue">🛍️</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر سرویس سفارش‌ها</div></article>
+        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">مشتریان جدید</span><span class="kpi-icon green">👤</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر سرویس کاربران</div></article>
+        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">محصولات کم‌موجود</span><span class="kpi-icon gold">📦</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر سرویس انبار</div></article>
+      </section>
+
+      <section class="admin-grid">
+        <article class="admin-card">
+          <div class="admin-card-head"><h2>نمودار فروش</h2><span class="status-pill gray">۷ روز گذشته</span></div>
+          <div class="admin-card-body"><div class="chart-empty"><div><strong>نمودار آماده اتصال است</strong>پس از دریافت API گزارش فروش، داده‌های واقعی اینجا نمایش داده می‌شوند.</div></div></div>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head"><h2>دسترسی سریع</h2></div>
+          <div class="admin-card-body"><div class="quick-grid">
+            <a class="quick-action" href="products.html"><span>＋</span>مدیریت محصولات</a>
+            <a class="quick-action" href="orders.html"><span>🛍️</span>بررسی سفارش‌ها</a>
+            <a class="quick-action" href="inventory.html"><span>📦</span>کنترل موجودی</a>
+            <a class="quick-action" href="discounts.html"><span>🏷️</span>مدیریت تخفیف‌ها</a>
+          </div></div>
+        </article>
+      </section>
+
+      <section class="admin-grid">
+        <article class="admin-card">
+          <div class="admin-card-head"><h2>آخرین سفارش‌ها</h2><a href="orders.html">مشاهده همه</a></div>
+          <div class="empty-state"><div class="icon">🧾</div><strong>هنوز داده سفارش دریافت نشده</strong>پس از اتصال Backend، آخرین سفارش‌ها به‌صورت زنده نمایش داده می‌شوند.</div>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head"><h2>هشدارهای موجودی</h2><a href="inventory.html">مشاهده انبار</a></div>
+          <div class="empty-state"><div class="icon">📦</div><strong>وضعیت موجودی در انتظار API</strong>حد هشدار هر محصول از Backend خوانده خواهد شد.</div>
+        </article>
+      </section>
     </div>
-
-    <div class="chart-card">
-      <div class="chart-head">
-        <h3>نمودار فروش</h3>
-        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
-          <div class="period-tabs">
-            <button class="active" data-period="daily">روزانه</button>
-            <button data-period="weekly">هفتگی</button>
-            <button data-period="monthly">ماهانه</button>
-            <button data-period="custom">دوره دلخواه</button>
-          </div>
-          <div class="custom-range">
-            <input type="date">
-            <span style="font-size:12px;color:var(--text-light);">تا</span>
-            <input type="date">
-            <button class="btn btn-primary btn-sm js-apply-range">اعمال</button>
-          </div>
-        </div>
-      </div>
-      <div class="chart-wrap"><canvas id="salesChart"></canvas></div>
-    </div>
-
-    <div class="dash-split">
-      <div class="table-card">
-        <div class="table-card-head"><h3>آخرین سفارش‌ها</h3><a href="#" style="font-size:13px;color:var(--rose-dark);font-weight:700;">مشاهده همه</a></div>
-        <table class="admin-table">
-          <thead><tr><th>شماره سفارش</th><th>مشتری</th><th>تاریخ</th><th>مبلغ</th><th>وضعیت</th></tr></thead>
-          <tbody>
-            <tr><td>SH-1058</td><td>مریم احمدی</td><td>۱۴۰۵/۰۳/۲۰</td><td>۶۸۵,۰۰۰ تومان</td><td><span class="pill green">تکمیل‌شده</span></td></tr>
-            <tr><td>SH-1057</td><td>نگین رضایی</td><td>۱۴۰۵/۰۳/۲۰</td><td>۴۲۰,۰۰۰ تومان</td><td><span class="pill gold">در حال ارسال</span></td></tr>
-            <tr><td>SH-1056</td><td>سارا کریمی</td><td>۱۴۰۵/۰۳/۱۹</td><td>۱,۲۵۰,۰۰۰ تومان</td><td><span class="pill gold">در حال پردازش</span></td></tr>
-            <tr><td>SH-1055</td><td>زهرا محمدی</td><td>۱۴۰۵/۰۳/۱۸</td><td>۳۱۰,۰۰۰ تومان</td><td><span class="pill red">مرجوع‌شده</span></td></tr>
-            <tr><td>SH-1054</td><td>فاطمه نوری</td><td>۱۴۰۵/۰۳/۱۸</td><td>۵۴۰,۰۰۰ تومان</td><td><span class="pill green">تکمیل‌شده</span></td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="table-card" style="padding:24px;">
-        <h3 style="margin:0 0 18px;font-size:16px;font-weight:800;">پرفروش‌ترین محصولات</h3>
-        <div style="display:flex;flex-direction:column;gap:16px;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div class="row-prod .thumb" style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">🧴</div>
-            <div style="flex:1;font-size:13px;">سرم آبرسان اسید هیالورونیک<div style="color:var(--text-light);font-size:11.5px;">۸۶ فروش این ماه</div></div>
-            <b style="font-size:13px;">۴۱,۷۱۰,۰۰۰</b>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">💄</div>
-            <div style="flex:1;font-size:13px;">رژلب مات سان‌کیس<div style="color:var(--text-light);font-size:11.5px;">۶۲ فروش این ماه</div></div>
-            <b style="font-size:13px;">۱۳,۰۲۰,۰۰۰</b>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">🌸</div>
-            <div style="flex:1;font-size:13px;">ادو پرفیوم رز شرفی<div style="color:var(--text-light);font-size:11.5px;">۳۴ فروش این ماه</div></div>
-            <b style="font-size:13px;">۲۱,۰۸۰,۰۰۰</b>
-          </div>
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:38px;height:38px;border-radius:10px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;font-size:18px;">💇‍♀️</div>
-            <div style="flex:1;font-size:13px;">شامپو ضدریزش<div style="color:var(--text-light);font-size:11.5px;">۲۹ فروش این ماه</div></div>
-            <b style="font-size:13px;">۹,۱۳۵,۰۰۰</b>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  </div>
+  </main>
 </div>
-
 <script src="../assets/js/clock.js"></script>
 <script src="../assets/js/admin.js"></script>
 </body>
