@@ -16,6 +16,7 @@ class ProductController extends Controller
     {
         $query = Product::query()
             ->published()
+            ->whereHas('variants', fn (Builder $variant) => $variant->active())
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
@@ -51,18 +52,21 @@ class ProductController extends Controller
                 ->where('slug', $slug));
         }
 
-        if ($request->filled('min_price')) {
-            $minimum = (int) $request->validated('min_price');
-            $query->whereHas('variants', fn (Builder $variant) => $variant
-                ->active()
-                ->where('price_irr', '>=', $minimum));
-        }
+        if ($request->filled('min_price') || $request->filled('max_price')) {
+            $minimum = $request->filled('min_price') ? (int) $request->validated('min_price') : null;
+            $maximum = $request->filled('max_price') ? (int) $request->validated('max_price') : null;
 
-        if ($request->filled('max_price')) {
-            $maximum = (int) $request->validated('max_price');
-            $query->whereHas('variants', fn (Builder $variant) => $variant
-                ->active()
-                ->where('price_irr', '<=', $maximum));
+            $query->whereHas('variants', function (Builder $variant) use ($minimum, $maximum): void {
+                $variant->active();
+
+                if ($minimum !== null) {
+                    $variant->where('price_irr', '>=', $minimum);
+                }
+
+                if ($maximum !== null) {
+                    $variant->where('price_irr', '<=', $maximum);
+                }
+            });
         }
 
         match ($request->validated('sort', 'default')) {
@@ -81,6 +85,7 @@ class ProductController extends Controller
     {
         $product = Product::query()
             ->published()
+            ->whereHas('variants', fn (Builder $variant) => $variant->active())
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
