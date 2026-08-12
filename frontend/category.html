@@ -5,239 +5,165 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مراقبت پوست | فروشگاه مراقبت از پوست شرفی</title>
 <link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/header.css">
 <link rel="stylesheet" href="assets/css/product-card.css">
+<link rel="stylesheet" href="assets/css/category-filter.css">
 </head>
 <body>
 
 <div class="announce-bar">
-  <div class="announce-inner">
-    <span class="announce-msg">ارسال رایگان برای خریدهای بالای ۸۰۰,۰۰۰ تومان 🌸 جشن تخفیف تابستانه فعال است</span>
-    <span class="flash-deal-pill">⏳ پایان تخفیف امروز تا <span class="js-flash-countdown">۰۰:۰۰:۰۰</span></span>
-    <span class="live-clock-pill">📅 <span class="js-live-date"></span> &nbsp;·&nbsp; 🕐 <span class="js-live-time"></span> به وقت تهران</span>
+  <div class="announce-inner announce-inner--simple">
+    <div class="announce-content">
+      <span class="announce-msg">ارسال رایگان برای خریدهای بالای ۸۰۰,۰۰۰ تومان 🌸</span>
+      <a class="announce-link" href="#shipping-benefits">شرایط ارسال</a>
+    </div>
+    <div class="announce-meta" aria-label="تاریخ و ساعت به وقت تهران">
+      <span class="date-time-pill"><span class="date-time-icon" aria-hidden="true">📅</span><span class="js-live-date"></span></span>
+      <span class="date-time-pill date-time-pill--time"><span class="date-time-icon" aria-hidden="true">🕐</span><span class="js-live-time"></span><span class="time-zone-label">تهران</span></span>
+    </div>
   </div>
 </div>
 
 <header class="site-header">
   <div class="container header-row">
-    <div class="logo">شرفی<span class="dot">.</span></div>
-    <nav class="main-nav">
-      <a href="index.html">صفحه اصلی</a>
-      <a href="category.html" class="active">محصولات</a>
-      <a href="category.html">مراقبت پوست</a>
-      <a href="category.html">آرایش</a>
-      <a href="#">درباره ما</a>
-      <a href="#">تماس با ما</a>
+    <a href="index.html" class="logo logo--link" aria-label="صفحه اصلی فروشگاه شرفی">شرفی<span class="dot">.</span></a>
+    <nav class="main-nav main-nav--store" aria-label="منوی اصلی فروشگاه">
+      <div class="nav-dropdown js-nav-dropdown">
+        <button class="nav-dropdown-toggle js-nav-dropdown-toggle" type="button" aria-expanded="false" aria-haspopup="true">محصولات <span class="nav-chevron" aria-hidden="true">⌄</span></button>
+        <div class="nav-dropdown-menu">
+          <a href="category.html">همه محصولات</a>
+          <a href="category.html?category=skin">مراقبت پوست</a>
+          <a href="category.html?category=hair">مراقبت مو</a>
+          <a href="category.html?category=makeup">آرایش</a>
+          <a href="category.html?category=fragrance">عطر و ادکلن</a>
+          <a href="category.html?category=personal-care">بهداشت شخصی</a>
+        </div>
+      </div>
+      <a href="category.html?view=brands">برندها</a>
+      <a href="category.html?sort=bestseller">پرفروش‌ها</a>
+      <a href="category.html?discount=1">تخفیف‌ها</a>
     </nav>
-    <div class="search-box">
-      <span>🔍</span>
-      <input type="text" placeholder="جستجوی محصول، برند...">
-    </div>
+    <form class="search-box search-box--store js-site-search-form" role="search">
+      <span aria-hidden="true">🔍</span>
+      <label class="sr-only" for="desktop-site-search">جستجوی محصول یا برند</label>
+      <input id="desktop-site-search" type="search" placeholder="جستجوی محصول، برند..." autocomplete="off">
+    </form>
     <div class="header-actions">
-      <button class="mobile-toggle js-mobile-toggle">☰</button>
-      <a href="login.html" class="icon-btn">👤</a>
-      <a href="cart.html" class="icon-btn">
-        🛒<span class="badge js-cart-count">0</span>
-      </a>
+      <button class="store-mobile-toggle js-store-mobile-toggle" type="button" aria-label="باز کردن منوی فروشگاه" aria-expanded="false">☰</button>
+      <button class="mobile-search-toggle js-mobile-search-toggle" type="button" aria-label="باز کردن جستجو" aria-expanded="false">🔍</button>
+      <a href="login.html" class="icon-btn user-account-link" aria-label="ورود به حساب کاربری">👤</a>
+      <a href="cart.html" class="icon-btn" aria-label="مشاهده سبد خرید">🛒<span class="badge js-cart-count">0</span></a>
     </div>
+  </div>
+  <div class="mobile-search-panel js-mobile-search-panel">
+    <form class="mobile-search-form js-site-search-form" role="search">
+      <div class="search-box"><span aria-hidden="true">🔍</span><label class="sr-only" for="mobile-site-search">جستجوی محصول یا برند</label><input id="mobile-site-search" type="search" placeholder="جستجوی محصول یا برند..." autocomplete="off"></div>
+      <button class="mobile-search-close js-mobile-search-close" type="button" aria-label="بستن جستجو">✕</button>
+    </form>
+  </div>
+  <div class="mobile-nav-panel js-mobile-nav-panel">
+    <nav class="mobile-nav-inner" aria-label="منوی موبایل فروشگاه">
+      <a href="category.html">همه محصولات <span aria-hidden="true">←</span></a>
+      <div class="mobile-nav-section-label">دسته‌بندی‌ها</div>
+      <a href="category.html?category=skin">مراقبت پوست</a>
+      <a href="category.html?category=hair">مراقبت مو</a>
+      <a href="category.html?category=makeup">آرایش</a>
+      <a href="category.html?category=fragrance">عطر و ادکلن</a>
+      <a href="category.html?category=personal-care">بهداشت شخصی</a>
+      <div class="mobile-nav-section-label">کشف محصولات</div>
+      <a href="category.html?view=brands">برندها</a>
+      <a href="category.html?sort=bestseller">پرفروش‌ها</a>
+      <a href="category.html?discount=1">تخفیف‌ها</a>
+    </nav>
   </div>
 </header>
 
 <div class="container">
   <div class="breadcrumb"><a href="index.html">صفحه اصلی</a> / <a href="category.html">محصولات</a> / مراقبت پوست</div>
-</div>
+  <section class="category-hero" aria-labelledby="category-title">
+    <h1 id="category-title">مراقبت پوست</h1>
+    <p>محصولات منتخب برای پاکسازی، آبرسانی و مراقبت روزانه پوست.</p>
+  </section>
 
-<div class="container">
-  <div class="cat-layout">
-
-    <aside class="filters">
-      <h4>فیلتر محصولات</h4>
-
-      <div class="group">
-        <h5>دسته‌بندی</h5>
-        <label class="filter-opt"><input type="checkbox" checked> مراقبت پوست</label>
-        <label class="filter-opt"><input type="checkbox"> مراقبت مو</label>
-        <label class="filter-opt"><input type="checkbox"> آرایش صورت</label>
-        <label class="filter-opt"><input type="checkbox"> عطر و ادکلن</label>
-        <label class="filter-opt"><input type="checkbox"> بهداشت شخصی</label>
-      </div>
-
-      <div class="group">
-        <h5>محدوده قیمت (تومان)</h5>
-        <div class="price-range">
-          <input type="number" placeholder="از">
-          <span>تا</span>
-          <input type="number" placeholder="تا">
+  <div class="category-shell">
+    <aside class="filter-panel" aria-label="فیلتر محصولات">
+      <div class="filter-panel__head"><h2>فیلتر محصولات</h2><button class="filter-reset js-filter-reset" type="button">پاک کردن</button></div>
+      <form class="filter-groups js-filter-form">
+        <div class="filter-group"><h3>دسته‌بندی</h3>
+          <label class="filter-check"><input type="checkbox" name="category" value="skin" checked> مراقبت پوست</label>
+          <label class="filter-check"><input type="checkbox" name="category" value="hair"> مراقبت مو</label>
+          <label class="filter-check"><input type="checkbox" name="category" value="makeup"> آرایش صورت</label>
+          <label class="filter-check"><input type="checkbox" name="category" value="fragrance"> عطر و ادکلن</label>
+          <label class="filter-check"><input type="checkbox" name="category" value="personal-care"> بهداشت شخصی</label>
         </div>
-      </div>
-
-      <div class="group">
-        <h5>برند</h5>
-        <label class="filter-opt"><input type="checkbox"> سی‌رو</label>
-        <label class="filter-opt"><input type="checkbox"> لورآل</label>
-        <label class="filter-opt"><input type="checkbox"> میبلین</label>
-        <label class="filter-opt"><input type="checkbox"> نیوآ</label>
-      </div>
-
-      <div class="group">
-        <h5>نوع پوست</h5>
-        <div class="swatch-row">
-          <div class="swatch" style="background:#f6d6d6" title="پوست خشک"></div>
-          <div class="swatch" style="background:#d6e8f0" title="پوست چرب"></div>
-          <div class="swatch" style="background:#e8e0d6" title="پوست مختلط"></div>
-          <div class="swatch" style="background:#f0e6f6" title="پوست حساس"></div>
+        <div class="filter-group"><h3>محدوده قیمت</h3><div class="filter-price"><input type="number" name="min_price" min="0" inputmode="numeric" placeholder="از"><span>تا</span><input type="number" name="max_price" min="0" inputmode="numeric" placeholder="تا"></div></div>
+        <div class="filter-group"><h3>برند</h3>
+          <label class="filter-check"><input type="checkbox" name="brand" value="ciro"> سی‌رو</label>
+          <label class="filter-check"><input type="checkbox" name="brand" value="loreal"> لورآل</label>
+          <label class="filter-check"><input type="checkbox" name="brand" value="nivea"> نیوآ</label>
+          <label class="filter-check"><input type="checkbox" name="brand" value="ordinary"> اوردینری</label>
         </div>
-      </div>
-
-      <button class="btn btn-primary btn-block btn-sm">اعمال فیلتر</button>
+        <div class="filter-group"><h3>نوع پوست</h3>
+          <label class="filter-check"><input type="checkbox" name="skin" value="dry"> پوست خشک</label>
+          <label class="filter-check"><input type="checkbox" name="skin" value="oily"> پوست چرب</label>
+          <label class="filter-check"><input type="checkbox" name="skin" value="combination"> پوست مختلط</label>
+          <label class="filter-check"><input type="checkbox" name="skin" value="sensitive"> پوست حساس</label>
+        </div>
+        <button class="btn btn-primary filter-apply" type="submit">اعمال فیلتر</button>
+      </form>
     </aside>
 
-    <main style="flex:1;">
-      <div class="toolbar">
-        <span style="font-size:14px;color:var(--text-light);">۲۴ محصول یافت شد</span>
-        <select>
-          <option>مرتب‌سازی: پیش‌فرض</option>
-          <option>ارزان‌ترین</option>
-          <option>گران‌ترین</option>
-          <option>پرفروش‌ترین</option>
-          <option>جدیدترین</option>
-        </select>
+    <main class="category-main">
+      <div class="category-toolbar">
+        <span class="category-toolbar__meta">۶ محصول نمایشی</span>
+        <div class="category-toolbar__actions">
+          <button class="filter-open-btn js-filter-open" type="button" aria-controls="mobile-filter-drawer" aria-expanded="false">☷ فیلترها</button>
+          <label class="sr-only" for="category-sort">مرتب‌سازی محصولات</label>
+          <select id="category-sort" class="category-sort js-category-sort">
+            <option value="default">مرتب‌سازی: پیش‌فرض</option>
+            <option value="price-asc">ارزان‌ترین</option>
+            <option value="price-desc">گران‌ترین</option>
+            <option value="bestseller">پرفروش‌ترین</option>
+            <option value="newest">جدیدترین</option>
+          </select>
+        </div>
       </div>
 
       <div class="prod-grid">
-        <article class="product-card-v2">
-          <div class="product-card-media">
-            <span class="product-card-badge product-card-badge--discount">۱۸٪ تخفیف</span>
-            <button class="product-wishlist" type="button" aria-label="افزودن سرم آبرسان به علاقه‌مندی‌ها">♡</button>
-            <div class="product-placeholder" aria-hidden="true">🧴</div>
-          </div>
-          <div class="product-card-body">
-            <span class="product-card-brand">سی‌رو</span>
-            <a class="product-card-link" href="product.html"><h3 class="product-card-title">سرم آبرسان اسید هیالورونیک</h3></a>
-            <div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۵ <span>(۱۲۴)</span></span></div>
-            <div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price">۵۹۰,۰۰۰ تومان</span><span class="product-current-price">۴۸۵,۰۰۰ <span class="currency">تومان</span></span></div></div>
-            <div class="product-card-actions">
-              <button class="product-card-add" type="button" aria-label="افزودن سرم آبرسان اسید هیالورونیک به سبد خرید" onclick='addToCart({id:1,name:"سرم آبرسان اسید هیالورونیک",brand:"سی‌رو",price:485000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card-v2">
-          <div class="product-card-media">
-            <button class="product-wishlist" type="button" aria-label="افزودن کرم آبرسان روزانه SPF۳۰ به علاقه‌مندی‌ها">♡</button>
-            <div class="product-placeholder" aria-hidden="true">🧴</div>
-          </div>
-          <div class="product-card-body">
-            <span class="product-card-brand">نیوآ</span>
-            <a class="product-card-link" href="product.html"><h3 class="product-card-title">کرم آبرسان روزانه SPF۳۰</h3></a>
-            <div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۳ <span>(۷۲)</span></span></div>
-            <div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۲۹۰,۰۰۰ <span class="currency">تومان</span></span></div></div>
-            <div class="product-card-actions">
-              <button class="product-card-add" type="button" aria-label="افزودن کرم آبرسان روزانه SPF۳۰ به سبد خرید" onclick='addToCart({id:5,name:"کرم آبرسان روزانه SPF30",brand:"نیوآ",price:290000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card-v2">
-          <div class="product-card-media">
-            <button class="product-wishlist" type="button" aria-label="افزودن ژل شوینده ملایم صورت به علاقه‌مندی‌ها">♡</button>
-            <div class="product-placeholder" aria-hidden="true">🧼</div>
-          </div>
-          <div class="product-card-body">
-            <span class="product-card-brand">سی‌رو</span>
-            <a class="product-card-link" href="product.html"><h3 class="product-card-title">ژل شوینده ملایم صورت</h3></a>
-            <div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۵.۰ <span>(۹۸)</span></span></div>
-            <div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۲۱۵,۰۰۰ <span class="currency">تومان</span></span></div></div>
-            <div class="product-card-actions">
-              <button class="product-card-add" type="button" aria-label="افزودن ژل شوینده ملایم صورت به سبد خرید" onclick='addToCart({id:6,name:"ژل شوینده ملایم صورت",brand:"سی‌رو",price:215000,icon:"🧼"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card-v2">
-          <div class="product-card-media">
-            <span class="product-card-badge product-card-badge--new">جدید</span>
-            <button class="product-wishlist" type="button" aria-label="افزودن سرم نیاسینامید به علاقه‌مندی‌ها">♡</button>
-            <div class="product-placeholder" aria-hidden="true">🧴</div>
-          </div>
-          <div class="product-card-body">
-            <span class="product-card-brand">اوردینری</span>
-            <a class="product-card-link" href="product.html"><h3 class="product-card-title">سرم نیاسینامید ۱۰٪ + زینک</h3></a>
-            <div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۵ <span>(۱۵۰)</span></span></div>
-            <div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۳۸۰,۰۰۰ <span class="currency">تومان</span></span></div></div>
-            <div class="product-card-actions">
-              <button class="product-card-add" type="button" aria-label="افزودن سرم نیاسینامید ۱۰٪ به سبد خرید" onclick='addToCart({id:7,name:"سرم نیاسینامید ۱۰٪",brand:"اوردینری",price:380000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card-v2">
-          <div class="product-card-media">
-            <span class="product-card-badge product-card-badge--discount">۱۳٪ تخفیف</span>
-            <button class="product-wishlist" type="button" aria-label="افزودن ماسک شب ترمیم‌کننده پوست به علاقه‌مندی‌ها">♡</button>
-            <div class="product-placeholder" aria-hidden="true">🧴</div>
-          </div>
-          <div class="product-card-body">
-            <span class="product-card-brand">لورآل</span>
-            <a class="product-card-link" href="product.html"><h3 class="product-card-title">ماسک شب ترمیم‌کننده پوست</h3></a>
-            <div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۴ <span>(۴۴)</span></span></div>
-            <div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price">۴۸۰,۰۰۰ تومان</span><span class="product-current-price">۴۲۰,۰۰۰ <span class="currency">تومان</span></span></div></div>
-            <div class="product-card-actions">
-              <button class="product-card-add" type="button" aria-label="افزودن ماسک شب ترمیم‌کننده پوست به سبد خرید" onclick='addToCart({id:8,name:"ماسک شب ترمیم‌کننده",brand:"لورآل",price:420000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button>
-            </div>
-          </div>
-        </article>
-
-        <article class="product-card-v2">
-          <div class="product-card-media">
-            <button class="product-wishlist" type="button" aria-label="افزودن تونر پاک‌کننده آرایش به علاقه‌مندی‌ها">♡</button>
-            <div class="product-placeholder" aria-hidden="true">🧴</div>
-          </div>
-          <div class="product-card-body">
-            <span class="product-card-brand">نیوآ</span>
-            <a class="product-card-link" href="product.html"><h3 class="product-card-title">تونر پاک‌کننده آرایش</h3></a>
-            <div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۱ <span>(۶۰)</span></span></div>
-            <div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۱۸۵,۰۰۰ <span class="currency">تومان</span></span></div></div>
-            <div class="product-card-actions">
-              <button class="product-card-add" type="button" aria-label="افزودن تونر پاک‌کننده آرایش به سبد خرید" onclick='addToCart({id:9,name:"تونر پاک‌کننده آرایش",brand:"نیوآ",price:185000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button>
-            </div>
-          </div>
-        </article>
+        <article class="product-card-v2"><div class="product-card-media"><span class="product-card-badge product-card-badge--discount">۱۸٪ تخفیف</span><button class="product-wishlist" type="button" aria-label="افزودن سرم آبرسان به علاقه‌مندی‌ها">♡</button><div class="product-placeholder" aria-hidden="true">🧴</div></div><div class="product-card-body"><span class="product-card-brand">سی‌رو</span><a class="product-card-link" href="product.html"><h3 class="product-card-title">سرم آبرسان اسید هیالورونیک</h3></a><div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۵ <span>(۱۲۴)</span></span></div><div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price">۵۹۰,۰۰۰ تومان</span><span class="product-current-price">۴۸۵,۰۰۰ <span class="currency">تومان</span></span></div></div><div class="product-card-actions"><button class="product-card-add" type="button" aria-label="افزودن سرم آبرسان به سبد خرید" onclick='addToCart({id:1,name:"سرم آبرسان اسید هیالورونیک",brand:"سی‌رو",price:485000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button></div></div></article>
+        <article class="product-card-v2"><div class="product-card-media"><button class="product-wishlist" type="button" aria-label="افزودن کرم آبرسان روزانه به علاقه‌مندی‌ها">♡</button><div class="product-placeholder" aria-hidden="true">🧴</div></div><div class="product-card-body"><span class="product-card-brand">نیوآ</span><a class="product-card-link" href="product.html"><h3 class="product-card-title">کرم آبرسان روزانه SPF۳۰</h3></a><div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۳ <span>(۷۲)</span></span></div><div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۲۹۰,۰۰۰ <span class="currency">تومان</span></span></div></div><div class="product-card-actions"><button class="product-card-add" type="button" aria-label="افزودن کرم آبرسان روزانه به سبد خرید" onclick='addToCart({id:5,name:"کرم آبرسان روزانه SPF30",brand:"نیوآ",price:290000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button></div></div></article>
+        <article class="product-card-v2"><div class="product-card-media"><button class="product-wishlist" type="button" aria-label="افزودن ژل شوینده ملایم صورت به علاقه‌مندی‌ها">♡</button><div class="product-placeholder" aria-hidden="true">🧼</div></div><div class="product-card-body"><span class="product-card-brand">سی‌رو</span><a class="product-card-link" href="product.html"><h3 class="product-card-title">ژل شوینده ملایم صورت</h3></a><div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۵.۰ <span>(۹۸)</span></span></div><div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۲۱۵,۰۰۰ <span class="currency">تومان</span></span></div></div><div class="product-card-actions"><button class="product-card-add" type="button" aria-label="افزودن ژل شوینده ملایم صورت به سبد خرید" onclick='addToCart({id:6,name:"ژل شوینده ملایم صورت",brand:"سی‌رو",price:215000,icon:"🧼"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button></div></div></article>
+        <article class="product-card-v2"><div class="product-card-media"><span class="product-card-badge product-card-badge--new">جدید</span><button class="product-wishlist" type="button" aria-label="افزودن سرم نیاسینامید به علاقه‌مندی‌ها">♡</button><div class="product-placeholder" aria-hidden="true">🧴</div></div><div class="product-card-body"><span class="product-card-brand">اوردینری</span><a class="product-card-link" href="product.html"><h3 class="product-card-title">سرم نیاسینامید ۱۰٪ + زینک</h3></a><div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۵ <span>(۱۵۰)</span></span></div><div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۳۸۰,۰۰۰ <span class="currency">تومان</span></span></div></div><div class="product-card-actions"><button class="product-card-add" type="button" aria-label="افزودن سرم نیاسینامید به سبد خرید" onclick='addToCart({id:7,name:"سرم نیاسینامید ۱۰٪",brand:"اوردینری",price:380000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button></div></div></article>
+        <article class="product-card-v2"><div class="product-card-media"><span class="product-card-badge product-card-badge--discount">۱۳٪ تخفیف</span><button class="product-wishlist" type="button" aria-label="افزودن ماسک شب به علاقه‌مندی‌ها">♡</button><div class="product-placeholder" aria-hidden="true">🧴</div></div><div class="product-card-body"><span class="product-card-brand">لورآل</span><a class="product-card-link" href="product.html"><h3 class="product-card-title">ماسک شب ترمیم‌کننده پوست</h3></a><div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۴ <span>(۴۴)</span></span></div><div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price">۴۸۰,۰۰۰ تومان</span><span class="product-current-price">۴۲۰,۰۰۰ <span class="currency">تومان</span></span></div></div><div class="product-card-actions"><button class="product-card-add" type="button" aria-label="افزودن ماسک شب به سبد خرید" onclick='addToCart({id:8,name:"ماسک شب ترمیم‌کننده",brand:"لورآل",price:420000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button></div></div></article>
+        <article class="product-card-v2"><div class="product-card-media"><button class="product-wishlist" type="button" aria-label="افزودن تونر پاک‌کننده آرایش به علاقه‌مندی‌ها">♡</button><div class="product-placeholder" aria-hidden="true">🧴</div></div><div class="product-card-body"><span class="product-card-brand">نیوآ</span><a class="product-card-link" href="product.html"><h3 class="product-card-title">تونر پاک‌کننده آرایش</h3></a><div class="product-card-meta"><span class="product-rating"><span class="product-rating-star">★</span> ۴.۱ <span>(۶۰)</span></span></div><div class="product-card-price-area"><div class="product-price-stack"><span class="product-old-price" aria-hidden="true">&nbsp;</span><span class="product-current-price">۱۸۵,۰۰۰ <span class="currency">تومان</span></span></div></div><div class="product-card-actions"><button class="product-card-add" type="button" aria-label="افزودن تونر پاک‌کننده آرایش به سبد خرید" onclick='addToCart({id:9,name:"تونر پاک‌کننده آرایش",brand:"نیوآ",price:185000,icon:"🧴"})'><span class="product-card-add-icon" aria-hidden="true">🛒</span>افزودن به سبد</button></div></div></article>
       </div>
 
-      <div class="pagination">
-        <a href="#" class="active">۱</a>
-        <a href="#">۲</a>
-        <a href="#">۳</a>
-        <a href="#">›</a>
-      </div>
+      <div class="pagination"><a href="#" class="active">۱</a><a href="#">۲</a><a href="#">۳</a><a href="#">›</a></div>
     </main>
-
   </div>
 </div>
 
+<div id="mobile-filter-drawer" class="filter-drawer js-filter-drawer" aria-hidden="true">
+  <button class="filter-drawer-backdrop js-filter-close" type="button" aria-label="بستن فیلترها"></button>
+  <section class="filter-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-filter-title">
+    <div class="filter-drawer__head"><h2 id="mobile-filter-title">فیلتر محصولات</h2><button class="filter-close js-filter-close" type="button" aria-label="بستن فیلترها">✕</button></div>
+    <form class="filter-drawer__body js-filter-form">
+      <div class="filter-group"><h3>دسته‌بندی</h3><label class="filter-check"><input type="checkbox" name="category" value="skin" checked> مراقبت پوست</label><label class="filter-check"><input type="checkbox" name="category" value="hair"> مراقبت مو</label><label class="filter-check"><input type="checkbox" name="category" value="makeup"> آرایش صورت</label><label class="filter-check"><input type="checkbox" name="category" value="fragrance"> عطر و ادکلن</label></div>
+      <div class="filter-group"><h3>محدوده قیمت</h3><div class="filter-price"><input type="number" name="min_price" min="0" inputmode="numeric" placeholder="از"><span>تا</span><input type="number" name="max_price" min="0" inputmode="numeric" placeholder="تا"></div></div>
+      <div class="filter-group"><h3>برند</h3><label class="filter-check"><input type="checkbox" name="brand" value="ciro"> سی‌رو</label><label class="filter-check"><input type="checkbox" name="brand" value="loreal"> لورآل</label><label class="filter-check"><input type="checkbox" name="brand" value="nivea"> نیوآ</label><label class="filter-check"><input type="checkbox" name="brand" value="ordinary"> اوردینری</label></div>
+      <div class="filter-group"><h3>نوع پوست</h3><label class="filter-check"><input type="checkbox" name="skin" value="dry"> پوست خشک</label><label class="filter-check"><input type="checkbox" name="skin" value="oily"> پوست چرب</label><label class="filter-check"><input type="checkbox" name="skin" value="combination"> پوست مختلط</label><label class="filter-check"><input type="checkbox" name="skin" value="sensitive"> پوست حساس</label></div>
+      <div class="filter-drawer__actions"><button class="btn btn-outline js-filter-reset" type="button">پاک کردن</button><button class="btn btn-primary" type="submit">اعمال فیلتر</button></div>
+    </form>
+  </section>
+</div>
+
 <footer style="margin-top:60px;">
-  <div class="container footer-grid">
-    <div>
-      <div class="logo" style="margin-bottom:14px;">شرفی<span class="dot">.</span></div>
-      <p>فروشگاه آنلاین محصولات بهداشتی، آرایشی و مراقبت پوست با تضمین اصالت کالا.</p>
-    </div>
-    <div>
-      <h4>دسترسی سریع</h4>
-      <ul><li><a href="index.html">صفحه اصلی</a></li><li><a href="category.html">محصولات</a></li><li><a href="cart.html">سبد خرید</a></li></ul>
-    </div>
-    <div>
-      <h4>راهنما</h4>
-      <ul><li><a href="#">شرایط بازگشت کالا</a></li><li><a href="#">روش‌های پرداخت</a></li></ul>
-    </div>
-    <div>
-      <h4>تماس با ما</h4>
-      <p>تهران، خیابان نمونه</p>
-      <p>info@sharafiskincare.ir</p>
-    </div>
-  </div>
+  <div class="container footer-grid"><div><div class="logo" style="margin-bottom:14px;">شرفی<span class="dot">.</span></div><p>فروشگاه آنلاین محصولات بهداشتی، آرایشی و مراقبت پوست با تضمین اصالت کالا.</p></div><div><h4>دسترسی سریع</h4><ul><li><a href="index.html">صفحه اصلی</a></li><li><a href="category.html">محصولات</a></li><li><a href="cart.html">سبد خرید</a></li></ul></div><div><h4>راهنما</h4><ul><li><a href="#">شرایط بازگشت کالا</a></li><li><a href="#">روش‌های پرداخت</a></li></ul></div><div><h4>تماس با ما</h4><p>تهران، خیابان نمونه</p><p>info@sharafiskincare.ir</p></div></div>
   <div class="footer-bottom">© ۱۴۰۵ فروشگاه مراقبت از پوست شرفی — تمامی حقوق محفوظ است</div>
 </footer>
 
+<script src="assets/js/header.js"></script>
+<script src="assets/js/category-filter.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/clock.js"></script>
 </body>
