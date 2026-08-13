@@ -53,7 +53,7 @@ async function stabilizePage(page) {
 }
 
 for (const viewport of viewports) {
-  test.describe(`${viewport.name} visual regression`, () => {
+  test.describe(`@visual ${viewport.name} visual regression`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } });
 
     for (const target of targets) {
