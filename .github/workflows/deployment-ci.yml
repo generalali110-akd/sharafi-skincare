@@ -24,11 +24,18 @@ permissions:
 jobs:
   containers:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Validate deployment shell scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          sh -n deploy/php/entrypoint.sh
+          sh -n deploy/staging/deploy.sh
 
       - name: Prepare non-secret compose validation environment
         shell: bash
@@ -38,6 +45,9 @@ jobs:
           sed -i 's|^APP_KEY=.*|APP_KEY=base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=|' SkinCare/.env.staging
           sed -i 's|^DB_PASSWORD=.*|DB_PASSWORD=ci-staging-password|' SkinCare/.env.staging
           sed -i 's|^OTP_PEPPER=.*|OTP_PEPPER=ci-only-otp-pepper-that-is-at-least-32-characters|' SkinCare/.env.staging
+          sed -i 's|^SMSIR_API_KEY=.*|SMSIR_API_KEY=ci-only-placeholder|' SkinCare/.env.staging
+          sed -i 's|^SMSIR_LINE_NUMBER=.*|SMSIR_LINE_NUMBER=30004505000017|' SkinCare/.env.staging
+          sed -i 's|^ZARINPAL_MERCHANT_ID=.*|ZARINPAL_MERCHANT_ID=12345678-1234-1234-1234-123456789abc|' SkinCare/.env.staging
           sed -i 's|^IMAGE_TAG=.*|IMAGE_TAG=ci|' SkinCare/.env.staging
           chmod 600 SkinCare/.env.staging
 
@@ -67,3 +77,20 @@ jobs:
           -e ACME_EMAIL=ops@example.com
           sharafi-skincare-web:ci
           caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+      - name: Exercise migrations and application container
+        shell: bash
+        run: |
+          set -euo pipefail
+          compose() {
+            docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml "$@"
+          }
+
+          compose up -d --wait db
+          compose run --rm app php artisan migrate --force --no-interaction
+          compose up -d --wait app
+          compose exec -T app php artisan ops:provider-readiness --json
+
+      - name: Cleanup staging containers
+        if: always()
+        run: docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml down --volumes --remove-orphans
