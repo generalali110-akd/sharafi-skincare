@@ -94,9 +94,9 @@
       <section class="account-hero" id="overview">
         <div class="account-user">
           <div class="account-avatar" aria-hidden="true">ش</div>
-          <div><h2>خوش آمدید</h2><p>اطلاعات هویتی پس از اتصال Backend در این بخش نمایش داده می‌شود.</p></div>
+          <div><h2>خوش آمدید</h2><p>در حال دریافت اطلاعات حساب…</p></div>
         </div>
-        <div class="account-security-badge">🛡️ آماده اتصال به احراز هویت سروری</div>
+        <div class="account-security-badge">🛡️ در حال بررسی نشست امن…</div>
       </section>
 
       <div class="account-stats" aria-label="خلاصه حساب">
@@ -107,38 +107,40 @@
 
       <section class="account-card" id="orders">
         <div class="account-card-head"><h3>سفارش‌های اخیر</h3></div>
-        <div class="account-empty"><div><div class="icon">📦</div><h4>هنوز سفارشی ثبت نشده</h4><p>بعد از اتصال Backend، سفارش‌های واقعی شما در این قسمت نمایش داده می‌شوند.</p><a class="btn btn-primary btn-sm" href="category.html">مشاهده محصولات</a></div></div>
+        <div class="account-empty"><div><div class="icon">📦</div><h4>در حال دریافت سفارش‌ها…</h4><p>سفارش‌های ثبت‌شده شما از سرور دریافت می‌شوند.</p><a class="btn btn-primary btn-sm" href="category.html">مشاهده محصولات</a></div></div>
       </section>
 
       <div class="account-actions-grid">
         <section class="account-card" id="addresses">
           <div class="account-card-head"><h3>آدرس‌ها</h3></div>
-          <div class="account-empty"><div><div class="icon">📍</div><h4>آدرسی ذخیره نشده</h4><p>ثبت و ویرایش آدرس‌ها بعد از اتصال API حساب کاربری فعال می‌شود.</p></div></div>
+          <div class="account-empty"><div><div class="icon">📍</div><h4>در حال دریافت آدرس‌ها…</h4><p>آدرس‌های ذخیره‌شده شما از سرور دریافت می‌شوند.</p></div></div>
         </section>
         <section class="account-card" id="wishlist">
           <div class="account-card-head"><h3>علاقه‌مندی‌ها</h3></div>
-          <div class="account-empty"><div><div class="icon">♡</div><h4>لیست علاقه‌مندی خالی است</h4><p>محصولات موردعلاقه بعد از اتصال حساب کاربری همگام‌سازی می‌شوند.</p></div></div>
+          <div class="account-empty"><div><div class="icon">♡</div><h4>لیست علاقه‌مندی خالی است</h4><p>این قابلیت هنوز به Backend متصل نشده است.</p></div></div>
         </section>
       </div>
 
       <section class="account-card" id="profile">
         <div class="account-card-head"><h3>تنظیمات حساب</h3></div>
         <div class="account-actions-grid">
-          <div class="account-action"><span class="icon">👤</span><div><strong>اطلاعات شخصی</strong><span>نام، موبایل و مشخصات حساب</span></div></div>
-          <div class="account-action"><span class="icon">🔐</span><div><strong>امنیت حساب</strong><span>جلسات ورود و احراز هویت OTP</span></div></div>
+          <div class="account-action"><span class="icon">👤</span><div><strong>اطلاعات شخصی</strong><span>نام و شماره موبایل حساب</span></div></div>
+          <div class="account-action"><span class="icon">🔐</span><div><strong>امنیت حساب</strong><span>ورود تأییدشده با OTP و نشست سروری</span></div></div>
         </div>
       </section>
 
       <section class="account-card" id="support">
         <div class="account-card-head"><h3>پشتیبانی</h3></div>
-        <div class="account-action"><span class="icon">💬</span><div><strong>تیکت پشتیبانی</strong><span>این قابلیت پس از آماده شدن Backend و پنل پشتیبانی فعال می‌شود.</span></div></div>
+        <div class="account-action"><span class="icon">💬</span><div><strong>تیکت پشتیبانی</strong><span>این قابلیت هنوز پیاده‌سازی نشده است.</span></div></div>
       </section>
     </div>
   </div>
 </main>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/header.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/clock.js"></script>
+<script src="assets/js/account.js"></script>
 </body>
 </html>
