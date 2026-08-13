@@ -15,7 +15,7 @@ final class OrderSmsComposer
 
         return match ($template) {
             'order_created' => "شرافی: سفارش {$number} ثبت شد. برای تکمیل سفارش، پرداخت را انجام دهید.",
-            'payment_succeeded' => "شرافی: پرداخت سفارش {$number} تأیید شد و سفارش وارد مرحله پردازش شد.",
+            'payment_succeeded' => "شرافی: پرداخت سفارش {$number} تأیید شد. سفارش برای پردازش آماده است.",
             'order_shipped' => "شرافی: سفارش {$number} ارسال شد. از خرید شما سپاسگزاریم.",
             default => throw new UnexpectedValueException('Unsupported order SMS template.'),
         };
