@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const pages = [
-  { name: 'home', path: '/' },
+  { name: 'home', path: '/index.html' },
   { name: 'category', path: '/category.html' },
   { name: 'product', path: '/product.html?slug=e2e-test-serum' },
   { name: 'cart', path: '/cart.html' },
