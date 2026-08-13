@@ -98,9 +98,12 @@ jobs:
         working-directory: e2e
         run: npm audit --audit-level=high
 
-      - name: Install Chromium
+      - name: Install Chromium and image comparison runtime
         working-directory: e2e
-        run: npx playwright install --with-deps chromium
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-pil
 
       - name: Prepare deterministic fixtures
         working-directory: SkinCare
@@ -124,25 +127,24 @@ jobs:
           cat storage/logs/visual-server.log
           exit 1
 
-      - name: Run visual regression suite
+      - name: Capture deterministic visual surfaces
         working-directory: e2e
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ ! -d tests/visual-snapshots ] && [ "$GITHUB_REF_NAME" = 'agent/visual-regression' ] && [ "$GITHUB_EVENT_NAME" = 'push' ]; then
-            npx playwright test tests/visual.spec.js --update-snapshots
-          else
-            npx playwright test tests/visual.spec.js
-          fi
+        run: npx playwright test tests/visual.spec.js
 
-      - name: Upload visual baselines or failure diffs
-        if: always()
+      - name: Compare approved visual fingerprints
+        working-directory: e2e
+        run: >-
+          python3 visual/compare_visual.py
+          --baseline visual/baselines.json
+          --current-dir test-results/visual-current
+
+      - name: Upload visual diagnostics
+        if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: sharafi-visual-regression
-          if-no-files-found: error
+          name: sharafi-visual-regression-failure
+          if-no-files-found: ignore
           retention-days: 14
           path: |
-            e2e/tests/visual-snapshots/
-            e2e/test-results/
+            e2e/test-results/visual-current/
             SkinCare/storage/logs/visual-server.log
