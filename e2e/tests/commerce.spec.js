@@ -28,7 +28,8 @@ test.describe.serial('Sharafi production commerce flow', () => {
     await page.getByRole('button', { name: 'تأیید و ادامه' }).click();
     await expect(page).toHaveURL(/\/checkout\.html$/);
 
-    await expect(page.getByText(PRODUCT_NAME, { exact: true })).toBeVisible();
+    await expect(page.locator('.js-checkout-items')).toContainText(PRODUCT_NAME);
+    await expect(page.locator('.js-checkout-submit')).toBeEnabled();
     await page.getByLabel('نام و نام خانوادگی').fill('مشتری تست مرورگر');
     await page.getByLabel('شماره موبایل').fill(CUSTOMER_MOBILE);
     await page.getByLabel('استان').fill('تهران');
