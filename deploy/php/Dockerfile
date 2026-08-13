@@ -2,6 +2,8 @@ FROM composer:2.10.2 AS vendor
 
 WORKDIR /app
 COPY SkinCare/composer.json SkinCare/composer.lock ./
+COPY SkinCare/app ./app
+COPY SkinCare/database ./database
 RUN composer install \
     --no-dev \
     --no-interaction \
