@@ -1,0 +1,32 @@
+name: Staging HTTP Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  http-boundaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    env:
+      STAGING_APP_URL: ${{ vars.STAGING_APP_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Require configured staging origin
+        shell: bash
+        run: |
+          set -euo pipefail
+          : "${STAGING_APP_URL:?STAGING_APP_URL environment variable is required}"
+          case "$STAGING_APP_URL" in
+            https://*) ;;
+            *) echo 'STAGING_APP_URL must use HTTPS.' >&2; exit 1 ;;
+          esac
+
+      - name: Verify HTTPS, cookies and CORS boundaries
+        run: sh deploy/staging/http-smoke.sh
