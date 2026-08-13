@@ -11,6 +11,13 @@
   const dropdown = header.querySelector('.js-nav-dropdown');
   const dropdownToggle = header.querySelector('.js-nav-dropdown-toggle');
 
+  header.querySelectorAll('a[href*="sort=bestseller"]').forEach((link) => {
+    link.href = 'category.html?sort=newest';
+    if (link.textContent.includes('پرفروش')) link.textContent = 'جدیدترین‌ها';
+  });
+  header.querySelectorAll('a[href*="discount=1"]').forEach((link) => { link.hidden = true; });
+  header.querySelectorAll('a[href*="view=brands"]').forEach((link) => { link.href = 'category.html'; });
+
   const setExpanded = (button, value) => {
     if (button) button.setAttribute('aria-expanded', String(value));
   };
