@@ -2,6 +2,7 @@
 
 use App\Exceptions\CheckoutConflictException;
 use App\Exceptions\InventoryConflictException;
+use App\Exceptions\PaymentAttemptRetryRequiredException;
 use App\Exceptions\PaymentUnavailableException;
 use App\Http\Middleware\EnsurePermission;
 use Illuminate\Foundation\Application;
@@ -42,6 +43,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return response()->json([
                 'message' => $exception->getMessage(),
+                'code' => $exception instanceof PaymentAttemptRetryRequiredException
+                    ? 'payment_attempt_retry_required'
+                    : 'payment_unavailable',
             ], Response::HTTP_SERVICE_UNAVAILABLE);
         });
 
