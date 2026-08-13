@@ -18,6 +18,11 @@
   header.querySelectorAll('a[href*="discount=1"]').forEach((link) => { link.hidden = true; });
   header.querySelectorAll('a[href*="view=brands"]').forEach((link) => { link.href = 'category.html'; });
 
+  document.querySelectorAll('.announce-link[href^="#"]').forEach((link) => {
+    const targetId = link.getAttribute('href')?.slice(1);
+    if (targetId && !document.getElementById(targetId)) link.href = `index.html#${targetId}`;
+  });
+
   const setExpanded = (button, value) => {
     if (button) button.setAttribute('aria-expanded', String(value));
   };
