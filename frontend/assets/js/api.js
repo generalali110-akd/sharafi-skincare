@@ -157,6 +157,26 @@
     return `${prefix}:${random}`.replace(/[^A-Za-z0-9._:-]/g, '').slice(0, 100);
   };
 
+  const retireOrderIdempotencyKey = (key) => {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem('sharafi:order-key') || 'null');
+      if (stored?.key === key) sessionStorage.removeItem('sharafi:order-key');
+    } catch {
+      // Session storage is optional; server-side idempotency remains authoritative.
+    }
+  };
+
+  const createOrder = async (data, key) => {
+    const payload = await request('/orders', {
+      method: 'POST',
+      headers: { 'Idempotency-Key': key },
+      json: data,
+    });
+
+    if (payload?.data?.order_number) retireOrderIdempotencyKey(key);
+    return payload;
+  };
+
   const paymentStorageKey = (orderNumber) => `sharafi:payment-idempotency:${orderNumber}`;
 
   const paymentIdempotencyKey = (orderNumber, rotate = false) => {
@@ -267,7 +287,7 @@
     orders: Object.freeze({
       list: (page = 1) => request(`/orders?page=${encodeURIComponent(page)}`),
       show: (orderNumber) => request(`/orders/${encodeURIComponent(orderNumber)}`),
-      create: (data, key) => request('/orders', { method: 'POST', headers: { 'Idempotency-Key': key }, json: data }),
+      create: createOrder,
       cancel: (orderNumber) => request(`/orders/${encodeURIComponent(orderNumber)}/cancel`, { method: 'POST' }),
     }),
     payments: Object.freeze({
