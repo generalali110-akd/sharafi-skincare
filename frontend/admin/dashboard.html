@@ -18,71 +18,61 @@
       <a href="inventory.html"><span class="ic">📦</span>موجودی</a>
       <a href="users.html"><span class="ic">♙</span>مشتریان</a>
       <a href="discounts.html"><span class="ic">🏷️</span>تخفیف‌ها</a>
-      <a href="#" data-backend-action><span class="ic">▥</span>گزارش‌ها</a>
-      <a href="#" data-backend-action><span class="ic">⚙️</span>تنظیمات</a>
     </nav>
     <div class="admin-sidebar-footer">
       <a href="../index.html"><span>🏠</span>مشاهده فروشگاه</a>
-      <a href="login.html"><span>↪</span>خروج</a>
+      <a href="login.html" data-admin-logout><span>↪</span>خروج</a>
     </div>
   </aside>
 
   <main class="admin-main">
     <header class="admin-topbar">
       <button class="admin-menu-toggle js-sidebar-toggle" type="button" aria-label="باز کردن منوی مدیریت" aria-expanded="false">☰</button>
-      <form class="admin-search js-admin-global-search" role="search"><span aria-hidden="true">⌕</span><input type="search" placeholder="جستجو در سفارش‌ها، محصولات و مشتریان..." aria-label="جستجوی مدیریت"></form>
-      <div class="admin-top-actions">
-        <button class="admin-icon-btn" type="button" data-backend-action aria-label="اعلان‌های مدیریت">🔔</button>
-        <button class="admin-icon-btn" type="button" data-backend-action aria-label="پیام‌های پشتیبانی">💬</button>
-        <div class="admin-profile"><span class="admin-avatar">👤</span><div><strong>مدیر فروشگاه</strong><span>سطح دسترسی: مدیر کل</span></div></div>
-      </div>
+      <form class="admin-search js-admin-global-search" role="search"><span aria-hidden="true">⌕</span><input type="search" placeholder="جستجو در صفحه جاری..." aria-label="جستجوی مدیریت"></form>
+      <div class="admin-top-actions"><div class="admin-profile"><span class="admin-avatar">👤</span><div><strong>مدیر فروشگاه</strong><span>در حال بررسی دسترسی…</span></div></div></div>
     </header>
 
     <div class="admin-content">
       <div class="admin-page-head">
-        <div><h1>خوش آمدید 👋</h1><p>نمای کلی عملکرد فروشگاه؛ مقادیر واقعی بعد از اتصال Backend نمایش داده می‌شوند.</p></div>
+        <div><h1>خوش آمدید 👋</h1><p>نمای کلی فروشگاه بر اساس تراکنش‌ها و موجودی واقعی Backend.</p></div>
         <div class="admin-page-actions"><span class="status-pill gray">📅 <span class="js-live-date"></span></span><span class="status-pill gray">🕐 <span class="js-live-time"></span></span></div>
       </div>
 
       <section class="kpi-grid" aria-label="شاخص‌های کلیدی فروشگاه">
-        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">فروش امروز</span><span class="kpi-icon">💳</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر داده فروش از API</div></article>
-        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">سفارش‌های جدید</span><span class="kpi-icon blue">🛍️</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر سرویس سفارش‌ها</div></article>
-        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">مشتریان جدید</span><span class="kpi-icon green">👤</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر سرویس کاربران</div></article>
-        <article class="kpi-card"><div class="kpi-card-head"><span class="kpi-label">محصولات کم‌موجود</span><span class="kpi-icon gold">📦</span></div><div class="kpi-value">—</div><div class="kpi-note">منتظر سرویس انبار</div></article>
+        <article class="kpi-card" data-kpi="today-sales"><div class="kpi-card-head"><span class="kpi-label">فروش موفق امروز</span><span class="kpi-icon">💳</span></div><div class="kpi-value">—</div><div class="kpi-note">در حال دریافت…</div></article>
+        <article class="kpi-card" data-kpi="today-orders"><div class="kpi-card-head"><span class="kpi-label">سفارش‌های امروز</span><span class="kpi-icon blue">🛍️</span></div><div class="kpi-value">—</div><div class="kpi-note">در حال دریافت…</div></article>
+        <article class="kpi-card" data-kpi="today-customers"><div class="kpi-card-head"><span class="kpi-label">مشتریان جدید امروز</span><span class="kpi-icon green">👤</span></div><div class="kpi-value">—</div><div class="kpi-note">در حال دریافت…</div></article>
+        <article class="kpi-card" data-kpi="low-stock"><div class="kpi-card-head"><span class="kpi-label">تنوع‌های کم‌موجود</span><span class="kpi-icon gold">📦</span></div><div class="kpi-value">—</div><div class="kpi-note">در حال دریافت…</div></article>
       </section>
 
       <section class="admin-grid">
         <article class="admin-card">
-          <div class="admin-card-head"><h2>نمودار فروش</h2><span class="status-pill gray">۷ روز گذشته</span></div>
-          <div class="admin-card-body"><div class="chart-empty"><div><strong>نمودار آماده اتصال است</strong>پس از دریافت API گزارش فروش، داده‌های واقعی اینجا نمایش داده می‌شوند.</div></div></div>
+          <div class="admin-card-head"><h2>فروش موفق</h2><span class="status-pill gray">۷ روز گذشته</span></div>
+          <div class="admin-card-body" id="sales7d"><div class="empty-state">در حال دریافت داده فروش…</div></div>
         </article>
-
         <article class="admin-card">
           <div class="admin-card-head"><h2>دسترسی سریع</h2></div>
           <div class="admin-card-body"><div class="quick-grid">
-            <a class="quick-action" href="products.html"><span>＋</span>مدیریت محصولات</a>
-            <a class="quick-action" href="orders.html"><span>🛍️</span>بررسی سفارش‌ها</a>
-            <a class="quick-action" href="inventory.html"><span>📦</span>کنترل موجودی</a>
-            <a class="quick-action" href="discounts.html"><span>🏷️</span>مدیریت تخفیف‌ها</a>
+            <a class="quick-action" href="products.html" data-permission="catalog.read"><span>＋</span>مدیریت محصولات</a>
+            <a class="quick-action" href="orders.html" data-permission="orders.read"><span>🛍️</span>بررسی سفارش‌ها</a>
+            <a class="quick-action" href="inventory.html" data-permission="inventory.read"><span>📦</span>کنترل موجودی</a>
+            <a class="quick-action" href="discounts.html" data-permission="discounts.read"><span>🏷️</span>مدیریت تخفیف‌ها</a>
           </div></div>
         </article>
       </section>
 
       <section class="admin-grid">
-        <article class="admin-card">
-          <div class="admin-card-head"><h2>آخرین سفارش‌ها</h2><a href="orders.html">مشاهده همه</a></div>
-          <div class="empty-state"><div class="icon">🧾</div><strong>هنوز داده سفارش دریافت نشده</strong>پس از اتصال Backend، آخرین سفارش‌ها به‌صورت زنده نمایش داده می‌شوند.</div>
-        </article>
-
-        <article class="admin-card">
-          <div class="admin-card-head"><h2>هشدارهای موجودی</h2><a href="inventory.html">مشاهده انبار</a></div>
-          <div class="empty-state"><div class="icon">📦</div><strong>وضعیت موجودی در انتظار API</strong>حد هشدار هر محصول از Backend خوانده خواهد شد.</div>
-        </article>
+        <article class="admin-card"><div class="admin-card-head"><h2>آخرین سفارش‌ها</h2><a href="orders.html" data-permission="orders.read">مشاهده همه</a></div><div id="dashboardRecentOrders" class="admin-card-body"><div class="empty-state">در حال دریافت سفارش‌ها…</div></div></article>
+        <article class="admin-card"><div class="admin-card-head"><h2>هشدارهای موجودی</h2><a href="inventory.html" data-permission="inventory.read">مشاهده انبار</a></div><div id="dashboardLowStock" class="admin-card-body"><div class="empty-state">در حال دریافت موجودی…</div></div></article>
       </section>
     </div>
   </main>
 </div>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/admin-api.js"></script>
 <script src="../assets/js/clock.js"></script>
+<script src="../assets/js/admin-page-utils.js"></script>
 <script src="../assets/js/admin.js"></script>
+<script src="../assets/js/admin-dashboard.js"></script>
 </body>
 </html>
