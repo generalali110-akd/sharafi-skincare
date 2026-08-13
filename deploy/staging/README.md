@@ -59,6 +59,18 @@ The script validates the Compose model, builds pinned PHP/Caddy images, starts t
 
 Persistent named volumes hold PostgreSQL data, Laravel storage, and Caddy certificate state.
 
+## Post-deploy HTTP boundaries
+
+After public TLS is active, validate the real origin:
+
+```bash
+STAGING_APP_URL=https://staging.example.com sh deploy/staging/http-smoke.sh
+```
+
+The probe verifies HTTPS availability, HTTP-to-HTTPS redirect, HSTS/security headers, unauthenticated API behavior, sensitive-response cache policy, Sanctum CSRF bootstrap cookies (`Secure` / `HttpOnly` where applicable / `SameSite=Lax`), credentialed CORS for the configured staging origin, and rejection of an untrusted Origin.
+
+The same probe is available as the manual `Staging HTTP Smoke` GitHub workflow using the protected `staging` environment variable `STAGING_APP_URL`.
+
 ## Post-deploy provider checks
 
 Read-only configuration/SMS.ir probe:
