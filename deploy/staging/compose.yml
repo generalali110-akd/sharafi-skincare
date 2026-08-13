@@ -43,7 +43,7 @@ services:
       context: ../..
       dockerfile: deploy/php/Dockerfile
     healthcheck:
-      test: ["CMD-SHELL", "php -r '$s=@fsockopen(\"127.0.0.1\",9000,$e,$m,1); exit($s ? 0 : 1);'"]
+      test: ["CMD-SHELL", "php -r '$$s=@fsockopen(\"127.0.0.1\",9000,$$e,$$m,1); exit($$s ? 0 : 1);'"]
       interval: 10s
       timeout: 3s
       retries: 10
