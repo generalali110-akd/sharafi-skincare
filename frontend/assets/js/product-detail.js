@@ -12,6 +12,17 @@
   const plusButtons = document.querySelectorAll('.js-product-plus');
   const addButtons = document.querySelectorAll('.js-product-add');
 
+  document.querySelector('.product-rating-v2')?.setAttribute('hidden', '');
+  document.querySelector('.product-highlights')?.setAttribute('hidden', '');
+  document.querySelector('.product-favorite')?.setAttribute('hidden', '');
+  document.querySelector('.product-thumbs')?.setAttribute('hidden', '');
+  document.querySelectorAll('.js-product-tab').forEach((tab) => {
+    if (tab.dataset.tab !== 'desc') tab.hidden = true;
+  });
+  document.querySelectorAll('.js-product-tab-panel').forEach((panel) => {
+    if (panel.dataset.panel !== 'desc') panel.hidden = true;
+  });
+
   const getApi = async () => {
     if (api) return api;
     if (window.SharafiApiReady) api = await window.SharafiApiReady;
@@ -148,12 +159,8 @@
     try {
       const category = product.categories?.[0]?.slug || null;
       const payload = await api.catalog.products({ category, per_page: 5 });
-      const items = (Array.isArray(payload?.data) ? payload.data : [])
-        .filter((item) => item.slug !== product.slug)
-        .slice(0, 4);
-      grid.innerHTML = items.length
-        ? items.map(relatedCard).join('')
-        : '<div class="cart-empty-v2"><p>محصول مرتبط دیگری برای نمایش وجود ندارد.</p></div>';
+      const items = (Array.isArray(payload?.data) ? payload.data : []).filter((item) => item.slug !== product.slug).slice(0, 4);
+      grid.innerHTML = items.length ? items.map(relatedCard).join('') : '<div class="cart-empty-v2"><p>محصول مرتبط دیگری برای نمایش وجود ندارد.</p></div>';
     } catch {
       grid.innerHTML = '<div class="cart-empty-v2"><p>دریافت محصولات مرتبط ناموفق بود.</p></div>';
     }
@@ -208,23 +215,8 @@
     });
   });
 
-  const mainVisual = document.querySelector('.js-product-main-visual');
-  const thumbs = [...document.querySelectorAll('.js-product-thumb')];
-  thumbs.forEach((thumb) => {
-    thumb.addEventListener('click', () => {
-      if (!mainVisual) return;
-      mainVisual.textContent = thumb.dataset.visual || '🧴';
-      thumbs.forEach((item) => {
-        item.classList.remove('is-active');
-        item.setAttribute('aria-pressed', 'false');
-      });
-      thumb.classList.add('is-active');
-      thumb.setAttribute('aria-pressed', 'true');
-    });
-  });
-
-  const tabs = [...document.querySelectorAll('.js-product-tab')];
-  const panels = [...document.querySelectorAll('.js-product-tab-panel')];
+  const tabs = [...document.querySelectorAll('.js-product-tab')].filter((tab) => tab.dataset.tab === 'desc');
+  const panels = [...document.querySelectorAll('.js-product-tab-panel')].filter((panel) => panel.dataset.panel === 'desc');
   const activateTab = (tab, focus = false) => {
     if (!tab) return;
     const target = tab.dataset.tab;
@@ -237,21 +229,8 @@
     if (focus) tab.focus();
   };
 
-  tabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => activateTab(tab));
-    tab.addEventListener('keydown', (event) => {
-      let nextIndex = null;
-      if (event.key === 'ArrowLeft') nextIndex = (index + 1) % tabs.length;
-      if (event.key === 'ArrowRight') nextIndex = (index - 1 + tabs.length) % tabs.length;
-      if (event.key === 'Home') nextIndex = 0;
-      if (event.key === 'End') nextIndex = tabs.length - 1;
-      if (nextIndex === null) return;
-      event.preventDefault();
-      activateTab(tabs[nextIndex], true);
-    });
-  });
-
-  activateTab(tabs.find((tab) => tab.getAttribute('aria-selected') === 'true') || tabs[0]);
+  tabs.forEach((tab) => tab.addEventListener('click', () => activateTab(tab)));
+  activateTab(tabs[0]);
   renderQuantity();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadProduct, { once: true });
   else loadProduct();
