@@ -1,0 +1,26 @@
+/* CSP-safe utility rules: replace legacy inline presentation without unsafe-inline. */
+.hero-actions{display:flex;gap:14px;}
+.section--flush-top{padding-top:0;}
+.benefit-grid{display:flex;gap:20px;flex-wrap:wrap;}
+.benefit-card{flex:1;min-width:240px;background:#fff;border-radius:16px;padding:26px;text-align:center;box-shadow:var(--shadow-sm);}
+.benefit-icon{font-size:30px;margin-bottom:8px;}
+.benefit-copy{font-size:13px;color:var(--text-light);margin:6px 0 0;}
+.footer--spaced{margin-top:60px;}
+.footer-logo{margin-bottom:14px;}
+.footer-link-unavailable{color:var(--text-light);cursor:default;}
+.social-placeholder{display:inline-grid;place-items:center;cursor:default;}
+.pagination span{display:inline-grid;place-items:center;min-width:36px;min-height:36px;border-radius:10px;color:var(--text-light);font-weight:700;}
+.pagination span.active{background:var(--rose);color:#fff;}
+.checkout-field--coupon{margin:12px 0;}
+.checkout-coupon-row{display:flex;gap:8px;}
+.checkout-coupon-input{flex:1;min-width:0;}
+.cart-empty-action{margin-top:16px;}
+.account-order-list{display:grid;gap:12px;}
+.account-address-list{display:grid;gap:10px;}
+.account-action--top{align-items:flex-start;}
+.account-action__content{flex:1;display:grid;gap:5px;}
+.product-variant-wrap{display:grid;gap:6px;min-width:190px;font-size:13px;font-weight:700;}
+.product-variant-select{min-height:44px;border:1px solid #e8d7da;border-radius:12px;padding:0 12px;background:#fff;font:inherit;}
+.js-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#4a3a3c;color:#fff;padding:12px 24px;border-radius:999px;font-size:14px;z-index:999;box-shadow:0 8px 20px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .3s;max-width:min(90vw,520px);text-align:center;}
+.js-toast.is-visible{opacity:1;}
+@media(max-width:560px){.hero-actions{flex-wrap:wrap;}.checkout-coupon-row{align-items:stretch;}.checkout-coupon-row .btn{flex:0 0 auto;}}
