@@ -43,3 +43,25 @@ jobs:
             echo 'payment_status query parameters must never be treated as payment truth.' >&2
             exit 1
           fi
+
+      - name: Keep admin login OTP-only
+        shell: bash
+        run: |
+          if grep -nEi 'type=["'"']password["'"']' frontend/admin/login.html; then
+            echo 'Admin login must use the real OTP/session flow, not a password placeholder.' >&2
+            exit 1
+          fi
+          grep -q 'assets/js/api.js' frontend/admin/login.html
+          grep -q 'assets/js/admin-api.js' frontend/admin/login.html
+          grep -q 'assets/js/admin-login.js' frontend/admin/login.html
+
+      - name: Verify protected admin shell dependencies
+        shell: bash
+        run: |
+          for page in dashboard orders products inventory users discounts; do
+            file="frontend/admin/${page}.html"
+            grep -q 'assets/js/api.js' "$file"
+            grep -q 'assets/js/admin-api.js' "$file"
+            grep -q 'assets/js/admin.js' "$file"
+            grep -q 'data-admin-logout' "$file"
+          done
