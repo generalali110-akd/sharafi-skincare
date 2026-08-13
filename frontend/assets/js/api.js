@@ -5,6 +5,7 @@
   const apiUrl = new URL(apiBase, window.location.origin);
   const backendRoot = `${apiUrl.origin}${apiUrl.pathname.replace(/\/api\/v1\/?$/, '')}`.replace(/\/+$/, '');
   const DEFAULT_TIMEOUT_MS = 12000;
+  const paymentKeyMemory = new Map();
   let csrfPromise = null;
   let currentUserPromise = null;
 
@@ -156,6 +157,52 @@
     return `${prefix}:${random}`.replace(/[^A-Za-z0-9._:-]/g, '').slice(0, 100);
   };
 
+  const paymentStorageKey = (orderNumber) => `sharafi:payment-idempotency:${orderNumber}`;
+
+  const paymentIdempotencyKey = (orderNumber, rotate = false) => {
+    const storageKey = paymentStorageKey(orderNumber);
+    if (!rotate) {
+      try {
+        const stored = sessionStorage.getItem(storageKey);
+        if (stored) return stored;
+      } catch {
+        const memory = paymentKeyMemory.get(orderNumber);
+        if (memory) return memory;
+      }
+    }
+
+    const key = idempotencyKey('payment');
+    paymentKeyMemory.set(orderNumber, key);
+    try {
+      sessionStorage.setItem(storageKey, key);
+    } catch {
+      // In-memory fallback keeps idempotency within the current page lifecycle.
+    }
+    return key;
+  };
+
+  const initiatePayment = async (orderNumber, recovered = false) => {
+    const key = paymentIdempotencyKey(orderNumber, false);
+    try {
+      return await request(`/orders/${encodeURIComponent(orderNumber)}/payment-attempts`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': key },
+        json: {},
+      });
+    } catch (error) {
+      const retryRequired = error instanceof ApiError
+        && error.status === 503
+        && error.payload?.code === 'payment_attempt_retry_required';
+
+      if (!recovered && retryRequired) {
+        paymentIdempotencyKey(orderNumber, true);
+        return initiatePayment(orderNumber, true);
+      }
+
+      throw error;
+    }
+  };
+
   const safeReturnTarget = (raw, fallback = 'account.html') => {
     if (!raw) return fallback;
     try {
@@ -225,11 +272,7 @@
     }),
     payments: Object.freeze({
       show: (orderNumber) => request(`/orders/${encodeURIComponent(orderNumber)}/payment`),
-      initiate: (orderNumber, key) => request(`/orders/${encodeURIComponent(orderNumber)}/payment-attempts`, {
-        method: 'POST',
-        headers: { 'Idempotency-Key': key },
-        json: {},
-      }),
+      initiate: (orderNumber) => initiatePayment(orderNumber),
     }),
   });
 })();
