@@ -7,6 +7,7 @@ use App\Contracts\SmsGateway;
 use App\Infrastructure\Payments\NullPaymentGateway;
 use App\Infrastructure\Payments\ZarinpalPaymentGateway;
 use App\Infrastructure\Sms\NullSmsGateway;
+use App\Infrastructure\Sms\SmsIrGateway;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
 
@@ -17,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SmsGateway::class, function () {
             return match (config('sms.driver')) {
                 'null' => new NullSmsGateway,
+                'smsir' => new SmsIrGateway((array) config('sms.smsir', [])),
                 default => throw new LogicException('Unsupported SMS driver configured.'),
             };
         });
