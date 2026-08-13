@@ -48,7 +48,8 @@ class PaymentInitiationRecoveryTest extends TestCase
         $this->actingAs($user)
             ->withHeader('Idempotency-Key', $key)
             ->postJson("/api/v1/orders/{$order->order_number}/payment-attempts")
-            ->assertServiceUnavailable();
+            ->assertServiceUnavailable()
+            ->assertJsonPath('code', 'payment_attempt_retry_required');
 
         $this->assertDatabaseCount('payments', 1);
         $this->assertDatabaseCount('payment_attempts', 1);
