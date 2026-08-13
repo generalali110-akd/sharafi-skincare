@@ -67,6 +67,7 @@ class OrderNotificationOutboxIntegrationTest extends TestCase
         $created = OutboxMessage::query()->where('event_key', $createdKey)->firstOrFail();
         $this->assertArrayNotHasKey('mobile', $created->payload);
         $this->assertStringNotContainsString('09121234567', json_encode($created->payload, JSON_THROW_ON_ERROR));
+        $this->assertTrue($created->expires_at->equalTo($order->reservation_expires_at));
         $this->assertSame(1, $inventory->fresh()->reserved);
 
         $payment = Payment::query()->create([
