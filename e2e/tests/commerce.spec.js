@@ -11,8 +11,9 @@ test.describe.serial('Sharafi production commerce flow', () => {
 
     await page.goto('/product.html?slug=e2e-test-serum');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(PRODUCT_NAME);
-    await expect(page.locator('.js-product-add')).toBeEnabled();
-    await page.locator('.js-product-add').click();
+    const primaryAddToCart = page.locator('.product-purchase .js-product-add');
+    await expect(primaryAddToCart).toBeEnabled();
+    await primaryAddToCart.click();
     await expect(page.locator('.js-cart-count').first()).toHaveText('1');
 
     await page.goto('/cart.html');
