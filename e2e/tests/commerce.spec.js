@@ -14,7 +14,7 @@ test.describe.serial('Sharafi production commerce flow', () => {
     const primaryAddToCart = page.locator('.product-purchase .js-product-add');
     await expect(primaryAddToCart).toBeEnabled();
     await primaryAddToCart.click();
-    await expect(page.locator('.js-cart-count').first()).toHaveText('1');
+    await expect(page.locator('.js-cart-count').first()).toHaveText('۱');
 
     await page.goto('/cart.html');
     await expect(page.getByText(PRODUCT_NAME, { exact: true })).toBeVisible();
