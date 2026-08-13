@@ -15,4 +15,14 @@ return [
         'lock_ttl_seconds' => (int) env('SMS_OUTBOX_LOCK_TTL_SECONDS', 300),
         'notification_expire_hours' => (int) env('SMS_NOTIFICATION_EXPIRE_HOURS', 24),
     ],
+    'smsir' => [
+        'api_key' => env('SMSIR_API_KEY'),
+        'sandbox' => (bool) env('SMSIR_SANDBOX', true),
+        'otp_template_id' => env('SMSIR_OTP_TEMPLATE_ID'),
+        'otp_code_parameter' => env('SMSIR_OTP_CODE_PARAMETER', 'CODE'),
+        'line_number' => env('SMSIR_LINE_NUMBER'),
+        'connect_timeout_seconds' => (int) env('SMSIR_CONNECT_TIMEOUT_SECONDS', 3),
+        'timeout_seconds' => (int) env('SMSIR_TIMEOUT_SECONDS', 8),
+        'max_message_chars' => (int) env('SMSIR_MAX_MESSAGE_CHARS', 320),
+    ],
 ];
