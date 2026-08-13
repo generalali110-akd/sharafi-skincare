@@ -164,7 +164,7 @@ Composer dependencies are locked for reproducible builds and audited in CI.
 - HMAC-SHA256 OTP storage using a secret server-side pepper
 - expiry, resend window, attempt limits, and mobile/IP rate limiting
 - session regeneration after successful authentication
-- `SmsGateway` abstraction with a fail-closed null provider
+- `SmsGateway` abstraction with a fail-closed null provider and provider-specific adapters
 - PHPUnit feature/unit coverage
 - Composer security audit, PostgreSQL migration check, tests, and Laravel Pint in GitHub Actions
 
@@ -257,12 +257,26 @@ Current Admin endpoints:
 - `GET /api/v1/admin/inventory` — `inventory.read`
 - `POST /api/v1/admin/inventory/{variant}/adjust` — `inventory.write`
 - `PATCH /api/v1/admin/inventory/{variant}/settings` — `inventory.write`
+- `GET /api/v1/admin/orders` — `orders.read`
+- `GET /api/v1/admin/orders/{orderNumber}` — `orders.read`
+- `PATCH /api/v1/admin/orders/{orderNumber}/status` — `orders.write`
 - `GET /api/v1/admin/audit-logs` — `audit.read`
 
 System roles/permissions can be created with `php artisan db:seed --class=SystemAccessSeeder`. Administrative access is then granted to an already verified user with `php artisan access:grant-role <mobile> <role>`. The command intentionally does not create or verify users and no default admin credentials are shipped with the application.
 
 ## SMS provider status
 
-The application contract for SMS is implemented, but no commercial SMS provider is hard-coded. `SMS_DRIVER=null` intentionally fails closed until a provider is selected and credentials are supplied through secret storage. A provider-specific adapter will implement `SmsGateway` without changing the OTP domain logic.
+The application remains provider-neutral through `SmsGateway`. `SMS_DRIVER=null` is still the default and intentionally fails closed when no provider secrets are configured.
 
-Plaintext OTP values must not be written to database-backed queues, logs, exceptions, analytics, or audit records.
+An SMS.ir adapter is implemented for test/staging use without coupling OTP, orders, payments, or the transactional outbox to SMS.ir:
+
+- OTP uses SMS.ir Verify templates over the official REST API.
+- Sandbox uses a dedicated SMS.ir Sandbox API key while keeping the same API endpoint; the built-in Verify template can be used for initial OTP tests.
+- order/payment/shipment notifications can use the configured SMS.ir sending line through plain transactional send during initial testing.
+- API keys, template IDs, and sending-line values are read only from environment/secret storage and are never committed.
+- permanent provider/configuration failures stop retrying immediately; transient network/rate/service failures remain eligible for bounded outbox retries.
+- no blind automatic provider failover is performed because an ambiguous timeout can otherwise cause duplicate SMS delivery.
+
+The detailed provider contract, environment variables, retry rules, and provider-swap boundary are documented in `docs/sms-provider-contract.md`.
+
+Plaintext OTP values must not be written to database-backed queues, logs, exceptions, analytics, or audit records. Replacing SMS.ir with the customer's final provider should require only an adapter/configuration/template mapping change; OTP, order/payment, outbox, API, and frontend contracts remain unchanged.

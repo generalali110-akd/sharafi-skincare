@@ -3,6 +3,7 @@
 namespace App\Services\Outbox;
 
 use App\Contracts\SmsGateway;
+use App\Exceptions\PermanentSmsDeliveryException;
 use App\Models\Order;
 use App\Models\OutboxMessage;
 use App\Services\Notifications\OrderSmsComposer;
@@ -65,7 +66,13 @@ final class SmsOutboxDispatcher
 
             return self::RESULT_PROCESSED;
         } catch (Throwable $exception) {
-            $this->releaseOrFail($message, class_basename($exception));
+            $safeError = class_basename($exception);
+
+            if ($exception instanceof PermanentSmsDeliveryException) {
+                $this->failPermanently($message, $safeError);
+            } else {
+                $this->releaseOrFail($message, $safeError);
+            }
 
             return self::RESULT_FAILED;
         }
