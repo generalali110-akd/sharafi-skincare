@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\Catalog\TaxonomyController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\StorefrontConfigController;
 use App\Http\Controllers\Api\V1\ZarinpalCallbackController;
 use App\Support\Permissions;
 use Illuminate\Http\Request;
@@ -26,6 +27,8 @@ Route::get('/health', static fn () => response()->json([
         'version' => 'v1',
     ],
 ]));
+
+Route::get('/storefront/config', StorefrontConfigController::class);
 
 Route::prefix('auth/otp')->group(function (): void {
     Route::post('/request', [OtpAuthController::class, 'requestOtp'])->middleware('throttle:10,1');
@@ -43,7 +46,16 @@ Route::get('/payments/zarinpal/callback', ZarinpalCallbackController::class)
     ->middleware('throttle:30,1');
 
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::get('/me', static fn (Request $request) => response()->json(['data' => $request->user()]));
+    Route::get('/me', static function (Request $request) {
+        $user = $request->user();
+
+        return response()->json([
+            'data' => [
+                'name' => $user?->name,
+                'mobile' => $user?->mobile,
+            ],
+        ]);
+    });
     Route::post('/auth/logout', [OtpAuthController::class, 'logout']);
 
     Route::get('/addresses', [AddressController::class, 'index']);

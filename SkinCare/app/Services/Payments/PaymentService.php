@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentAttemptStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\CheckoutConflictException;
+use App\Exceptions\PaymentAttemptRetryRequiredException;
 use App\Exceptions\PaymentInitiationUnknownException;
 use App\Exceptions\PaymentUnavailableException;
 use App\Models\Order;
@@ -89,7 +90,7 @@ final class PaymentService
 
         if (! $created) {
             if ($attempt->status === PaymentAttemptStatus::Created) {
-                throw new PaymentUnavailableException('وضعیت شروع پرداخت قبلی نامشخص است؛ برای تلاش جدید شناسه جدید ایجاد کنید.');
+                throw new PaymentAttemptRetryRequiredException('وضعیت شروع پرداخت قبلی نامشخص است؛ برای تلاش جدید شناسه جدید ایجاد کنید.');
             }
 
             return [$payment, $attempt, false];

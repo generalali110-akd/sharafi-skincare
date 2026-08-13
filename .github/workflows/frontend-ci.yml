@@ -1,0 +1,45 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Verify JavaScript syntax
+        run: |
+          find frontend/assets/js -type f -name '*.js' -print0 \
+            | sort -z \
+            | xargs -0 -n1 node --check
+
+      - name: Reject browser-stored authentication tokens
+        shell: bash
+        run: |
+          if grep -RInE "localStorage\.(setItem|[A-Za-z]+)[^\n]*(auth[_-]?token|access[_-]?token|bearer)" frontend/assets/js; then
+            echo 'Authentication tokens must not be persisted in browser localStorage.' >&2
+            exit 1
+          fi
+
+      - name: Keep payment result server-authoritative
+        shell: bash
+        run: |
+          if grep -nF "params.get('payment_status')" frontend/assets/js/payment-result.js; then
+            echo 'payment_status query parameters must never be treated as payment truth.' >&2
+            exit 1
+          fi
