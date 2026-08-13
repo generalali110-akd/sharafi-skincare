@@ -1,4 +1,4 @@
-name: Browser E2E
+name: Visual Regression CI
 
 on:
   push:
@@ -6,19 +6,19 @@ on:
       - 'frontend/**'
       - 'SkinCare/**'
       - 'e2e/**'
-      - '.github/workflows/e2e-ci.yml'
+      - '.github/workflows/visual-regression-ci.yml'
   pull_request:
     paths:
       - 'frontend/**'
       - 'SkinCare/**'
       - 'e2e/**'
-      - '.github/workflows/e2e-ci.yml'
+      - '.github/workflows/visual-regression-ci.yml'
 
 permissions:
   contents: read
 
 jobs:
-  browser-e2e:
+  visual-regression:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -26,13 +26,13 @@ jobs:
       postgres:
         image: postgres:18
         env:
-          POSTGRES_DB: sharafi_e2e
+          POSTGRES_DB: sharafi_visual
           POSTGRES_USER: sharafi
-          POSTGRES_PASSWORD: sharafi_e2e_password
+          POSTGRES_PASSWORD: sharafi_visual_password
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U sharafi -d sharafi_e2e"
+          --health-cmd "pg_isready -U sharafi -d sharafi_visual"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -42,7 +42,7 @@ jobs:
       APP_DEBUG: 'false'
       APP_URL: http://127.0.0.1:8000
       APP_KEY: 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='
-      OTP_PEPPER: 'ci-only-e2e-otp-pepper-that-is-at-least-32-characters'
+      OTP_PEPPER: 'ci-only-visual-otp-pepper-that-is-at-least-32-characters'
       SMS_DRIVER: e2e
       PAYMENT_DRIVER: e2e
       PAYMENT_CALLBACK_URL: http://127.0.0.1:8000/api/v1/payments/zarinpal/callback
@@ -50,9 +50,9 @@ jobs:
       DB_CONNECTION: pgsql
       DB_HOST: 127.0.0.1
       DB_PORT: 5432
-      DB_DATABASE: sharafi_e2e
+      DB_DATABASE: sharafi_visual
       DB_USERNAME: sharafi
-      DB_PASSWORD: sharafi_e2e_password
+      DB_PASSWORD: sharafi_visual_password
       DB_SSLMODE: disable
       CACHE_STORE: array
       QUEUE_CONNECTION: sync
@@ -90,55 +90,61 @@ jobs:
         working-directory: SkinCare
         run: composer audit --locked
 
-      - name: Install locked E2E dependencies
+      - name: Install locked browser dependencies
         working-directory: e2e
         run: npm ci --ignore-scripts --no-audit --no-fund
 
-      - name: Audit E2E dependencies
+      - name: Audit browser dependencies
         working-directory: e2e
         run: npm audit --audit-level=high
 
-      - name: Install Chromium
+      - name: Install Chromium and image comparison runtime
         working-directory: e2e
-        run: npx playwright install --with-deps chromium
+        run: |
+          npx playwright install --with-deps chromium
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-pil
 
-      - name: Prepare database and deterministic fixtures
+      - name: Prepare deterministic fixtures
         working-directory: SkinCare
         run: |
           php artisan migrate:fresh --force
           php artisan db:seed --class=E2ESeeder --force
-          rm -rf storage/framework/e2e
-          mkdir -p storage/framework/e2e
-          chmod 700 storage/framework/e2e
 
       - name: Mount storefront into Laravel public root
         run: rsync -a frontend/ SkinCare/public/
 
-      - name: Start Laravel test server
+      - name: Start Laravel visual server
         working-directory: SkinCare
         run: |
-          php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/e2e-server.log 2>&1 &
-          echo $! > /tmp/sharafi-e2e-server.pid
+          php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/visual-server.log 2>&1 &
           for attempt in {1..30}; do
             if curl --fail --silent http://127.0.0.1:8000/api/v1/health >/dev/null; then
               exit 0
             fi
             sleep 1
           done
-          cat storage/logs/e2e-server.log
+          cat storage/logs/visual-server.log
           exit 1
 
-      - name: Run Playwright commerce and responsive suite
+      - name: Capture deterministic visual surfaces
         working-directory: e2e
-        run: npm test -- --grep-invert @visual
+        run: npx playwright test tests/visual.spec.js
 
-      - name: Upload failure diagnostics
+      - name: Compare approved visual fingerprints
+        working-directory: e2e
+        run: >-
+          python3 visual/compare_visual.py
+          --baseline visual/baselines.json
+          --current-dir test-results/visual-current
+
+      - name: Upload visual diagnostics
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: sharafi-e2e-failure
+          name: sharafi-visual-regression-failure
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 14
           path: |
-            e2e/test-results/
-            SkinCare/storage/logs/e2e-server.log
+            e2e/test-results/visual-current/
+            SkinCare/storage/logs/visual-server.log
