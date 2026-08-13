@@ -1,16 +1,23 @@
 // ===== Sharafi authentication UX =====
 (() => {
+  const api = window.SharafiAPI;
   const views = document.querySelectorAll('.auth-view');
   const tabs = document.querySelectorAll('.auth-tab-v2');
   const echoTargets = document.querySelectorAll('.js-auth-mobile-echo');
   let timerId = null;
   let secondsLeft = 0;
+  let challengeId = null;
+  let pendingMobile = '';
+  let pendingName = '';
+  let sourceView = 'login';
+  let requestInFlight = false;
 
-  const normalizeDigits = (value) => value
+  const normalizeDigits = (value) => String(value || '')
     .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
     .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
 
-  const isValidIranMobile = (value) => /^09\d{9}$/.test(normalizeDigits(value).replace(/\s|-/g, ''));
+  const normalizeMobile = (value) => normalizeDigits(value).replace(/\s|-/g, '');
+  const isValidIranMobile = (value) => /^09\d{9}$/.test(normalizeMobile(value));
 
   const showView = (name) => {
     views.forEach((view) => {
@@ -22,6 +29,113 @@
     window.setTimeout(() => firstField?.focus(), 0);
   };
 
+  const setFieldError = (input, message = '') => {
+    if (!input) return;
+    input.setAttribute('aria-invalid', String(Boolean(message)));
+    const error = input.closest('.auth-field')?.querySelector('.auth-error');
+    if (error) error.textContent = message;
+  };
+
+  const setButtonBusy = (button, busy, busyText = 'در حال ارسال...') => {
+    if (!button) return;
+    if (!button.dataset.originalText) button.dataset.originalText = button.textContent;
+    button.disabled = busy;
+    button.textContent = busy ? busyText : button.dataset.originalText;
+  };
+
+  const startTimer = (seconds = 45) => {
+    clearInterval(timerId);
+    secondsLeft = Math.max(0, Number.parseInt(seconds, 10) || 45);
+    const paint = () => {
+      document.querySelectorAll('.js-auth-timer').forEach((el) => {
+        const secondsText = String(secondsLeft).padStart(2, '0').replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]);
+        el.textContent = `۰۰:${secondsText}`;
+      });
+      document.querySelectorAll('.js-auth-resend').forEach((button) => {
+        button.disabled = secondsLeft > 0 || requestInFlight;
+      });
+    };
+    paint();
+    timerId = setInterval(() => {
+      secondsLeft = Math.max(0, secondsLeft - 1);
+      paint();
+      if (secondsLeft <= 0) clearInterval(timerId);
+    }, 1000);
+  };
+
+  const requestOtp = async ({ resend = false, trigger = null } = {}) => {
+    if (!api || requestInFlight) return;
+
+    let mobileInput = null;
+    let nameInput = null;
+    if (!resend) {
+      const view = trigger?.closest('.auth-view');
+      if (!view) return;
+      sourceView = view.dataset.authView || 'login';
+      mobileInput = view.querySelector('input[type="tel"]');
+      nameInput = view.querySelector('input[name="name"]');
+      pendingMobile = normalizeMobile(mobileInput?.value);
+      pendingName = nameInput?.value.trim() || '';
+
+      if (!isValidIranMobile(pendingMobile)) {
+        setFieldError(mobileInput, 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.');
+        mobileInput?.focus();
+        return;
+      }
+      setFieldError(mobileInput);
+
+      if (sourceView === 'register') {
+        const terms = view.querySelector('input[name="terms"]');
+        if (!pendingName) {
+          setFieldError(nameInput, 'نام و نام خانوادگی را وارد کنید.');
+          nameInput?.focus();
+          return;
+        }
+        setFieldError(nameInput);
+        if (!terms?.checked) {
+          toast('برای ادامه، قوانین و حریم خصوصی را بپذیرید.');
+          return;
+        }
+      }
+    }
+
+    if (!isValidIranMobile(pendingMobile)) {
+      showView(sourceView);
+      return;
+    }
+
+    requestInFlight = true;
+    setButtonBusy(trigger, true, resend ? 'در حال ارسال مجدد...' : 'در حال ارسال...');
+    document.querySelectorAll('.js-auth-resend').forEach((button) => { button.disabled = true; });
+
+    try {
+      const payload = await api.auth.requestOtp(pendingMobile, pendingName || null);
+      challengeId = payload?.data?.challenge_id || null;
+      if (!challengeId) throw new Error('invalid_challenge');
+
+      echoTargets.forEach((target) => {
+        target.textContent = payload?.data?.mobile || pendingMobile;
+      });
+      document.querySelectorAll('.otp-row-v2 input').forEach((input) => { input.value = ''; });
+      showView('otp');
+      startTimer(payload?.data?.resend_after || 45);
+      toast(resend ? 'کد جدید ارسال شد.' : 'کد تأیید ارسال شد.');
+    } catch (error) {
+      const message = error?.message || 'ارسال کد تأیید ناموفق بود.';
+      toast(message, 3200);
+      if (!resend && mobileInput && error?.payload?.errors?.mobile) {
+        setFieldError(mobileInput, String(error.payload.errors.mobile[0] || message));
+        showView(sourceView);
+      }
+    } finally {
+      requestInFlight = false;
+      setButtonBusy(trigger, false);
+      if (secondsLeft <= 0) {
+        document.querySelectorAll('.js-auth-resend').forEach((button) => { button.disabled = false; });
+      }
+    }
+  };
+
   tabs.forEach((tab) => {
     tab.addEventListener('click', () => {
       tabs.forEach((item) => {
@@ -30,70 +144,13 @@
         item.setAttribute('aria-selected', String(active));
         item.tabIndex = active ? 0 : -1;
       });
-      showView(tab.dataset.authTarget);
+      sourceView = tab.dataset.authTarget || 'login';
+      showView(sourceView);
     });
   });
 
-  const setFieldError = (input, message = '') => {
-    if (!input) return;
-    input.setAttribute('aria-invalid', String(Boolean(message)));
-    const error = input.closest('.auth-field')?.querySelector('.auth-error');
-    if (error) error.textContent = message;
-  };
-
-  const startTimer = () => {
-    clearInterval(timerId);
-    secondsLeft = 45;
-    const paint = () => {
-      document.querySelectorAll('.js-auth-timer').forEach((el) => {
-        el.textContent = `۰۰:${String(secondsLeft).padStart(2, '0').replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d])}`;
-      });
-      document.querySelectorAll('.js-auth-resend').forEach((button) => {
-        button.disabled = secondsLeft > 0;
-      });
-    };
-    paint();
-    timerId = setInterval(() => {
-      secondsLeft -= 1;
-      paint();
-      if (secondsLeft <= 0) clearInterval(timerId);
-    }, 1000);
-  };
-
   document.querySelectorAll('.js-auth-request-otp').forEach((button) => {
-    button.addEventListener('click', () => {
-      const view = button.closest('.auth-view');
-      const mobile = view?.querySelector('input[type="tel"]');
-      if (!mobile) return;
-
-      const value = normalizeDigits(mobile.value).replace(/\s|-/g, '');
-      if (!isValidIranMobile(value)) {
-        setFieldError(mobile, 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.');
-        mobile.focus();
-        return;
-      }
-      setFieldError(mobile);
-
-      if (view.dataset.authView === 'register') {
-        const name = view.querySelector('input[name="name"]');
-        const terms = view.querySelector('input[name="terms"]');
-        if (!name?.value.trim()) {
-          setFieldError(name, 'نام و نام خانوادگی را وارد کنید.');
-          name?.focus();
-          return;
-        }
-        setFieldError(name);
-        if (!terms?.checked) {
-          toast('برای ادامه، قوانین و حریم خصوصی را بپذیرید.');
-          return;
-        }
-      }
-
-      echoTargets.forEach((target) => target.textContent = mobile.value.trim());
-      showView('otp');
-      startTimer();
-      toast('رابط کاربری OTP آماده است؛ ارسال واقعی کد پس از اتصال Backend فعال می‌شود.');
-    });
+    button.addEventListener('click', () => requestOtp({ trigger: button }));
   });
 
   document.querySelectorAll('.otp-row-v2').forEach((row) => {
@@ -119,28 +176,51 @@
   });
 
   document.querySelectorAll('.js-auth-verify').forEach((button) => {
-    button.addEventListener('click', () => {
+    button.addEventListener('click', async () => {
+      if (!api || requestInFlight) return;
       const row = document.querySelector('.auth-view.is-active .otp-row-v2');
       const code = [...(row?.querySelectorAll('input') || [])].map((input) => input.value).join('');
       if (!/^\d{6}$/.test(code)) {
         toast('کد تأیید ۶ رقمی را کامل وارد کنید.');
         return;
       }
-      toast('اعتبارسنجی OTP باید توسط Backend انجام شود؛ ورود ساختگی غیرفعال است.');
+      if (!challengeId) {
+        toast('درخواست کد منقضی شده است. دوباره کد دریافت کنید.');
+        showView(sourceView);
+        return;
+      }
+
+      requestInFlight = true;
+      setButtonBusy(button, true, 'در حال تأیید...');
+      try {
+        await api.auth.verifyOtp(challengeId, code);
+        api.clearSessionCache();
+        if (window.SharafiCart?.syncGuestCart) {
+          const result = await window.SharafiCart.syncGuestCart();
+          if (result.failed > 0) toast('ورود انجام شد؛ بعضی اقلام سبد موقت قابل انتقال نبودند.', 3200);
+        }
+        document.dispatchEvent(new CustomEvent('sharafi:authenticated'));
+        const params = new URLSearchParams(window.location.search);
+        const target = api.safeReturnTarget(params.get('return'), 'account.html');
+        window.location.assign(target);
+      } catch (error) {
+        toast(error?.message || 'کد تأیید معتبر نیست یا منقضی شده است.', 3200);
+      } finally {
+        requestInFlight = false;
+        setButtonBusy(button, false);
+      }
     });
   });
 
   document.querySelectorAll('.js-auth-resend').forEach((button) => {
-    button.addEventListener('click', () => {
-      startTimer();
-      toast('ارسال مجدد واقعی پس از اتصال سرویس OTP فعال می‌شود.');
-    });
+    button.addEventListener('click', () => requestOtp({ resend: true, trigger: button }));
   });
 
   document.querySelectorAll('.js-auth-back').forEach((button) => {
     button.addEventListener('click', () => {
-      const activeTab = document.querySelector('.auth-tab-v2.is-active');
-      showView(activeTab?.dataset.authTarget || 'login');
+      challengeId = null;
+      clearInterval(timerId);
+      showView(sourceView || 'login');
     });
   });
 
@@ -150,5 +230,6 @@
     tab.setAttribute('aria-selected', String(active));
     tab.tabIndex = active ? 0 : -1;
   });
-  showView(initialTab?.dataset.authTarget || 'login');
+  sourceView = initialTab?.dataset.authTarget || 'login';
+  showView(sourceView);
 })();
