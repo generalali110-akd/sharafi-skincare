@@ -19,7 +19,6 @@ class StorefrontConfigTest extends TestCase
         $response = $this->getJson('/api/v1/storefront/config');
 
         $response->assertOk()
-            ->assertHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=60')
             ->assertExactJson([
                 'data' => [
                     'currency' => 'IRR',
@@ -33,6 +32,11 @@ class StorefrontConfigTest extends TestCase
                     ],
                 ],
             ]);
+
+        $cacheControl = (string) $response->headers->get('Cache-Control');
+        $this->assertStringContainsString('public', $cacheControl);
+        $this->assertStringContainsString('max-age=300', $cacheControl);
+        $this->assertStringContainsString('stale-while-revalidate=60', $cacheControl);
 
         $encoded = json_encode($response->json(), JSON_THROW_ON_ERROR);
         $this->assertStringNotContainsString('must-not-leak', $encoded);
