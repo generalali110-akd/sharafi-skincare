@@ -65,7 +65,14 @@
     const orders = Array.isArray(ordersPayload?.data) ? ordersPayload.data : [];
     setStat(0, Number(ordersPayload?.total ?? orders.length));
 
-    if (!orders.length) return;
+    if (!orders.length) {
+      const title = old?.querySelector('h4');
+      const text = old?.querySelector('p');
+      if (title) title.textContent = 'هنوز سفارشی ثبت نشده';
+      if (text) text.textContent = 'پس از اولین خرید، سفارش‌های شما در این بخش نمایش داده می‌شوند.';
+      return;
+    }
+
     const container = document.createElement('div');
     container.className = 'js-account-orders';
     container.style.cssText = 'display:grid;gap:12px;';
@@ -91,7 +98,14 @@
     const old = section.querySelector('.account-empty, .js-account-addresses');
     const addresses = Array.isArray(addressesPayload?.data) ? addressesPayload.data : [];
     setStat(1, addresses.length);
-    if (!addresses.length) return;
+
+    if (!addresses.length) {
+      const title = old?.querySelector('h4');
+      const text = old?.querySelector('p');
+      if (title) title.textContent = 'هنوز آدرسی ذخیره نشده';
+      if (text) text.textContent = 'هنگام تکمیل اولین خرید می‌توانید آدرس تحویل را ذخیره کنید.';
+      return;
+    }
 
     const container = document.createElement('div');
     container.className = 'js-account-addresses';
@@ -112,13 +126,15 @@
     const logout = document.querySelector('.account-nav .danger');
     logout?.addEventListener('click', async (event) => {
       event.preventDefault();
+      if (logout.getAttribute('aria-disabled') === 'true') return;
       logout.setAttribute('aria-disabled', 'true');
       try {
         await api.auth.logout();
-      } catch {
-        // Local session is still redirected to login even if the backend is temporarily unavailable.
+        window.location.replace('login.html');
+      } catch (error) {
+        logout.removeAttribute('aria-disabled');
+        toast(error?.message || 'خروج از حساب انجام نشد. لطفاً دوباره تلاش کنید.', 3500);
       }
-      window.location.replace('login.html');
     });
   };
 
@@ -138,10 +154,7 @@
     renderUser(user);
 
     try {
-      const [orders, addresses] = await Promise.all([
-        api.orders.list(),
-        api.addresses.list(),
-      ]);
+      const [orders, addresses] = await Promise.all([api.orders.list(), api.addresses.list()]);
       renderOrders(orders);
       renderAddresses(addresses);
     } catch (error) {
@@ -149,5 +162,6 @@
     }
   };
 
-  document.addEventListener('DOMContentLoaded', init);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();
