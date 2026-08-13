@@ -17,13 +17,10 @@ ENV APP_ENV=production \
     PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
 
 RUN set -eux; \
+    mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"; \
     apt-get update; \
-    apt-get install -y --no-install-recommends \
-        libonig-dev \
-        libpq-dev \
-        libzip-dev \
-        unzip; \
-    docker-php-ext-install -j"$(nproc)" mbstring opcache pdo_pgsql; \
+    apt-get install -y --no-install-recommends libpq-dev; \
+    docker-php-ext-install -j"$(nproc)" pdo_pgsql; \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/html
