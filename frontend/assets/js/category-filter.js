@@ -25,17 +25,25 @@
     if (!drawer) return;
     if (open) lastFocusedElement = trigger || document.activeElement;
     drawer.classList.toggle('is-open', open);
-    drawer.setAttribute('aria-hidden', String(!open));
     document.body.classList.toggle('filters-open', open);
     openButtons.forEach((button) => button.setAttribute('aria-expanded', String(open)));
 
     if (open) {
+      drawer.inert = false;
+      drawer.setAttribute('aria-hidden', 'false');
       window.setTimeout(() => getDrawerFocusable()[0]?.focus(), 0);
-    } else if (lastFocusedElement instanceof HTMLElement) {
+      return;
+    }
+
+    if (lastFocusedElement instanceof HTMLElement) {
       lastFocusedElement.focus();
       lastFocusedElement = null;
     }
+    drawer.inert = true;
+    drawer.setAttribute('aria-hidden', 'true');
   };
+
+  if (drawer) drawer.inert = drawer.getAttribute('aria-hidden') === 'true';
 
   openButtons.forEach((button) => button.addEventListener('click', () => setDrawer(true, button)));
   closeButtons.forEach((button) => button.addEventListener('click', () => setDrawer(false)));
