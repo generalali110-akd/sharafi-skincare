@@ -79,6 +79,7 @@ class AdminDashboardController extends Controller
                         ->whereBetween('created_at', [$todayStart, $todayEnd])
                         ->count(),
                     'new_customers' => User::query()
+                        ->whereDoesntHave('roles')
                         ->whereBetween('created_at', [$todayStart, $todayEnd])
                         ->count(),
                     'low_stock_variants' => InventoryItem::query()
