@@ -1,8 +1,9 @@
 // ===== Sharafi storefront shared utilities =====
 
 const GUEST_CART_KEY = 'sharafi_guest_cart_v2';
-const MAX_CART_QTY = 99;
+const DEFAULT_MAX_CART_QTY = 99;
 const SHARAFI_MAIN_SCRIPT_URL = document.currentScript?.src || new URL('assets/js/main.js', window.location.href).href;
+let maxCartQty = DEFAULT_MAX_CART_QTY;
 let serverCartItems = [];
 let cartLoadPromise = null;
 
@@ -69,7 +70,7 @@ function toast(message, duration = 2200) {
 function normalizeGuestItem(item) {
   const variantId = Number.parseInt(item?.variant_id ?? item?.variantId, 10);
   if (!Number.isInteger(variantId) || variantId <= 0) return null;
-  const qty = Math.min(MAX_CART_QTY, Math.max(1, Number.parseInt(item?.qty ?? item?.quantity, 10) || 1));
+  const qty = Math.min(maxCartQty, Math.max(1, Number.parseInt(item?.qty ?? item?.quantity, 10) || 1));
   return {
     variant_id: variantId,
     qty,
@@ -186,7 +187,7 @@ function guestAdd(product, quantity = 1) {
   if (!safeProduct) return null;
   const cart = getGuestCart();
   const existing = cart.find((item) => item.variant_id === safeProduct.variant_id);
-  if (existing) existing.qty = Math.min(MAX_CART_QTY, existing.qty + safeProduct.qty);
+  if (existing) existing.qty = Math.min(maxCartQty, existing.qty + safeProduct.qty);
   else cart.push(safeProduct);
   saveGuestCart(cart);
   return safeProduct;
@@ -210,7 +211,7 @@ async function addToCart(product, quantity = 1) {
   try {
     const currentItems = await loadCart(true);
     const existing = currentItems.find((item) => item.variant_id === safeProduct.variant_id);
-    const nextQty = Math.min(MAX_CART_QTY, (existing?.qty || 0) + safeProduct.qty);
+    const nextQty = Math.min(maxCartQty, (existing?.qty || 0) + safeProduct.qty);
     const payload = await api.cart.set(safeProduct.variant_id, nextQty);
     serverCartItems = normalizeServerCart(payload);
     updateCartBadgeFromItems(serverCartItems);
@@ -231,14 +232,14 @@ async function changeQty(id, delta) {
     const cart = getGuestCart();
     const item = cart.find((entry) => entry.variant_id === variantId);
     if (!item) return cart;
-    item.qty = Math.min(MAX_CART_QTY, Math.max(1, item.qty + Number(delta || 0)));
+    item.qty = Math.min(maxCartQty, Math.max(1, item.qty + Number(delta || 0)));
     saveGuestCart(cart);
     return cart;
   }
 
   const current = (await loadCart()).find((item) => item.variant_id === variantId);
   if (!current) return serverCartItems;
-  const nextQty = Math.min(MAX_CART_QTY, Math.max(1, current.qty + Number(delta || 0)));
+  const nextQty = Math.min(maxCartQty, Math.max(1, current.qty + Number(delta || 0)));
   const payload = await api.cart.set(variantId, nextQty);
   serverCartItems = normalizeServerCart(payload);
   updateCartBadgeFromItems(serverCartItems);
@@ -283,7 +284,7 @@ async function syncGuestCart() {
   let synced = 0;
   for (const item of guest) {
     try {
-      const nextQty = Math.min(MAX_CART_QTY, (quantities.get(item.variant_id) || 0) + item.qty);
+      const nextQty = Math.min(maxCartQty, (quantities.get(item.variant_id) || 0) + item.qty);
       await api.cart.set(item.variant_id, nextQty);
       quantities.set(item.variant_id, nextQty);
       synced += 1;
@@ -334,10 +335,21 @@ async function syncStorefrontConfig() {
   const config = payload?.data;
   if (!config) return;
   window.SharafiStorefrontConfig = Object.freeze(config);
+
+  const configuredMaxQty = Number(config.cart?.max_item_quantity);
+  if (Number.isInteger(configuredMaxQty) && configuredMaxQty > 0 && configuredMaxQty <= 999) {
+    maxCartQty = configuredMaxQty;
+    saveGuestCart(getGuestCart());
+  }
+
   const threshold = Number(config.shipping?.free_threshold_irr || 0);
   if (threshold > 0) {
+    const label = `ارسال رایگان استاندارد برای خرید از ${api.formatIrr(threshold)}`;
     document.querySelectorAll('.announce-msg').forEach((element) => {
-      if (element.textContent.includes('ارسال رایگان')) element.textContent = `ارسال رایگان استاندارد برای خرید از ${api.formatIrr(threshold)} 🌸`;
+      if (element.textContent.includes('ارسال رایگان')) element.textContent = `${label} 🌸`;
+    });
+    document.querySelectorAll('.shipping-note').forEach((element) => {
+      element.textContent = `🚚 ${label}`;
     });
   }
 }
