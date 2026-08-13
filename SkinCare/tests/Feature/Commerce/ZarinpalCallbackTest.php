@@ -13,7 +13,6 @@ use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\PaymentAttempt;
-use App\Models\PaymentEvent;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
