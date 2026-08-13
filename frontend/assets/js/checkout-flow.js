@@ -39,7 +39,7 @@
     }
 
     if (cart.length === 0) {
-      list.innerHTML = '<div class="cart-empty-v2"><div class="icon" aria-hidden="true">🛍️</div><h3>سبد خرید شما خالی است</h3><p>محصولات موردعلاقه‌تان را پیدا کنید و به سبد اضافه کنید.</p><a href="category.html" class="btn btn-primary" style="margin-top:16px;">مشاهده محصولات</a></div>';
+      list.innerHTML = '<div class="cart-empty-v2"><div class="icon" aria-hidden="true">🛍️</div><h3>سبد خرید شما خالی است</h3><p>محصولات موردعلاقه‌تان را پیدا کنید و به سبد اضافه کنید.</p><a href="category.html" class="btn btn-primary cart-empty-action">مشاهده محصولات</a></div>';
       if (checkoutLink) {
         checkoutLink.setAttribute('aria-disabled', 'true');
         checkoutLink.removeAttribute('href');
