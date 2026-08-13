@@ -23,6 +23,10 @@ storage/logs/*
 bootstrap/cache/*
 .env
 
+# Playwright runtime artifacts
+/e2e/test-results/
+/e2e/playwright-report/
+
 # IDE / OS
 .vscode/
 .idea/
