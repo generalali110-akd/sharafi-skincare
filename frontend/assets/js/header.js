@@ -3,6 +3,27 @@
   const header = document.querySelector('.site-header');
   if (!header) return;
 
+  const normalizePageSemantics = () => {
+    document.querySelectorAll('.social-row[aria-label]').forEach((element) => {
+      element.removeAttribute('aria-label');
+    });
+
+    const hero = document.querySelector('body > section.hero');
+    const footer = document.querySelector('body > footer');
+    if (!hero || !footer || document.querySelector('body > main')) return;
+
+    const main = document.createElement('main');
+    hero.before(main);
+    let node = main.nextSibling;
+    while (node && node !== footer) {
+      const next = node.nextSibling;
+      main.appendChild(node);
+      node = next;
+    }
+  };
+
+  normalizePageSemantics();
+
   const menuToggle = header.querySelector('.js-store-mobile-toggle');
   const mobileNav = header.querySelector('.js-mobile-nav-panel');
   const searchToggle = header.querySelector('.js-mobile-search-toggle');
