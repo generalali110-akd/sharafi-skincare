@@ -2,10 +2,13 @@
 
 use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
+use App\Http\Controllers\Api\V1\Admin\AdminCustomerController;
+use App\Http\Controllers\Api\V1\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\V1\Admin\AdminDiscountController;
 use App\Http\Controllers\Api\V1\Admin\AdminInventoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminOrderController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
+use App\Http\Controllers\Api\V1\Admin\AdminSessionController;
 use App\Http\Controllers\Api\V1\Admin\AdminTaxonomyController;
 use App\Http\Controllers\Api\V1\Auth\OtpAuthController;
 use App\Http\Controllers\Api\V1\CartController;
@@ -76,7 +79,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/orders/{orderNumber}/payment-attempts', [PaymentController::class, 'store'])->middleware('throttle:10,1');
 
     Route::prefix('admin')->group(function (): void {
+        Route::get('/session', AdminSessionController::class);
+        Route::get('/dashboard', AdminDashboardController::class)->middleware('permission:'.Permissions::ADMIN_DASHBOARD_VIEW);
+
         Route::get('/catalog/products', [AdminProductController::class, 'index'])->middleware('permission:'.Permissions::CATALOG_READ);
+        Route::get('/catalog/products/{product}', [AdminProductController::class, 'show'])->middleware('permission:'.Permissions::CATALOG_READ);
         Route::post('/catalog/products', [AdminProductController::class, 'store'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::patch('/catalog/products/{product}', [AdminProductController::class, 'update'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::post('/catalog/products/{product}/variants', [AdminProductController::class, 'storeVariant'])->middleware('permission:'.Permissions::CATALOG_WRITE);
@@ -94,6 +101,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/orders', [AdminOrderController::class, 'index'])->middleware('permission:'.Permissions::ORDERS_READ);
         Route::get('/orders/{orderNumber}', [AdminOrderController::class, 'show'])->middleware('permission:'.Permissions::ORDERS_READ);
         Route::patch('/orders/{orderNumber}/status', [AdminOrderController::class, 'updateStatus'])->middleware('permission:'.Permissions::ORDERS_WRITE);
+
+        Route::get('/customers', [AdminCustomerController::class, 'index'])->middleware('permission:'.Permissions::CUSTOMERS_READ);
 
         Route::get('/discounts', [AdminDiscountController::class, 'index'])->middleware('permission:'.Permissions::DISCOUNTS_READ);
         Route::post('/discounts', [AdminDiscountController::class, 'store'])->middleware('permission:'.Permissions::DISCOUNTS_WRITE);
