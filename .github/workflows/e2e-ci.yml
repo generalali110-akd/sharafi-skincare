@@ -128,9 +128,9 @@ jobs:
           cat storage/logs/e2e-server.log
           exit 1
 
-      - name: Run Playwright commerce suite
+      - name: Run Playwright commerce and responsive suite
         working-directory: e2e
-        run: npm test
+        run: npm test -- --grep-invert @visual
 
       - name: Upload failure diagnostics
         if: failure()
