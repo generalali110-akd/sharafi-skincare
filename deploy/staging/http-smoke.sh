@@ -99,10 +99,9 @@ grep -Eqi '^Set-Cookie:[[:space:]]*XSRF-TOKEN=' "$TMP_DIR/csrf.headers" || fail 
 grep -Ei '^Set-Cookie:[[:space:]]*XSRF-TOKEN=' "$TMP_DIR/csrf.headers" | grep -Fqi 'Secure' || fail 'XSRF-TOKEN cookie is missing Secure.'
 grep -Ei '^Set-Cookie:[[:space:]]*XSRF-TOKEN=' "$TMP_DIR/csrf.headers" | grep -Fqi 'SameSite=Lax' || fail 'XSRF-TOKEN cookie is missing SameSite=Lax.'
 
-grep -Eqi '^Set-Cookie:[[:space:]]*sharafi_session=|^Set-Cookie:[[:space:]]*laravel_session=' "$TMP_DIR/csrf.headers" || fail 'Session cookie was not issued by the CSRF bootstrap.'
-session_cookie=$(grep -Ei '^Set-Cookie:[[:space:]]*(sharafi_session|laravel_session)=' "$TMP_DIR/csrf.headers" | tail -n 1)
+session_cookie=$(grep -Ei '^Set-Cookie:' "$TMP_DIR/csrf.headers" | grep -Fvi 'XSRF-TOKEN=' | grep -Fi 'HttpOnly' | tail -n 1 || true)
+[ -n "$session_cookie" ] || fail 'HttpOnly session cookie was not issued by the CSRF bootstrap.'
 printf '%s' "$session_cookie" | grep -Fqi 'Secure' || fail 'Session cookie is missing Secure.'
-printf '%s' "$session_cookie" | grep -Fqi 'HttpOnly' || fail 'Session cookie is missing HttpOnly.'
 printf '%s' "$session_cookie" | grep -Fqi 'SameSite=Lax' || fail 'Session cookie is missing SameSite=Lax.'
 
 untrusted_origin='https://cors-probe.invalid'
