@@ -1,0 +1,40 @@
+{
+    email {$ACME_EMAIL}
+    admin off
+}
+
+{$STAGING_DOMAIN} {
+    encode zstd gzip
+
+    root * /srv/public
+
+    @sensitiveApi path /sanctum/* /api/v1/auth/* /api/v1/me /api/v1/addresses* /api/v1/cart* /api/v1/checkout* /api/v1/orders* /api/v1/payments/* /api/v1/admin/*
+    header @sensitiveApi Cache-Control "no-store, private"
+
+    @assets path /assets/*
+    header @assets Cache-Control "public, max-age=3600"
+
+    header {
+        -Server
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Strict-Transport-Security "max-age=31536000"
+    }
+
+    php_fastcgi app:9000 {
+        root /var/www/html/public
+        capture_stderr
+        dial_timeout 3s
+        read_timeout 65s
+        write_timeout 65s
+    }
+
+    file_server
+
+    log {
+        output stdout
+        format json
+    }
+}

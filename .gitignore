@@ -9,6 +9,8 @@ build/
 .env
 .env.local
 .env.*.local
+/SkinCare/.env.staging
+/SkinCare/.env.production
 
 # Logs
 *.log
