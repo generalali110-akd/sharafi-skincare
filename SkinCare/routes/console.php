@@ -3,6 +3,7 @@
 use App\Enums\OrderStatus;
 use App\Models\Order;
 use App\Services\Commerce\OrderReservationService;
+use App\Services\Outbox\SmsOutboxDispatcher;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
 
@@ -31,6 +32,38 @@ Artisan::command('orders:expire-reservations {--limit=500}', function (): void {
     $this->info("Expired {$expired} pending order reservation(s).");
 })->purpose('Release expired pending-payment inventory reservations');
 
+Artisan::command('outbox:dispatch-sms {--limit=100}', function (): void {
+    if (config('sms.driver') === 'null') {
+        $this->warn('SMS driver is not configured; queued notifications were left untouched.');
+
+        return;
+    }
+
+    $limit = max(1, min(1000, (int) $this->option('limit')));
+    $dispatcher = app(SmsOutboxDispatcher::class);
+    $processed = 0;
+    $failed = 0;
+
+    for ($i = 0; $i < $limit; $i++) {
+        $result = $dispatcher->dispatchOne();
+        if ($result === SmsOutboxDispatcher::RESULT_EMPTY) {
+            break;
+        }
+
+        if ($result === SmsOutboxDispatcher::RESULT_PROCESSED) {
+            $processed++;
+        } else {
+            $failed++;
+        }
+    }
+
+    $this->info("SMS outbox: {$processed} processed, {$failed} deferred/failed.");
+})->purpose('Dispatch committed SMS notifications from the transactional outbox');
+
 Schedule::command('orders:expire-reservations')
+    ->everyMinute()
+    ->withoutOverlapping();
+
+Schedule::command('outbox:dispatch-sms --limit=100')
     ->everyMinute()
     ->withoutOverlapping();
