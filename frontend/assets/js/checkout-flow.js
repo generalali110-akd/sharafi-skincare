@@ -184,16 +184,10 @@
     if (!form) return;
     form.elements.full_name.value = address.recipient_name || '';
     form.elements.phone.value = address.mobile || '';
+    form.elements.province.value = address.province || '';
+    form.elements.city.value = address.city || '';
     form.elements.postal_code.value = address.postal_code || '';
     form.elements.address.value = address.address_line || '';
-
-    const setSelectByText = (select, value) => {
-      if (!select || !value) return;
-      const option = [...select.options].find((item) => item.value === value || item.textContent.trim() === value);
-      if (option) select.value = option.value;
-    };
-    setSelectByText(form.elements.province, address.province);
-    setSelectByText(form.elements.city, address.city);
   }
 
   async function initCheckoutPage() {
@@ -211,9 +205,6 @@
       window.location.replace(`login.html?return=${encodeURIComponent('checkout.html')}`);
       return;
     }
-
-    const postal = form.elements.postal_code;
-    if (postal) postal.required = true;
 
     const cod = form.querySelector('input[name="payment"][value="cod"]');
     if (cod) {
@@ -246,15 +237,13 @@
     });
   }
 
-  const selectedText = (select) => select?.options?.[select.selectedIndex]?.textContent?.trim() || '';
-
   async function saveCheckoutAddress(form) {
     const data = {
       title: checkoutAddress?.title || 'ارسال سفارش',
       recipient_name: form.elements.full_name.value.trim(),
       mobile: form.elements.phone.value.trim(),
-      province: selectedText(form.elements.province),
-      city: selectedText(form.elements.city),
+      province: form.elements.province.value.trim(),
+      city: form.elements.city.value.trim(),
       postal_code: form.elements.postal_code.value.trim(),
       address_line: form.elements.address.value.trim(),
       is_default: true,
@@ -313,13 +302,14 @@
         sessionStorage.setItem('sharafi:last-order', orderNumber);
         if (submit) submit.textContent = 'در حال اتصال به درگاه...';
 
-        const paymentFingerprint = String(orderNumber);
-        const paymentKey = stableIdempotencyKey(`sharafi:payment-key:${orderNumber}`, paymentFingerprint, 'payment');
+        const paymentKey = stableIdempotencyKey(`sharafi:payment-key:${orderNumber}`, String(orderNumber), 'payment');
         const paymentPayload = await api.payments.initiate(orderNumber, paymentKey);
         const redirectUrl = paymentPayload?.data?.attempt?.redirect_url;
         if (!redirectUrl) throw new Error('آدرس درگاه پرداخت دریافت نشد.');
+        const target = new URL(redirectUrl, window.location.href);
+        if (!['http:', 'https:'].includes(target.protocol)) throw new Error('آدرس درگاه معتبر نیست.');
 
-        window.location.assign(redirectUrl);
+        window.location.assign(target.href);
       } catch (error) {
         if (orderNumber) {
           toast(`سفارش ${orderNumber} ثبت شد، اما اتصال به درگاه ناموفق بود. از حساب کاربری دوباره تلاش کنید.`, 5000);
