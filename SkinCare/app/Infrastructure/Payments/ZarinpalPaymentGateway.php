@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Http;
 
 final class ZarinpalPaymentGateway implements PaymentGateway, ReversiblePaymentGateway
 {
+    private const MAX_AMOUNT_IRR = 1_000_000_000;
+
     public function __construct(private readonly array $config) {}
 
     public function name(): string
@@ -26,6 +28,7 @@ final class ZarinpalPaymentGateway implements PaymentGateway, ReversiblePaymentG
     public function initiate(PaymentAttempt $attempt, string $callbackUrl): PaymentInitiationResult
     {
         $this->assertConfigured();
+        $this->assertPayableAmount($attempt->amount_irr);
         $attempt->loadMissing('payment.order.user');
         $order = $attempt->payment?->order;
 
@@ -79,6 +82,7 @@ final class ZarinpalPaymentGateway implements PaymentGateway, ReversiblePaymentG
     public function verify(PaymentAttempt $attempt, array $payload): PaymentVerificationResult
     {
         $this->assertConfigured();
+        $this->assertPayableAmount($attempt->amount_irr);
 
         $callbackStatus = strtoupper(trim((string) ($payload['Status'] ?? $payload['status'] ?? '')));
         if ($callbackStatus !== 'OK') {
@@ -89,8 +93,16 @@ final class ZarinpalPaymentGateway implements PaymentGateway, ReversiblePaymentG
             );
         }
 
+        if (! $attempt->authority || ! $this->validAuthority($attempt->authority)) {
+            return new PaymentVerificationResult(
+                successful: false,
+                failureCode: 'invalid_authority',
+                failureMessage: 'شناسه پرداخت ذخیره‌شده معتبر نیست.',
+            );
+        }
+
         $callbackAuthority = trim((string) ($payload['Authority'] ?? $payload['authority'] ?? ''));
-        if (! $attempt->authority || ! hash_equals($attempt->authority, $callbackAuthority)) {
+        if (! hash_equals($attempt->authority, $callbackAuthority)) {
             return new PaymentVerificationResult(
                 successful: false,
                 failureCode: 'authority_mismatch',
@@ -214,6 +226,16 @@ final class ZarinpalPaymentGateway implements PaymentGateway, ReversiblePaymentG
         }
     }
 
+    private function assertPayableAmount(int $amountIrr): void
+    {
+        if ($amountIrr <= 0) {
+            throw new PaymentUnavailableException('مبلغ پرداخت باید بیشتر از صفر باشد.');
+        }
+        if ($amountIrr > self::MAX_AMOUNT_IRR) {
+            throw new PaymentUnavailableException('مبلغ تراکنش از سقف مجاز زرین‌پال بیشتر است.');
+        }
+    }
+
     private function merchantId(): string
     {
         return trim((string) ($this->config['merchant_id'] ?? ''));
@@ -228,7 +250,7 @@ final class ZarinpalPaymentGateway implements PaymentGateway, ReversiblePaymentG
     {
         $prefix = $this->sandbox() ? 'S' : 'A';
 
-        return (bool) preg_match('/^'.$prefix.'[A-Za-z0-9]{20,99}$/', $authority);
+        return (bool) preg_match('/^'.$prefix.'[A-Za-z0-9]{35}$/', $authority);
     }
 
     private function decodeResponse(Response $response): array

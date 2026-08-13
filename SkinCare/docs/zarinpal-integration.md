@@ -13,6 +13,8 @@ This adapter is based on the current official Zarinpal payment-gateway documenta
 - Successful verification code `100` means newly verified.
 - Verification code `101` means the same successful transaction was already verified and is treated idempotently.
 - Callback query values are not trusted. `Status=OK` is only a signal to perform server-to-server verification; it never marks an order paid by itself.
+- Authority values are validated as the documented 36-character provider token before any callback lookup or verification request.
+- The adapter rejects zero/negative amounts and amounts above `1,000,000,000 IRR` before network I/O, matching the provider limit documented for error `-41` at review time.
 
 Production service base URL is `https://payment.zarinpal.com`. Sandbox replaces that host with `https://sandbox.zarinpal.com`; sandbox authorities start with `S` while production authorities start with `A`.
 

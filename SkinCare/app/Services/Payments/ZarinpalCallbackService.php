@@ -22,7 +22,7 @@ final class ZarinpalCallbackService
         }
 
         $authority = trim((string) ($payload['Authority'] ?? $payload['authority'] ?? ''));
-        if (! preg_match('/^[AS][A-Za-z0-9]{20,99}$/', $authority)) {
+        if (! preg_match('/^[AS][A-Za-z0-9]{35}$/', $authority)) {
             throw (new ModelNotFoundException)->setModel(PaymentAttempt::class);
         }
 

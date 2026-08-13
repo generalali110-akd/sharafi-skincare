@@ -119,6 +119,38 @@ class ZarinpalPaymentGatewayTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_malformed_stored_authority_is_rejected_without_provider_request(): void
+    {
+        Http::preventStrayRequests();
+        $authority = 'A'.str_repeat('D', 34);
+        $result = $this->gateway()->verify(
+            $this->attempt(500_000, $authority),
+            ['Authority' => $authority, 'Status' => 'OK'],
+        );
+
+        $this->assertFalse($result->successful);
+        $this->assertSame('invalid_authority', $result->failureCode);
+        Http::assertNothingSent();
+    }
+
+    public function test_zero_amount_is_rejected_before_provider_request(): void
+    {
+        Http::preventStrayRequests();
+
+        $this->expectException(PaymentUnavailableException::class);
+        $this->expectExceptionMessage('مبلغ پرداخت باید بیشتر از صفر باشد.');
+        $this->gateway()->initiate($this->attempt(0), 'https://shop.test/callback');
+    }
+
+    public function test_amount_above_zarinpal_limit_is_rejected_before_provider_request(): void
+    {
+        Http::preventStrayRequests();
+
+        $this->expectException(PaymentUnavailableException::class);
+        $this->expectExceptionMessage('مبلغ تراکنش از سقف مجاز زرین‌پال بیشتر است.');
+        $this->gateway()->initiate($this->attempt(1_000_000_001), 'https://shop.test/callback');
+    }
+
     public function test_provider_validation_errors_are_mapped_to_safe_messages(): void
     {
         Http::fake([
