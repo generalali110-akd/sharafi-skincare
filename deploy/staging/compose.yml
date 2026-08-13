@@ -25,17 +25,17 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-sharafi}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-sharafi} -d ${DB_DATABASE:-sharafi_staging}"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 10s
+      retries: 12
+      start_period: 15s
     security_opt:
       - no-new-privileges:true
     networks:
       - backend
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
 
   app:
     <<: *app-common
