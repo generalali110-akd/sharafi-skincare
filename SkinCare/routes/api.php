@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\Catalog\TaxonomyController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentController;
+use App\Http\Controllers\Api\V1\ZarinpalCallbackController;
 use App\Support\Permissions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,9 @@ Route::prefix('catalog')->group(function (): void {
     Route::get('/categories', [TaxonomyController::class, 'categories']);
     Route::get('/brands', [TaxonomyController::class, 'brands']);
 });
+
+Route::get('/payments/zarinpal/callback', ZarinpalCallbackController::class)
+    ->middleware('throttle:30,1');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('/me', static fn (Request $request) => response()->json(['data' => $request->user()]));

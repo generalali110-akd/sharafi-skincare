@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentAttemptStatus;
 use App\Enums\PaymentStatus;
 use App\Exceptions\CheckoutConflictException;
+use App\Exceptions\PaymentInitiationUnknownException;
 use App\Exceptions\PaymentUnavailableException;
 use App\Models\Order;
 use App\Models\Payment;
@@ -102,18 +103,20 @@ final class PaymentService
             $result = $this->gateway->initiate($attempt, (string) config('payment.callback_url'));
             $this->assertValidInitiation($result->authority, $result->redirectUrl);
         } catch (Throwable $exception) {
-            DB::transaction(function () use ($attempt, $exception): void {
-                $locked = PaymentAttempt::query()->whereKey($attempt->getKey())->lockForUpdate()->firstOrFail();
-                if ($locked->status === PaymentAttemptStatus::Created) {
-                    $locked->status = PaymentAttemptStatus::Failed;
-                    $locked->failure_code = 'initiation_failed';
-                    $locked->failure_message = $exception instanceof PaymentUnavailableException
-                        ? mb_substr($exception->getMessage(), 0, 500)
-                        : 'Payment gateway initiation failed.';
-                    $locked->failed_at = now();
-                    $locked->save();
-                }
-            });
+            if (! $exception instanceof PaymentInitiationUnknownException) {
+                DB::transaction(function () use ($attempt, $exception): void {
+                    $locked = PaymentAttempt::query()->whereKey($attempt->getKey())->lockForUpdate()->firstOrFail();
+                    if ($locked->status === PaymentAttemptStatus::Created) {
+                        $locked->status = PaymentAttemptStatus::Failed;
+                        $locked->failure_code = 'initiation_failed';
+                        $locked->failure_message = $exception instanceof PaymentUnavailableException
+                            ? mb_substr($exception->getMessage(), 0, 500)
+                            : 'Payment gateway initiation failed.';
+                        $locked->failed_at = now();
+                        $locked->save();
+                    }
+                });
+            }
 
             throw $exception;
         }
