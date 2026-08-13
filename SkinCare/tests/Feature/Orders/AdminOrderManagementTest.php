@@ -5,9 +5,7 @@ namespace Tests\Feature\Orders;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentAttemptStatus;
 use App\Enums\PaymentStatus;
-use App\Models\AuditLog;
 use App\Models\InventoryItem;
-use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OutboxMessage;
 use App\Models\Payment;
@@ -30,7 +28,7 @@ class AdminOrderManagementTest extends TestCase
     public function test_admin_order_routes_require_authentication_and_orders_permission(): void
     {
         $this->seed(SystemAccessSeeder::class);
-        $customer = User::factory()->create();
+        $customer = User::factory()->create(['mobile' => '09121234567']);
         $manager = $this->userWithRole('order-manager');
         $order = $this->order($customer, OrderStatus::Paid);
 
