@@ -79,12 +79,11 @@
     }
 
     const container = document.createElement('div');
-    container.className = 'js-account-orders';
-    container.style.cssText = 'display:grid;gap:12px;';
+    container.className = 'js-account-orders account-order-list';
     container.innerHTML = orders.slice(0, 10).map((order) => `
-      <article class="account-action" data-order="${safe(order.order_number)}" style="align-items:flex-start;">
+      <article class="account-action account-action--top" data-order="${safe(order.order_number)}">
         <span class="icon">📦</span>
-        <div style="flex:1;display:grid;gap:5px;">
+        <div class="account-action__content">
           <strong>سفارش ${safe(order.order_number)}</strong>
           <span>${safe(statusLabels[order.status] || order.status)} · ${safe(api.formatIrr(order.total_irr))}</span>
           <span>${Number(order.items?.length || 0).toLocaleString('fa-IR')} قلم</span>
@@ -113,8 +112,7 @@
     }
 
     const container = document.createElement('div');
-    container.className = 'js-account-addresses';
-    container.style.cssText = 'display:grid;gap:10px;';
+    container.className = 'js-account-addresses account-address-list';
     container.innerHTML = addresses.map((address) => `
       <div class="account-action">
         <span class="icon">📍</span>
