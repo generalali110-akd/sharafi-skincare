@@ -14,7 +14,7 @@
   <div class="container header-row">
     <a href="index.html" class="logo logo--link" aria-label="صفحه اصلی فروشگاه شرفی">شرفی<span class="dot">.</span></a>
     <div class="announce-meta" aria-label="تاریخ و ساعت به وقت تهران">
-      <span class="date-time-pill" style="background:var(--cream-2);color:var(--text);border-color:#ead9dd;"><span class="date-time-icon" aria-hidden="true">📅</span><span class="js-live-date"></span></span>
+      <span class="date-time-pill"><span class="date-time-icon" aria-hidden="true">📅</span><span class="js-live-date"></span></span>
       <span class="date-time-pill date-time-pill--time"><span class="date-time-icon" aria-hidden="true">🕐</span><span class="js-live-time"></span></span>
     </div>
     <a href="cart.html" class="icon-btn" aria-label="بازگشت به سبد خرید">🛒<span class="badge js-cart-count">0</span></a>
@@ -24,7 +24,7 @@
 <main class="checkout-page">
   <div class="container">
     <div class="checkout-page-head">
-      <div><h1 class="page-title">تکمیل خرید</h1><p class="page-subtitle">اطلاعات ارسال را بررسی و روش‌های ارسال و پرداخت را انتخاب کنید.</p></div>
+      <div><h1 class="page-title">تکمیل خرید</h1><p class="page-subtitle">اطلاعات ارسال را بررسی و روش ارسال را انتخاب کنید؛ مبلغ نهایی از سرور محاسبه می‌شود.</p></div>
     </div>
 
     <div class="checkout-steps" aria-label="مراحل تکمیل خرید">
@@ -44,7 +44,7 @@
               <div class="checkout-field"><label for="province">استان</label><select id="province" name="province" required><option value="">انتخاب استان</option><option value="tehran">تهران</option></select></div>
               <div class="checkout-field"><label for="city">شهر</label><select id="city" name="city" required><option value="">انتخاب شهر</option><option value="tehran">تهران</option></select></div>
               <div class="checkout-field full"><label for="address">آدرس دقیق پستی</label><textarea id="address" name="address" rows="3" required autocomplete="street-address" placeholder="خیابان، کوچه، پلاک، واحد..."></textarea></div>
-              <div class="checkout-field"><label for="postal-code">کد پستی</label><input id="postal-code" name="postal_code" type="text" inputmode="numeric" pattern="[0-9]{10}" autocomplete="postal-code" placeholder="1234567890"></div>
+              <div class="checkout-field"><label for="postal-code">کد پستی</label><input id="postal-code" name="postal_code" type="text" inputmode="numeric" pattern="[0-9]{10}" required autocomplete="postal-code" placeholder="1234567890"></div>
               <div class="checkout-field"><label for="delivery-note">توضیحات ارسال (اختیاری)</label><input id="delivery-note" name="delivery_note" type="text" placeholder="مثلاً تحویل عصر"></div>
             </div>
           </section>
@@ -52,16 +52,16 @@
           <section class="checkout-card">
             <h3><span class="num">۲</span> روش ارسال</h3>
             <div class="option-group" aria-label="روش ارسال">
-              <label class="checkout-option is-selected"><input type="radio" name="shipping" value="standard" checked><span class="ic" aria-hidden="true">🚚</span><span><span class="name">پست پیشتاز</span><span class="desc">تحویل ۲ تا ۳ روز کاری — ۴۵,۰۰۰ تومان؛ رایگان برای خریدهای واجد شرایط</span></span></label>
-              <label class="checkout-option"><input type="radio" name="shipping" value="courier"><span class="ic" aria-hidden="true">🏍️</span><span><span class="name">پیک موتوری</span><span class="desc">تحویل سریع در محدوده تهران — ۶۵,۰۰۰ تومان</span></span></label>
+              <label class="checkout-option is-selected"><input type="radio" name="shipping" value="standard" checked><span class="ic" aria-hidden="true">🚚</span><span><span class="name">پست پیشتاز</span><span class="desc">هزینه و شرایط ارسال به‌صورت لحظه‌ای از سرور محاسبه می‌شود.</span></span></label>
+              <label class="checkout-option"><input type="radio" name="shipping" value="courier"><span class="ic" aria-hidden="true">🏍️</span><span><span class="name">پیک موتوری</span><span class="desc">تحویل سریع؛ هزینه نهایی از Backend دریافت می‌شود.</span></span></label>
             </div>
           </section>
 
           <section class="checkout-card">
             <h3><span class="num">۳</span> روش پرداخت</h3>
             <div class="option-group" aria-label="روش پرداخت">
-              <label class="checkout-option is-selected"><input type="radio" name="payment" value="online" checked><span class="ic" aria-hidden="true">💳</span><span><span class="name">پرداخت آنلاین</span><span class="desc">اتصال درگاه امن در مرحله Backend انجام می‌شود.</span></span></label>
-              <label class="checkout-option"><input type="radio" name="payment" value="cod"><span class="ic" aria-hidden="true">💰</span><span><span class="name">پرداخت در محل</span><span class="desc">در صورت پشتیبانی آدرس و قوانین فروشگاه در Backend فعال می‌شود.</span></span></label>
+              <label class="checkout-option is-selected"><input type="radio" name="payment" value="online" checked><span class="ic" aria-hidden="true">💳</span><span><span class="name">پرداخت آنلاین</span><span class="desc">پس از ثبت سفارش به درگاه امن پرداخت هدایت می‌شوید.</span></span></label>
+              <label class="checkout-option" aria-disabled="true"><input type="radio" name="payment" value="cod" disabled><span class="ic" aria-hidden="true">💰</span><span><span class="name">پرداخت در محل</span><span class="desc">در حال حاضر فعال نیست.</span></span></label>
             </div>
           </section>
         </div>
@@ -74,7 +74,7 @@
           <div class="summary-row-v2"><span>هزینه ارسال</span><strong class="js-shipping">۰ تومان</strong></div>
           <div class="summary-row-v2 total"><span>مبلغ نهایی</span><strong class="js-total">۰ تومان</strong></div>
           <button type="submit" class="checkout-submit js-checkout-submit">ثبت سفارش و ادامه پرداخت</button>
-          <p class="secure-note">🔒 اطلاعات پرداخت در این Prototype ذخیره نمی‌شود. اتصال واقعی پرداخت و ایجاد سفارش در Backend انجام خواهد شد.</p>
+          <p class="secure-note">🔒 قیمت، موجودی، تخفیف، هزینه ارسال و وضعیت پرداخت فقط توسط Backend تعیین می‌شوند.</p>
         </aside>
       </div>
     </form>
@@ -83,6 +83,7 @@
 
 <footer><div class="footer-bottom">© ۱۴۰۵ فروشگاه مراقبت از پوست شرفی — تمامی حقوق محفوظ است</div></footer>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/checkout-flow.js"></script>
 <script src="assets/js/clock.js"></script>
