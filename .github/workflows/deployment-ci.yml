@@ -86,9 +86,43 @@ jobs:
             docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml "$@"
           }
 
-          compose up -d --wait db
+          compose up -d db
+
+          db_ready=false
+          for attempt in $(seq 1 30); do
+            if compose exec -T db sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then
+              db_ready=true
+              break
+            fi
+            sleep 2
+          done
+
+          if [ "$db_ready" != true ]; then
+            compose logs --no-color db
+            exit 1
+          fi
+
           compose run --rm app php artisan migrate --force --no-interaction
-          compose up -d --wait app
+          compose up -d app
+
+          app_ready=false
+          for attempt in $(seq 1 30); do
+            app_id=$(compose ps -q app)
+            if [ -n "$app_id" ]; then
+              app_status=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$app_id" 2>/dev/null || true)
+              if [ "$app_status" = healthy ]; then
+                app_ready=true
+                break
+              fi
+            fi
+            sleep 2
+          done
+
+          if [ "$app_ready" != true ]; then
+            compose logs --no-color app
+            exit 1
+          fi
+
           compose exec -T app php artisan ops:provider-readiness --json
 
       - name: Cleanup staging containers
