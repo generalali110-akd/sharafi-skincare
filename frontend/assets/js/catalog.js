@@ -40,9 +40,7 @@
     const min = Number(product?.pricing?.min);
     const max = Number(product?.pricing?.max);
     if (!Number.isFinite(min)) return '<span class="product-current-price">قیمت نامشخص</span>';
-    if (Number.isFinite(max) && max !== min) {
-      return `<span class="product-current-price">از ${safe(api.formatIrr(min))}</span>`;
-    }
+    if (Number.isFinite(max) && max !== min) return `<span class="product-current-price">از ${safe(api.formatIrr(min))}</span>`;
     return `<span class="product-current-price">${safe(api.formatIrr(min))}</span>`;
   };
 
@@ -57,9 +55,7 @@
 
     return `
       <article class="product-card-v2">
-        <div class="product-card-media">
-          <div class="product-placeholder" aria-hidden="true">🧴</div>
-        </div>
+        <div class="product-card-media"><div class="product-placeholder" aria-hidden="true">🧴</div></div>
         <div class="product-card-body">
           <span class="product-card-brand">${safe(product.brand?.name || 'شرفی')}</span>
           <a class="product-card-link" href="${detailUrl}"><h3 class="product-card-title">${safe(product.name)}</h3></a>
@@ -74,9 +70,7 @@
     const category = categories.find((item) => item.slug === params.category);
     const brand = brands.find((item) => item.slug === params.brand);
     const query = params.q;
-    if (categoryTitle) {
-      categoryTitle.textContent = query ? `نتایج جستجو برای «${query}»` : category?.name || brand?.name || 'همه محصولات';
-    }
+    if (categoryTitle) categoryTitle.textContent = query ? `نتایج جستجو برای «${query}»` : category?.name || brand?.name || 'همه محصولات';
     if (categoryHeroText) {
       categoryHeroText.textContent = query
         ? `${Number(total || 0).toLocaleString('fa-IR')} نتیجه از کاتالوگ فروشگاه پیدا شد.`
@@ -130,11 +124,9 @@
       const payload = await api.catalog.products(params);
       if (serial !== requestSerial) return;
       const products = Array.isArray(payload?.data) ? payload.data : [];
-      if (!products.length) {
-        grid.innerHTML = '<div class="cart-empty-v2"><h3>محصولی پیدا نشد</h3><p>فیلترها یا عبارت جستجو را تغییر دهید.</p></div>';
-      } else {
-        grid.innerHTML = products.map(productCard).join('');
-      }
+      grid.innerHTML = products.length
+        ? products.map(productCard).join('')
+        : '<div class="cart-empty-v2"><h3>محصولی پیدا نشد</h3><p>فیلترها یا عبارت جستجو را تغییر دهید.</p></div>';
       const total = Number(payload?.meta?.total || products.length);
       if (metaText) metaText.textContent = `${total.toLocaleString('fa-IR')} محصول`;
       updateHero(params, total);
@@ -172,10 +164,7 @@
 
   const loadTaxonomies = async () => {
     try {
-      const [categoriesPayload, brandsPayload] = await Promise.all([
-        api.catalog.categories(),
-        api.catalog.brands(),
-      ]);
+      const [categoriesPayload, brandsPayload] = await Promise.all([api.catalog.categories(), api.catalog.brands()]);
       categories = Array.isArray(categoriesPayload?.data) ? categoriesPayload.data : [];
       brands = Array.isArray(brandsPayload?.data) ? brandsPayload.data : [];
       document.querySelectorAll('.js-filter-form').forEach((form) => {
@@ -188,9 +177,12 @@
     }
   };
 
-  document.addEventListener('sharafi:catalog-query-changed', loadCatalog);
-  document.addEventListener('DOMContentLoaded', async () => {
+  const init = async () => {
     await loadTaxonomies();
     await loadCatalog();
-  });
+  };
+
+  document.addEventListener('sharafi:catalog-query-changed', loadCatalog);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
+  else init();
 })();
