@@ -32,8 +32,11 @@ cd "$ROOT_DIR"
 compose config --quiet
 compose build --pull app web
 
-# Migrations run before new application/web containers are exposed.
-compose run --rm --no-deps app php artisan migrate --force --no-interaction
+# The database is private to the Docker network and must be healthy before migrations.
+compose up -d --wait db
+
+# Migrations finish before new application/web containers are exposed.
+compose run --rm app php artisan migrate --force --no-interaction
 
 compose up -d --remove-orphans
 
