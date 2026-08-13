@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نتیجه پرداخت | فروشگاه شرفی</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="stylesheet" href="assets/css/header.css">
+<link rel="stylesheet" href="assets/css/checkout-flow.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-row">
+    <a href="index.html" class="logo logo--link" aria-label="صفحه اصلی فروشگاه شرفی">شرفی<span class="dot">.</span></a>
+    <div class="announce-meta" aria-label="تاریخ و ساعت به وقت تهران">
+      <span class="date-time-pill"><span class="date-time-icon" aria-hidden="true">📅</span><span class="js-live-date"></span></span>
+      <span class="date-time-pill date-time-pill--time"><span class="date-time-icon" aria-hidden="true">🕐</span><span class="js-live-time"></span></span>
+    </div>
+    <a href="account.html#orders" class="icon-btn" aria-label="مشاهده سفارش‌ها">📦</a>
+  </div>
+</header>
+
+<main class="checkout-page">
+  <div class="container">
+    <div class="checkout-page-head">
+      <div><h1 class="page-title">نتیجه پرداخت</h1><p class="page-subtitle">وضعیت نهایی مستقیماً از سرور فروشگاه بررسی می‌شود.</p></div>
+    </div>
+    <section class="checkout-card js-payment-result" aria-live="polite" aria-busy="true">
+      <h3 class="js-payment-result-title">در حال بررسی پرداخت...</h3>
+      <p class="js-payment-result-message">لطفاً چند لحظه صبر کنید.</p>
+      <div class="summary-row-v2"><span>شماره سفارش</span><strong class="js-payment-order">—</strong></div>
+      <div class="summary-row-v2"><span>مبلغ سفارش</span><strong class="js-payment-total">—</strong></div>
+      <div class="summary-row-v2"><span>وضعیت</span><strong class="js-payment-status">در حال بررسی</strong></div>
+      <div class="product-card-actions">
+        <a class="btn btn-primary" href="account.html#orders">مشاهده سفارش‌ها</a>
+        <a class="btn btn-outline" href="index.html">بازگشت به فروشگاه</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer><div class="footer-bottom">© ۱۴۰۵ فروشگاه مراقبت از پوست شرفی — تمامی حقوق محفوظ است</div></footer>
+<script src="assets/js/api.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/payment-result.js"></script>
+<script src="assets/js/clock.js"></script>
+</body>
+</html>
