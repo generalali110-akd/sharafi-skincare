@@ -20,6 +20,7 @@ class AdminProductListResource extends JsonResource
                 'name' => $this->brand->name,
                 'slug' => $this->brand->slug,
             ] : null,
+            'skus' => $this->variants->pluck('sku')->values(),
             'variant_count' => $this->variants->count(),
             'active_variant_count' => $activeVariants->count(),
             'available_stock' => $activeVariants->sum(fn ($variant) => $variant->inventory?->available ?? 0),

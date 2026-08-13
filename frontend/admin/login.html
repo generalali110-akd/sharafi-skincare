@@ -1,1 +1,47 @@
-<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ورود مدیر | شرفی</title><link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/admin-login.css"></head><body class="admin-login-page"><main class="admin-login-shell"><section class="admin-login-brand"><a href="../index.html" class="logo">شرفی<span class="dot">.</span></a><h1>ورود امن به پنل مدیریت فروشگاه</h1><p>پنل مدیریت شامل اطلاعات سفارش، مشتری و موجودی است؛ بنابراین احراز هویت واقعی باید فقط در Backend و با کنترل سطح دسترسی انجام شود.</p><div class="admin-login-security"><div>🛡️ بررسی Role و Permission در سرور</div><div>🔐 Session امن و HttpOnly Cookie</div><div>⏱️ آماده Rate Limit و ثبت رویدادهای ورود</div></div></section><section class="admin-login-form"><h2>ورود مدیر</h2><p>اطلاعات حساب مدیریتی خود را وارد کنید.</p><form class="js-admin-login-form"><div class="admin-login-field"><label for="admin-identity">ایمیل یا نام کاربری</label><input id="admin-identity" name="identity" type="text" autocomplete="username" required maxlength="190"></div><div class="admin-login-field"><label for="admin-password">رمز عبور</label><input id="admin-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></div><div class="admin-login-error js-admin-login-error" aria-live="polite"></div><button type="submit" class="btn btn-primary btn-block">ورود به پنل</button></form><div class="admin-login-note">در این نسخه Frontend هیچ رمز یا حساب نمونه‌ای وجود ندارد و ورود ساختگی غیرفعال است.</div><a class="admin-login-back" href="../index.html">← بازگشت به فروشگاه</a></section></main><script src="../assets/js/admin-login.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ورود مدیر | شرفی</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/admin-login.css">
+</head>
+<body class="admin-login-page">
+<main class="admin-login-shell">
+  <section class="admin-login-brand">
+    <a href="../index.html" class="logo">شرفی<span class="dot">.</span></a>
+    <h1>ورود امن به پنل مدیریت فروشگاه</h1>
+    <p>ورود مدیر با همان OTP امن فروشگاه انجام می‌شود؛ دسترسی به هر بخش پس از ورود دوباره در Backend بر اساس Permission کنترل می‌شود.</p>
+    <div class="admin-login-security">
+      <div>🛡️ بررسی Role و Permission در سرور</div>
+      <div>🔐 Session امن و HttpOnly Cookie</div>
+      <div>⏱️ Rate Limit و انقضای OTP</div>
+    </div>
+  </section>
+
+  <section class="admin-login-form">
+    <h2>ورود مدیر</h2>
+    <p>شماره موبایل حساب مدیریتی را وارد کنید.</p>
+    <form class="js-admin-login-form" novalidate>
+      <div class="admin-login-field">
+        <label for="admin-mobile">شماره موبایل</label>
+        <input id="admin-mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="09123456789" required maxlength="11" pattern="09[0-9]{9}">
+      </div>
+      <div class="admin-login-field js-admin-otp-field" hidden>
+        <label for="admin-code">کد تأیید</label>
+        <input id="admin-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="------">
+      </div>
+      <div class="admin-login-error js-admin-login-error" aria-live="polite"></div>
+      <button type="submit" class="btn btn-primary btn-block js-admin-submit">ارسال کد تأیید</button>
+      <button type="button" class="btn btn-outline btn-block js-admin-resend" hidden disabled>ارسال دوباره کد</button>
+    </form>
+    <div class="admin-login-note">هیچ حساب، رمز یا کد OTP نمونه‌ای در Frontend وجود ندارد.</div>
+    <a class="admin-login-back" href="../index.html">← بازگشت به فروشگاه</a>
+  </section>
+</main>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/admin-api.js"></script>
+<script src="../assets/js/admin-login.js"></script>
+</body>
+</html>

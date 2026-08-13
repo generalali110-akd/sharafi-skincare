@@ -52,6 +52,17 @@ class AdminProductController extends Controller
         );
     }
 
+    public function show(Product $product): AdminProductDetailResource
+    {
+        $product->load([
+            'brand:id,name,slug',
+            'categories:id,name,slug',
+            'variants.inventory:id,variant_id,on_hand,reserved,reorder_level',
+        ]);
+
+        return new AdminProductDetailResource($product);
+    }
+
     public function store(StoreProductRequest $request, CreateProductAction $action): JsonResponse
     {
         $product = $action->execute(
