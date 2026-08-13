@@ -4,12 +4,13 @@ namespace App\Services\Notifications;
 
 use App\Models\Order;
 use App\Models\OutboxMessage;
+use Carbon\CarbonInterface;
 
 final class OrderNotificationOutbox
 {
     public function orderCreated(Order $order): void
     {
-        $this->record($order, 'order_created');
+        $this->record($order, 'order_created', $order->reservation_expires_at);
     }
 
     public function paymentSucceeded(Order $order): void
@@ -22,7 +23,7 @@ final class OrderNotificationOutbox
         $this->record($order, 'order_shipped');
     }
 
-    private function record(Order $order, string $template): void
+    private function record(Order $order, string $template, ?CarbonInterface $expiresAt = null): void
     {
         $expiresHours = max(1, min(168, (int) config('sms.outbox.notification_expire_hours', 24)));
 
@@ -37,7 +38,7 @@ final class OrderNotificationOutbox
                     'order_number' => $order->order_number,
                 ],
                 'available_at' => now(),
-                'expires_at' => now()->addHours($expiresHours),
+                'expires_at' => $expiresAt ?? now()->addHours($expiresHours),
             ],
         );
     }
