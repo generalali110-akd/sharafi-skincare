@@ -7,6 +7,19 @@ let maxCartQty = DEFAULT_MAX_CART_QTY;
 let serverCartItems = [];
 let cartLoadPromise = null;
 
+function ensureCspSafeStylesheet() {
+  const href = new URL('../css/csp-safe.css', SHARAFI_MAIN_SCRIPT_URL).href;
+  if ([...document.styleSheets].some((sheet) => sheet.href === href)) return;
+  const existing = [...document.querySelectorAll('link[rel="stylesheet"]')].find((link) => link.href === href);
+  if (existing) return;
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = href;
+  document.head.appendChild(link);
+}
+
+ensureCspSafeStylesheet();
+
 function ensureSharafiApi() {
   if (window.SharafiAPI) return Promise.resolve(window.SharafiAPI);
   if (window.SharafiApiReady) return window.SharafiApiReady;
@@ -58,13 +71,12 @@ function toast(message, duration = 2200) {
     box.className = 'js-toast';
     box.setAttribute('role', 'status');
     box.setAttribute('aria-live', 'polite');
-    box.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#4a3a3c;color:#fff;padding:12px 24px;border-radius:999px;font-size:14px;z-index:999;box-shadow:0 8px 20px rgba(0,0,0,.2);transition:opacity .3s;max-width:min(90vw,520px);text-align:center;';
     document.body.appendChild(box);
   }
   box.textContent = String(message || '');
-  box.style.opacity = '1';
+  box.classList.add('is-visible');
   clearTimeout(box._t);
-  box._t = setTimeout(() => { box.style.opacity = '0'; }, duration);
+  box._t = setTimeout(() => { box.classList.remove('is-visible'); }, duration);
 }
 
 function normalizeGuestItem(item) {
@@ -301,8 +313,12 @@ async function syncGuestCart() {
 
 function initProductCardCartActions() {
   document.addEventListener('click', async (event) => {
-    const button = event.target.closest('.product-card-add[data-variant-id]');
+    const button = event.target.closest('.product-card-add');
     if (!button || button.disabled) return;
+    if (!button.dataset.variantId) {
+      toast('در حال دریافت اطلاعات واقعی محصول؛ لطفاً چند لحظه دیگر دوباره تلاش کنید.');
+      return;
+    }
     button.disabled = true;
     try {
       const api = await ensureSharafiApi().catch(() => null);

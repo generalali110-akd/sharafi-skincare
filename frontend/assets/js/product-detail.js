@@ -97,12 +97,10 @@
     let wrapper = document.querySelector('.js-product-variant-wrap');
     if (!wrapper) {
       wrapper = document.createElement('label');
-      wrapper.className = 'js-product-variant-wrap';
-      wrapper.style.cssText = 'display:grid;gap:6px;min-width:190px;font-size:13px;font-weight:700;';
+      wrapper.className = 'js-product-variant-wrap product-variant-wrap';
       wrapper.append(document.createTextNode('انتخاب گزینه'));
       const select = document.createElement('select');
-      select.className = 'js-product-variant';
-      select.style.cssText = 'min-height:44px;border:1px solid #e8d7da;border-radius:12px;padding:0 12px;background:#fff;font:inherit;';
+      select.className = 'js-product-variant product-variant-select';
       wrapper.appendChild(select);
       purchase.prepend(wrapper);
     }

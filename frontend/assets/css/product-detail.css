@@ -34,6 +34,8 @@
 .product-buy-btn{flex:1;min-height:48px;border-radius:12px;background:linear-gradient(135deg,var(--rose),var(--rose-dark));color:#fff;font-size:14px;font-weight:800;box-shadow:0 8px 20px rgba(212,103,127,.20);}
 .product-buy-btn:hover{filter:saturate(1.05);transform:translateY(-1px);}
 .product-buy-btn:focus-visible,.product-qty button:focus-visible{outline:3px solid rgba(212,103,127,.25);outline-offset:2px;}
+.product-variant-wrap{display:grid;gap:6px;min-width:190px;font-size:13px;font-weight:700;}
+.product-variant-select{min-height:44px;border:1px solid #e8d7da;border-radius:12px;padding:0 12px;background:#fff;font:inherit;}
 .product-trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid #f2e7e8;}
 .product-trust-item{text-align:center;font-size:11px;color:var(--text-light);}
 .product-trust-item strong{display:block;color:var(--text);font-size:12px;margin-top:4px;}

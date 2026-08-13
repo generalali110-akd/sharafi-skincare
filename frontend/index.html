@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/header.css">
 <link rel="stylesheet" href="assets/css/product-card.css">
+<link rel="stylesheet" href="assets/css/csp-safe.css">
 </head>
 <body>
 
@@ -105,7 +106,7 @@
       <span class="tag">✨ ۱۰۰٪ اصل و گارانتی‌دار</span>
       <h1>زیبایی طبیعی شما<br>با <b>شرفی</b> شروع می‌شود</h1>
       <p>مجموعه‌ای منتخب از محصولات بهداشتی، مراقبت پوست و آرایشی از برترین برندها — همراه با مشاوره رایگان و ارسال سریع.</p>
-      <div style="display:flex;gap:14px;">
+      <div class="hero-actions">
         <a href="category.html" class="btn btn-primary">مشاهده محصولات</a>
         <a href="#categories" class="btn btn-outline">دسته‌بندی‌ها</a>
       </div>
@@ -132,7 +133,7 @@
   </div>
 </section>
 
-<section class="section" style="padding-top:0;">
+<section class="section section--flush-top">
   <div class="container">
     <div class="section-head">
       <div>
@@ -164,7 +165,7 @@
             </div>
           </div>
           <div class="product-card-actions">
-            <button class="product-card-add" type="button" aria-label="افزودن سرم آبرسان اسید هیالورونیک به سبد خرید" onclick='addToCart({id:1,name:"سرم آبرسان اسید هیالورونیک",brand:"سی‌رو",price:485000,icon:"🧴"})'>
+            <button class="product-card-add" type="button" aria-label="افزودن سرم آبرسان اسید هیالورونیک به سبد خرید">
               <span class="product-card-add-icon" aria-hidden="true">🛒</span>
               افزودن به سبد
             </button>
@@ -192,7 +193,7 @@
             </div>
           </div>
           <div class="product-card-actions">
-            <button class="product-card-add" type="button" aria-label="افزودن رژلب مات سان‌کیس به سبد خرید" onclick='addToCart({id:2,name:"رژلب مات سان‌کیس",brand:"میبلین",price:210000,icon:"💄"})'>
+            <button class="product-card-add" type="button" aria-label="افزودن رژلب مات سان‌کیس به سبد خرید">
               <span class="product-card-add-icon" aria-hidden="true">🛒</span>
               افزودن به سبد
             </button>
@@ -221,7 +222,7 @@
             </div>
           </div>
           <div class="product-card-actions">
-            <button class="product-card-add" type="button" aria-label="افزودن ادو پرفیوم رز شرفی به سبد خرید" onclick='addToCart({id:3,name:"ادو پرفیوم رز شرفی",brand:"ادریسی",price:620000,icon:"🌸"})'>
+            <button class="product-card-add" type="button" aria-label="افزودن ادو پرفیوم رز شرفی به سبد خرید">
               <span class="product-card-add-icon" aria-hidden="true">🛒</span>
               افزودن به سبد
             </button>
@@ -250,7 +251,7 @@
             </div>
           </div>
           <div class="product-card-actions">
-            <button class="product-card-add" type="button" aria-label="افزودن شامپو تقویت‌کننده ضدریزش به سبد خرید" onclick='addToCart({id:4,name:"شامپو تقویت‌کننده ضدریزش",brand:"لورآل",price:315000,icon:"💇‍♀️"})'>
+            <button class="product-card-add" type="button" aria-label="افزودن شامپو تقویت‌کننده ضدریزش به سبد خرید">
               <span class="product-card-add-icon" aria-hidden="true">🛒</span>
               افزودن به سبد
             </button>
@@ -261,28 +262,28 @@
   </div>
 </section>
 
-<section class="section" id="shipping-benefits" style="padding-top:0;">
+<section class="section section--flush-top" id="shipping-benefits">
   <div class="container">
-    <div style="display:flex;gap:20px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:240px;background:#fff;border-radius:16px;padding:26px;text-align:center;box-shadow:var(--shadow-sm);">
-        <div style="font-size:30px;margin-bottom:8px;">🚚</div>
+    <div class="benefit-grid">
+      <div class="benefit-card">
+        <div class="benefit-icon">🚚</div>
         <b>ارسال سریع</b>
-        <p style="font-size:13px;color:var(--text-light);margin:6px 0 0;">تحویل ۲۴ تا ۴۸ ساعته</p>
+        <p class="benefit-copy">تحویل ۲۴ تا ۴۸ ساعته</p>
       </div>
-      <div style="flex:1;min-width:240px;background:#fff;border-radius:16px;padding:26px;text-align:center;box-shadow:var(--shadow-sm);">
-        <div style="font-size:30px;margin-bottom:8px;">✅</div>
+      <div class="benefit-card">
+        <div class="benefit-icon">✅</div>
         <b>۱۰۰٪ اورجینال</b>
-        <p style="font-size:13px;color:var(--text-light);margin:6px 0 0;">ضمانت اصالت کالا</p>
+        <p class="benefit-copy">ضمانت اصالت کالا</p>
       </div>
-      <div style="flex:1;min-width:240px;background:#fff;border-radius:16px;padding:26px;text-align:center;box-shadow:var(--shadow-sm);">
-        <div style="font-size:30px;margin-bottom:8px;">💳</div>
+      <div class="benefit-card">
+        <div class="benefit-icon">💳</div>
         <b>پرداخت امن</b>
-        <p style="font-size:13px;color:var(--text-light);margin:6px 0 0;">درگاه مستقیم بانکی</p>
+        <p class="benefit-copy">درگاه مستقیم بانکی</p>
       </div>
-      <div style="flex:1;min-width:240px;background:#fff;border-radius:16px;padding:26px;text-align:center;box-shadow:var(--shadow-sm);">
-        <div style="font-size:30px;margin-bottom:8px;">↩️</div>
+      <div class="benefit-card">
+        <div class="benefit-icon">↩️</div>
         <b>۷ روز ضمانت بازگشت</b>
-        <p style="font-size:13px;color:var(--text-light);margin:6px 0 0;">رضایت شما اولویت ماست</p>
+        <p class="benefit-copy">رضایت شما اولویت ماست</p>
       </div>
     </div>
   </div>
@@ -291,10 +292,10 @@
 <footer>
   <div class="container footer-grid">
     <div>
-      <div class="logo" style="margin-bottom:14px;">شرفی<span class="dot">.</span></div>
+      <div class="logo footer-logo">شرفی<span class="dot">.</span></div>
       <p>فروشگاه آنلاین محصولات بهداشتی، آرایشی و مراقبت پوست با تضمین اصالت کالا.</p>
-      <div class="social-row">
-        <a href="#">📸</a><a href="#">💬</a><a href="#">📘</a>
+      <div class="social-row" aria-label="شبکه‌های اجتماعی در انتظار تکمیل اطلاعات رسمی">
+        <span class="social-placeholder" aria-hidden="true">📸</span><span class="social-placeholder" aria-hidden="true">💬</span><span class="social-placeholder" aria-hidden="true">📘</span>
       </div>
     </div>
     <div>
@@ -308,9 +309,9 @@
     <div>
       <h4>راهنما</h4>
       <ul>
-        <li><a href="#">شرایط بازگشت کالا</a></li>
-        <li><a href="#">روش‌های پرداخت</a></li>
-        <li><a href="#">سوالات متداول</a></li>
+        <li><span class="footer-link-unavailable">شرایط بازگشت کالا</span></li>
+        <li><span class="footer-link-unavailable">روش‌های پرداخت</span></li>
+        <li><span class="footer-link-unavailable">سوالات متداول</span></li>
       </ul>
     </div>
     <div>
