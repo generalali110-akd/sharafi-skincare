@@ -135,7 +135,7 @@ final class SmsIrGateway implements SmsGateway
     {
         $apiKey = $this->apiKey();
 
-        if (mb_strlen($apiKey) < 20 || mb_strlen($apiKey) > 200 || preg_match('/\s/', $apiKey)) {
+        if ($apiKey === '' || mb_strlen($apiKey) > 512 || str_contains($apiKey, "\r") || str_contains($apiKey, "\n")) {
             throw new PermanentSmsDeliveryException('SMS.ir API key is not configured or is invalid.');
         }
     }
