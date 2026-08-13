@@ -217,7 +217,10 @@ async function addToCart(product, quantity = 1) {
   }
 
   try {
-    const payload = await api.cart.set(safeProduct.variant_id, safeProduct.qty);
+    const currentItems = await loadCart(true);
+    const existing = currentItems.find((item) => item.variant_id === safeProduct.variant_id);
+    const nextQty = Math.min(MAX_CART_QTY, (existing?.qty || 0) + safeProduct.qty);
+    const payload = await api.cart.set(safeProduct.variant_id, nextQty);
     serverCartItems = normalizeServerCart(payload);
     updateCartBadgeFromItems(serverCartItems);
     toast(`«${safeProduct.name}» به سبد خرید اضافه شد`);
@@ -285,11 +288,16 @@ async function syncGuestCart() {
   const guest = getGuestCart();
   if (!user || guest.length === 0) return { synced: 0, failed: guest.length };
 
+  const currentItems = await loadCart(true);
+  const quantities = new Map(currentItems.map((item) => [item.variant_id, item.qty]));
   const failed = [];
   let synced = 0;
+
   for (const item of guest) {
     try {
-      await api.cart.set(item.variant_id, item.qty);
+      const nextQty = Math.min(MAX_CART_QTY, (quantities.get(item.variant_id) || 0) + item.qty);
+      await api.cart.set(item.variant_id, nextQty);
+      quantities.set(item.variant_id, nextQty);
       synced += 1;
     } catch {
       failed.push(item);
@@ -343,9 +351,7 @@ async function bootstrapPageModules() {
     loadSharafiModule('catalog.js');
     return;
   }
-  if (document.querySelector('.hero') && document.querySelector('.prod-grid')) {
-    loadSharafiModule('home-catalog.js');
-  }
+  if (document.querySelector('.hero') && document.querySelector('.prod-grid')) loadSharafiModule('home-catalog.js');
 }
 
 window.SharafiCart = Object.freeze({
