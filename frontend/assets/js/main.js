@@ -5,6 +5,31 @@ const MAX_CART_QTY = 99;
 let serverCartItems = [];
 let cartLoadPromise = null;
 
+function ensureSharafiApi() {
+  if (window.SharafiAPI) return Promise.resolve(window.SharafiAPI);
+  if (window.SharafiApiReady) return window.SharafiApiReady;
+
+  const current = document.currentScript?.src || window.location.href;
+  const src = new URL('api.js', current).href;
+  window.SharafiApiReady = new Promise((resolve, reject) => {
+    const existing = [...document.scripts].find((script) => script.src === src);
+    const script = existing || document.createElement('script');
+    const onReady = () => window.SharafiAPI ? resolve(window.SharafiAPI) : reject(new Error('API client unavailable'));
+    if (existing) {
+      if (window.SharafiAPI) onReady();
+      else existing.addEventListener('load', onReady, { once: true });
+      existing.addEventListener('error', reject, { once: true });
+      return;
+    }
+    script.src = src;
+    script.async = true;
+    script.addEventListener('load', onReady, { once: true });
+    script.addEventListener('error', () => reject(new Error('API client failed to load')), { once: true });
+    document.head.appendChild(script);
+  });
+  return window.SharafiApiReady;
+}
+
 function escapeHTML(value) {
   return String(value ?? '').replace(/[&<>'"]/g, (char) => ({
     '&': '&amp;',
@@ -88,9 +113,14 @@ function normalizeServerCart(payload) {
 }
 
 async function currentUser() {
-  if (!window.SharafiAPI) return null;
+  let api;
   try {
-    return await window.SharafiAPI.currentUser();
+    api = await ensureSharafiApi();
+  } catch {
+    return null;
+  }
+  try {
+    return await api.currentUser();
   } catch {
     return null;
   }
@@ -101,7 +131,12 @@ function getCart() {
 }
 
 async function loadCart(force = false) {
-  if (!window.SharafiAPI) return getGuestCart();
+  let api = null;
+  try {
+    api = await ensureSharafiApi();
+  } catch {
+    return getGuestCart();
+  }
   if (!force && cartLoadPromise) return cartLoadPromise;
 
   cartLoadPromise = (async () => {
@@ -112,12 +147,12 @@ async function loadCart(force = false) {
     }
 
     try {
-      const payload = await window.SharafiAPI.cart.get();
+      const payload = await api.cart.get();
       serverCartItems = normalizeServerCart(payload);
       return serverCartItems;
     } catch (error) {
-      if (error instanceof window.SharafiAPI.ApiError && error.status === 401) {
-        window.SharafiAPI.clearSessionCache();
+      if (error instanceof api.ApiError && error.status === 401) {
+        api.clearSessionCache();
         serverCartItems = [];
         return getGuestCart();
       }
@@ -162,8 +197,9 @@ async function addToCart(product, quantity = 1) {
     return null;
   }
 
+  const api = await ensureSharafiApi().catch(() => null);
   const user = await currentUser();
-  if (!user || !window.SharafiAPI) {
+  if (!user || !api) {
     guestAdd(safeProduct, safeProduct.qty);
     toast(safeProduct.qty > 1
       ? `${safeProduct.qty.toLocaleString('fa-IR')} عدد «${safeProduct.name}» به سبد موقت اضافه شد`
@@ -172,7 +208,7 @@ async function addToCart(product, quantity = 1) {
   }
 
   try {
-    const payload = await window.SharafiAPI.cart.set(safeProduct.variant_id, safeProduct.qty);
+    const payload = await api.cart.set(safeProduct.variant_id, safeProduct.qty);
     serverCartItems = normalizeServerCart(payload);
     updateCartBadgeFromItems(serverCartItems);
     toast(`«${safeProduct.name}» به سبد خرید اضافه شد`);
@@ -186,9 +222,10 @@ async function addToCart(product, quantity = 1) {
 async function changeQty(id, delta) {
   const variantId = Number.parseInt(id, 10);
   if (!Number.isInteger(variantId) || variantId <= 0) return [];
+  const api = await ensureSharafiApi().catch(() => null);
   const user = await currentUser();
 
-  if (!user || !window.SharafiAPI) {
+  if (!user || !api) {
     const cart = getGuestCart();
     const item = cart.find((entry) => entry.variant_id === variantId);
     if (!item) return cart;
@@ -200,7 +237,7 @@ async function changeQty(id, delta) {
   const current = (await loadCart()).find((item) => item.variant_id === variantId);
   if (!current) return serverCartItems;
   const nextQty = Math.min(MAX_CART_QTY, Math.max(1, current.qty + Number(delta || 0)));
-  const payload = await window.SharafiAPI.cart.set(variantId, nextQty);
+  const payload = await api.cart.set(variantId, nextQty);
   serverCartItems = normalizeServerCart(payload);
   updateCartBadgeFromItems(serverCartItems);
   return serverCartItems;
@@ -209,15 +246,16 @@ async function changeQty(id, delta) {
 async function removeFromCart(id) {
   const variantId = Number.parseInt(id, 10);
   if (!Number.isInteger(variantId) || variantId <= 0) return [];
+  const api = await ensureSharafiApi().catch(() => null);
   const user = await currentUser();
 
-  if (!user || !window.SharafiAPI) {
+  if (!user || !api) {
     const cart = getGuestCart().filter((item) => item.variant_id !== variantId);
     saveGuestCart(cart);
     return cart;
   }
 
-  const payload = await window.SharafiAPI.cart.remove(variantId);
+  const payload = await api.cart.remove(variantId);
   serverCartItems = normalizeServerCart(payload);
   updateCartBadgeFromItems(serverCartItems);
   return serverCartItems;
@@ -232,8 +270,9 @@ function cartTotal() {
 }
 
 async function syncGuestCart() {
-  if (!window.SharafiAPI) return { synced: 0, failed: 0 };
-  const user = await window.SharafiAPI.currentUser(true);
+  const api = await ensureSharafiApi().catch(() => null);
+  if (!api) return { synced: 0, failed: getGuestCart().length };
+  const user = await api.currentUser(true);
   const guest = getGuestCart();
   if (!user || guest.length === 0) return { synced: 0, failed: guest.length };
 
@@ -241,7 +280,7 @@ async function syncGuestCart() {
   let synced = 0;
   for (const item of guest) {
     try {
-      await window.SharafiAPI.cart.set(item.variant_id, item.qty);
+      await api.cart.set(item.variant_id, item.qty);
       synced += 1;
     } catch {
       failed.push(item);
@@ -261,12 +300,13 @@ function initProductCardCartActions() {
 
     button.disabled = true;
     try {
+      const api = await ensureSharafiApi().catch(() => null);
       await addToCart({
         variant_id: button.dataset.variantId,
         name: button.dataset.cartName,
         slug: button.dataset.cartSlug,
         variant_title: button.dataset.variantTitle,
-        price: window.SharafiAPI?.toman(Number(button.dataset.priceIrr || 0)) || 0,
+        price: api?.toman(Number(button.dataset.priceIrr || 0)) || 0,
         in_stock: button.dataset.inStock !== 'false',
         icon: button.dataset.cartIcon || '🧴',
       });
@@ -290,6 +330,7 @@ document.addEventListener('sharafi:authenticated', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+  ensureSharafiApi().catch(() => {});
   updateCartBadge();
   initProductCardCartActions();
 });
