@@ -69,7 +69,16 @@
           <h3>خلاصه سفارش</h3>
           <div class="checkout-empty-warning js-checkout-empty-warning" hidden>سبد خرید خالی است.</div>
           <div class="checkout-summary-items js-checkout-items"></div>
+          <div class="checkout-field" style="margin:12px 0;">
+            <label for="coupon-code">کد تخفیف</label>
+            <div style="display:flex;gap:8px;">
+              <input id="coupon-code" class="js-coupon-code" name="coupon_code" type="text" maxlength="64" autocomplete="off" placeholder="مثلاً SAVE10" style="flex:1;">
+              <button class="btn btn-outline btn-sm js-apply-coupon" type="button">اعمال</button>
+            </div>
+            <div class="auth-error js-coupon-status" aria-live="polite"></div>
+          </div>
           <div class="summary-row-v2"><span>جمع کالاها</span><strong class="js-subtotal">۰ تومان</strong></div>
+          <div class="summary-row-v2 js-discount-row" hidden><span>تخفیف</span><strong class="js-discount">۰ تومان</strong></div>
           <div class="summary-row-v2"><span>هزینه ارسال</span><strong class="js-shipping">۰ تومان</strong></div>
           <div class="summary-row-v2 total"><span>مبلغ نهایی</span><strong class="js-total">۰ تومان</strong></div>
           <button type="submit" class="checkout-submit js-checkout-submit">ثبت سفارش و ادامه پرداخت</button>
