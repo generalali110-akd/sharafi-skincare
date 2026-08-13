@@ -1,4 +1,9 @@
 /* CSP-safe utility rules: replace legacy inline presentation without unsafe-inline. */
+:root{
+  --rose:#bc4e68;
+  --rose-dark:#ad405c;
+  --text-light:#7c686b;
+}
 .hero-actions{display:flex;gap:14px;}
 .section--flush-top{padding-top:0;}
 .benefit-grid{display:flex;gap:20px;flex-wrap:wrap;}
