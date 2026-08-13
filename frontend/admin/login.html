@@ -1,1 +1,55 @@
-<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ورود مدیر | شرفی</title><link rel="stylesheet" href="../assets/css/style.css"><link rel="stylesheet" href="../assets/css/admin-login.css"></head><body class="admin-login-page"><main class="admin-login-shell"><section class="admin-login-brand"><a href="../index.html" class="logo">شرفی<span class="dot">.</span></a><h1>ورود امن به پنل مدیریت فروشگاه</h1><p>پنل مدیریت شامل اطلاعات سفارش، مشتری و موجودی است؛ بنابراین احراز هویت واقعی باید فقط در Backend و با کنترل سطح دسترسی انجام شود.</p><div class="admin-login-security"><div>🛡️ بررسی Role و Permission در سرور</div><div>🔐 Session امن و HttpOnly Cookie</div><div>⏱️ آماده Rate Limit و ثبت رویدادهای ورود</div></div></section><section class="admin-login-form"><h2>ورود مدیر</h2><p>اطلاعات حساب مدیریتی خود را وارد کنید.</p><form class="js-admin-login-form"><div class="admin-login-field"><label for="admin-identity">ایمیل یا نام کاربری</label><input id="admin-identity" name="identity" type="text" autocomplete="username" required maxlength="190"></div><div class="admin-login-field"><label for="admin-password">رمز عبور</label><input id="admin-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></div><div class="admin-login-error js-admin-login-error" aria-live="polite"></div><button type="submit" class="btn btn-primary btn-block">ورود به پنل</button></form><div class="admin-login-note">در این نسخه Frontend هیچ رمز یا حساب نمونه‌ای وجود ندارد و ورود ساختگی غیرفعال است.</div><a class="admin-login-back" href="../index.html">← بازگشت به فروشگاه</a></section></main><script src="../assets/js/admin-login.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ورود مدیر | شرفی</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/admin-login.css">
+</head>
+<body class="admin-login-page">
+<main class="admin-login-shell">
+  <section class="admin-login-brand">
+    <a href="../index.html" class="logo">شرفی<span class="dot">.</span></a>
+    <h1>ورود امن به پنل مدیریت فروشگاه</h1>
+    <p>احراز هویت مدیر با همان OTP امن و Session سروری فروشگاه انجام می‌شود؛ دسترسی به پنل فقط پس از بررسی Permissionهای Backend فعال خواهد شد.</p>
+    <div class="admin-login-security">
+      <div>🛡️ Authorization مستقل پس از OTP</div>
+      <div>🔐 Session امن و HttpOnly Cookie</div>
+      <div>⏱️ Rate Limit و اعتبار کوتاه‌مدت OTP</div>
+    </div>
+  </section>
+
+  <section class="admin-login-form" aria-labelledby="admin-login-title">
+    <h2 id="admin-login-title">ورود مدیر</h2>
+    <p>شماره موبایل حسابی را وارد کنید که در Backend نقش یا مجوز مدیریتی دارد.</p>
+
+    <form class="js-admin-otp-request-form" novalidate>
+      <div class="admin-login-field">
+        <label for="admin-mobile">شماره موبایل</label>
+        <input id="admin-mobile" name="mobile" type="tel" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="۰۹۱۲۳۴۵۶۷۸۹" required aria-describedby="admin-login-error">
+      </div>
+      <div class="admin-login-error js-admin-login-error" id="admin-login-error" aria-live="polite"></div>
+      <button type="submit" class="btn btn-primary btn-block js-admin-request-button">دریافت کد ورود</button>
+    </form>
+
+    <form class="js-admin-otp-verify-form" hidden novalidate>
+      <div class="admin-login-field">
+        <label for="admin-otp">کد تأیید ارسال‌شده به <strong class="js-admin-mobile-echo"></strong></label>
+        <input id="admin-otp" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" minlength="6" maxlength="6" pattern="[0-9۰-۹٠-٩]{6}" placeholder="۱۲۳۴۵۶" required aria-describedby="admin-verify-error">
+      </div>
+      <div class="admin-login-error js-admin-verify-error" id="admin-verify-error" aria-live="polite"></div>
+      <button type="submit" class="btn btn-primary btn-block js-admin-verify-button">تأیید و ورود</button>
+      <button type="button" class="btn btn-outline btn-block js-admin-resend" disabled>ارسال مجدد کد</button>
+      <button type="button" class="admin-login-back js-admin-change-mobile">← ویرایش شماره موبایل</button>
+    </form>
+
+    <div class="admin-login-note">OTP فقط هویت را تأیید می‌کند؛ Backend بعد از ورود، Permissionهای مدیریتی حساب را جداگانه بررسی می‌کند.</div>
+    <a class="admin-login-back" href="../index.html">← بازگشت به فروشگاه</a>
+  </section>
+</main>
+<script src="../assets/js/api.js"></script>
+<script src="../assets/js/admin-api.js"></script>
+<script src="../assets/js/admin-login.js"></script>
+</body>
+</html>
