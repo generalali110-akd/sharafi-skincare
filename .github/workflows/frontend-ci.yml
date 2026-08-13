@@ -47,7 +47,7 @@ jobs:
       - name: Keep admin login OTP-only
         shell: bash
         run: |
-          if grep -nEi 'type=["'"']password["'"']' frontend/admin/login.html; then
+          if grep -nEi 'type="password"' frontend/admin/login.html; then
             echo 'Admin login must use the real OTP/session flow, not a password placeholder.' >&2
             exit 1
           fi
