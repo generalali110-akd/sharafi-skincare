@@ -13,6 +13,7 @@ use App\Models\PaymentAttempt;
 use App\Models\PaymentEvent;
 use App\Services\Commerce\DiscountService;
 use App\Services\Commerce\OrderStateMachine;
+use App\Services\Notifications\OrderNotificationOutbox;
 use Illuminate\Support\Facades\DB;
 
 final class PaymentSettlementService
@@ -20,6 +21,7 @@ final class PaymentSettlementService
     public function __construct(
         private readonly DiscountService $discounts,
         private readonly OrderStateMachine $stateMachine,
+        private readonly OrderNotificationOutbox $notifications,
     ) {}
 
     public function settleSuccessful(
@@ -127,6 +129,7 @@ final class PaymentSettlementService
 
             $this->discounts->consumeForOrder($order);
             $this->stateMachine->transition($order, OrderStatus::Paid, null, 'payment_verified');
+            $this->notifications->paymentSucceeded($order);
 
             return $order;
         }, attempts: 3);

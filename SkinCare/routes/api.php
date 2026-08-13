@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AddressController;
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminDiscountController;
 use App\Http\Controllers\Api\V1\Admin\AdminInventoryController;
+use App\Http\Controllers\Api\V1\Admin\AdminOrderController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminTaxonomyController;
 use App\Http\Controllers\Api\V1\Auth\OtpAuthController;
@@ -77,6 +78,10 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/inventory', [AdminInventoryController::class, 'index'])->middleware('permission:'.Permissions::INVENTORY_READ);
         Route::post('/inventory/{variant}/adjust', [AdminInventoryController::class, 'adjust'])->middleware('permission:'.Permissions::INVENTORY_WRITE);
         Route::patch('/inventory/{variant}/settings', [AdminInventoryController::class, 'updateSettings'])->middleware('permission:'.Permissions::INVENTORY_WRITE);
+
+        Route::get('/orders', [AdminOrderController::class, 'index'])->middleware('permission:'.Permissions::ORDERS_READ);
+        Route::get('/orders/{orderNumber}', [AdminOrderController::class, 'show'])->middleware('permission:'.Permissions::ORDERS_READ);
+        Route::patch('/orders/{orderNumber}/status', [AdminOrderController::class, 'updateStatus'])->middleware('permission:'.Permissions::ORDERS_WRITE);
 
         Route::get('/discounts', [AdminDiscountController::class, 'index'])->middleware('permission:'.Permissions::DISCOUNTS_READ);
         Route::post('/discounts', [AdminDiscountController::class, 'store'])->middleware('permission:'.Permissions::DISCOUNTS_WRITE);

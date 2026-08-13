@@ -11,4 +11,9 @@ class NullSmsGateway implements SmsGateway
     {
         throw new SmsDeliveryException('No SMS provider is configured.');
     }
+
+    public function sendMessage(string $mobile, string $message, string $idempotencyKey): void
+    {
+        throw new SmsDeliveryException('No SMS provider is configured.');
+    }
 }
