@@ -2,6 +2,7 @@
 
 const GUEST_CART_KEY = 'sharafi_guest_cart_v2';
 const MAX_CART_QTY = 99;
+const SHARAFI_MAIN_SCRIPT_URL = document.currentScript?.src || new URL('assets/js/main.js', window.location.href).href;
 let serverCartItems = [];
 let cartLoadPromise = null;
 
@@ -9,8 +10,7 @@ function ensureSharafiApi() {
   if (window.SharafiAPI) return Promise.resolve(window.SharafiAPI);
   if (window.SharafiApiReady) return window.SharafiApiReady;
 
-  const current = document.currentScript?.src || window.location.href;
-  const src = new URL('api.js', current).href;
+  const src = new URL('api.js', SHARAFI_MAIN_SCRIPT_URL).href;
   window.SharafiApiReady = new Promise((resolve, reject) => {
     const existing = [...document.scripts].find((script) => script.src === src);
     const script = existing || document.createElement('script');
@@ -28,6 +28,15 @@ function ensureSharafiApi() {
     document.head.appendChild(script);
   });
   return window.SharafiApiReady;
+}
+
+function loadSharafiModule(filename) {
+  const src = new URL(filename, SHARAFI_MAIN_SCRIPT_URL).href;
+  if ([...document.scripts].some((script) => script.src === src)) return;
+  const script = document.createElement('script');
+  script.src = src;
+  script.async = true;
+  document.body.appendChild(script);
 }
 
 function escapeHTML(value) {
@@ -316,6 +325,29 @@ function initProductCardCartActions() {
   });
 }
 
+async function syncAccountLink() {
+  const user = await currentUser();
+  document.querySelectorAll('.user-account-link').forEach((link) => {
+    link.href = user ? 'account.html' : 'login.html';
+    link.setAttribute('aria-label', user ? 'حساب کاربری' : 'ورود به حساب کاربری');
+  });
+}
+
+async function bootstrapPageModules() {
+  await ensureSharafiApi();
+  if (document.body.classList.contains('account-page')) {
+    loadSharafiModule('account.js');
+    return;
+  }
+  if (document.querySelector('.category-main .prod-grid')) {
+    loadSharafiModule('catalog.js');
+    return;
+  }
+  if (document.querySelector('.hero') && document.querySelector('.prod-grid')) {
+    loadSharafiModule('home-catalog.js');
+  }
+}
+
 window.SharafiCart = Object.freeze({
   load: loadCart,
   add: addToCart,
@@ -324,13 +356,19 @@ window.SharafiCart = Object.freeze({
   syncGuestCart,
   getGuestCart,
 });
+window.ensureSharafiApi = ensureSharafiApi;
+
+// Start loading the shared client immediately so page-specific scripts can await it safely.
+ensureSharafiApi().catch(() => {});
 
 document.addEventListener('sharafi:authenticated', () => {
   syncGuestCart().catch(() => {});
+  syncAccountLink().catch(() => {});
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-  ensureSharafiApi().catch(() => {});
   updateCartBadge();
   initProductCardCartActions();
+  syncAccountLink().catch(() => {});
+  bootstrapPageModules().catch(() => {});
 });
