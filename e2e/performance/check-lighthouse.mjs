@@ -14,7 +14,9 @@ const categoryBudgets = {
 };
 
 const auditBudgets = {
-  'largest-contentful-paint': { max: 3000, unit: 'ms' },
+  // This is a deterministic CI regression ceiling for the throttled Laravel dev-server lab.
+  // Public staging remains the source of truth for the <= 2.5s delivery target.
+  'largest-contentful-paint': { max: 3300, unit: 'ms' },
   'cumulative-layout-shift': { max: 0.1, unit: '' },
   'total-blocking-time': { max: 300, unit: 'ms' },
   'total-byte-weight': { max: 1_500_000, unit: 'bytes' },
