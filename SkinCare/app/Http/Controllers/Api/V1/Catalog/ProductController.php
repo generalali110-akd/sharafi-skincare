@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\Catalog\ProductIndexRequest;
 use App\Http\Resources\Api\V1\Catalog\ProductDetailResource;
 use App\Http\Resources\Api\V1\Catalog\ProductListResource;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -20,6 +21,18 @@ class ProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
+            ])
+            ->withCount([
+                'variants as active_variants_count' => fn ($query) => $query->active(),
+            ])
+            ->addSelect([
+                'single_variant_id' => ProductVariant::query()
+                    ->select('id')
+                    ->whereColumn('product_id', 'products.id')
+                    ->active()
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->limit(1),
             ])
             ->withMin(['variants as min_price_irr' => fn ($query) => $query->active()], 'price_irr')
             ->withMax(['variants as max_price_irr' => fn ($query) => $query->active()], 'price_irr')
