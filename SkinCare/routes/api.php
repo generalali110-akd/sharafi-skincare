@@ -46,7 +46,16 @@ Route::get('/payments/zarinpal/callback', ZarinpalCallbackController::class)
     ->middleware('throttle:30,1');
 
 Route::middleware('auth:sanctum')->group(function (): void {
-    Route::get('/me', static fn (Request $request) => response()->json(['data' => $request->user()]));
+    Route::get('/me', static function (Request $request) {
+        $user = $request->user();
+
+        return response()->json([
+            'data' => [
+                'name' => $user?->name,
+                'mobile' => $user?->mobile,
+            ],
+        ]);
+    });
     Route::post('/auth/logout', [OtpAuthController::class, 'logout']);
 
     Route::get('/addresses', [AddressController::class, 'index']);
