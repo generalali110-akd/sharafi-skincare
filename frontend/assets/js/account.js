@@ -45,22 +45,12 @@
     if (security) security.textContent = '🛡️ ورود تأییدشده با OTP';
   };
 
-  const paymentKey = (orderNumber) => {
-    const storageKey = `sharafi:account-payment:${orderNumber}`;
-    let key = sessionStorage.getItem(storageKey);
-    if (!key) {
-      key = api.idempotencyKey('payment');
-      sessionStorage.setItem(storageKey, key);
-    }
-    return key;
-  };
-
   const continuePayment = async (orderNumber, button) => {
     button.disabled = true;
     const oldText = button.textContent;
     button.textContent = 'در حال اتصال...';
     try {
-      const payload = await api.payments.initiate(orderNumber, paymentKey(orderNumber));
+      const payload = await api.payments.initiate(orderNumber);
       const redirect = payload?.data?.attempt?.redirect_url;
       if (!redirect) throw new Error('آدرس درگاه دریافت نشد.');
       const target = new URL(redirect, window.location.href);
