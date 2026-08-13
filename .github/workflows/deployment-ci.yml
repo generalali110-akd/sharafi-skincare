@@ -38,6 +38,20 @@ jobs:
           sh -n deploy/staging/deploy.sh
           sh -n deploy/staging/http-smoke.sh
 
+      - name: Enforce strict CSP policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'Content-Security-Policy' deploy/caddy/Caddyfile
+          grep -Fq "default-src 'self'" deploy/caddy/Caddyfile
+          grep -Fq "script-src 'self'" deploy/caddy/Caddyfile
+          grep -Fq "style-src 'self'" deploy/caddy/Caddyfile
+          grep -Fq "object-src 'none'" deploy/caddy/Caddyfile
+          if grep -E 'Content-Security-Policy.*unsafe-(inline|eval)' deploy/caddy/Caddyfile; then
+            echo 'CSP must not permit unsafe-inline or unsafe-eval.' >&2
+            exit 1
+          fi
+
       - name: Prepare non-secret compose validation environment
         shell: bash
         run: |
