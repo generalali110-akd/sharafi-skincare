@@ -16,6 +16,19 @@
     refunded: 'بازگشت وجه',
   };
 
+  const hideUnsupportedFeatures = () => {
+    const subtitle = document.querySelector('.account-heading p');
+    if (subtitle) subtitle.textContent = 'مدیریت سفارش‌ها، آدرس‌ها و اطلاعات حساب';
+
+    document.querySelectorAll('a[href="#wishlist"], a[href="#support"], #wishlist, #support').forEach((element) => {
+      element.hidden = true;
+    });
+
+    document.querySelectorAll('.account-stat').forEach((stat) => {
+      if (stat.textContent.includes('موردعلاقه')) stat.hidden = true;
+    });
+  };
+
   const setStat = (index, value) => {
     const target = document.querySelectorAll('.account-stat .value')[index];
     if (target) target.textContent = Number(value || 0).toLocaleString('fa-IR');
@@ -50,7 +63,9 @@
       const payload = await api.payments.initiate(orderNumber, paymentKey(orderNumber));
       const redirect = payload?.data?.attempt?.redirect_url;
       if (!redirect) throw new Error('آدرس درگاه دریافت نشد.');
-      window.location.assign(redirect);
+      const target = new URL(redirect, window.location.href);
+      if (!['http:', 'https:'].includes(target.protocol)) throw new Error('آدرس درگاه معتبر نیست.');
+      window.location.assign(target.href);
     } catch (error) {
       toast(error?.message || 'شروع پرداخت ناموفق بود.', 3500);
       button.disabled = false;
@@ -139,6 +154,7 @@
   };
 
   const init = async () => {
+    hideUnsupportedFeatures();
     initLogout();
     let user;
     try {
