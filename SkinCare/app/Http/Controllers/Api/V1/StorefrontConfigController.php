@@ -21,6 +21,6 @@ final class StorefrontConfigController extends Controller
                     'courier_irr' => (int) config('shop.courier_shipping_irr'),
                 ],
             ],
-        ]);
+        ])->header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
     }
 }
