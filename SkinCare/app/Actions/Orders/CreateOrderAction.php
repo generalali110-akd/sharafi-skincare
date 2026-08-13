@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\Commerce\CheckoutPricingService;
 use App\Services\Commerce\DiscountService;
 use App\Services\Commerce\OrderStateMachine;
+use App\Services\Notifications\OrderNotificationOutbox;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -24,6 +25,7 @@ final class CreateOrderAction
         private readonly CheckoutPricingService $pricing,
         private readonly DiscountService $discounts,
         private readonly OrderStateMachine $stateMachine,
+        private readonly OrderNotificationOutbox $notifications,
     ) {}
 
     public function execute(
@@ -169,6 +171,7 @@ final class CreateOrderAction
             }
 
             CartItem::query()->where('cart_id', $cart->getKey())->delete();
+            $this->notifications->orderCreated($order);
 
             return [$order->load('items'), true];
         }, attempts: 3);
