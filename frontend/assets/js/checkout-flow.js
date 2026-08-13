@@ -6,6 +6,7 @@
   let checkoutAddress = null;
   let checkoutCart = [];
   let checkoutQuote = null;
+  let appliedCouponCode = null;
   let submitting = false;
 
   const formatIrr = (value) => api ? api.formatIrr(Number(value || 0)) : '۰ تومان';
@@ -25,7 +26,6 @@
   async function renderCartV2() {
     const list = document.querySelector('.js-cart-list');
     if (!list || !cartApi) return;
-
     const checkoutLink = document.querySelector('.js-checkout-btn');
     const progress = document.querySelector('.js-free-shipping-progress');
     let cart;
@@ -39,14 +39,7 @@
     }
 
     if (cart.length === 0) {
-      list.innerHTML = `
-        <div class="cart-empty-v2">
-          <div class="icon" aria-hidden="true">🛍️</div>
-          <h3>سبد خرید شما خالی است</h3>
-          <p>محصولات موردعلاقه‌تان را پیدا کنید و به سبد اضافه کنید.</p>
-          <a href="category.html" class="btn btn-primary" style="margin-top:16px;">مشاهده محصولات</a>
-        </div>`;
-
+      list.innerHTML = '<div class="cart-empty-v2"><div class="icon" aria-hidden="true">🛍️</div><h3>سبد خرید شما خالی است</h3><p>محصولات موردعلاقه‌تان را پیدا کنید و به سبد اضافه کنید.</p><a href="category.html" class="btn btn-primary" style="margin-top:16px;">مشاهده محصولات</a></div>';
       if (checkoutLink) {
         checkoutLink.setAttribute('aria-disabled', 'true');
         checkoutLink.removeAttribute('href');
@@ -61,15 +54,7 @@
     list.innerHTML = cart.map((item) => `
       <article class="cart-item-v2" data-cart-row="${item.variant_id}">
         <div class="thumb" aria-hidden="true">${safe(item.icon || '🧴')}</div>
-        <div>
-          <h4>${safe(item.name)}</h4>
-          <div class="meta">${safe(item.variant_title || item.sku || '')}${item.in_stock === false ? ' · ناموجود' : ''}</div>
-          <div class="cart-qty" aria-label="تعداد ${safe(item.name)}">
-            <button type="button" aria-label="کم کردن تعداد" data-cart-delta="-1" data-cart-id="${item.variant_id}">−</button>
-            <span>${Number(item.qty).toLocaleString('fa-IR')}</span>
-            <button type="button" aria-label="زیاد کردن تعداد" data-cart-delta="1" data-cart-id="${item.variant_id}">+</button>
-          </div>
-        </div>
+        <div><h4>${safe(item.name)}</h4><div class="meta">${safe(item.variant_title || item.sku || '')}${item.in_stock === false ? ' · ناموجود' : ''}</div><div class="cart-qty" aria-label="تعداد ${safe(item.name)}"><button type="button" aria-label="کم کردن تعداد" data-cart-delta="-1" data-cart-id="${item.variant_id}">−</button><span>${Number(item.qty).toLocaleString('fa-IR')}</span><button type="button" aria-label="زیاد کردن تعداد" data-cart-delta="1" data-cart-id="${item.variant_id}">+</button></div></div>
         <div class="price-col">${fmtPrice(item.price * item.qty)}</div>
         <button class="cart-remove" type="button" aria-label="حذف ${safe(item.name)} از سبد" data-cart-remove="${item.variant_id}">✕</button>
       </article>`).join('');
@@ -86,7 +71,6 @@
         }
       });
     });
-
     list.querySelectorAll('[data-cart-remove]').forEach((button) => {
       button.addEventListener('click', async () => {
         button.disabled = true;
@@ -121,18 +105,14 @@
       document.querySelectorAll('.js-subtotal').forEach((el) => { el.textContent = formatIrr(quote?.subtotal_irr); });
       document.querySelectorAll('.js-shipping').forEach((el) => { el.textContent = Number(quote?.shipping_irr || 0) === 0 ? 'رایگان' : formatIrr(quote?.shipping_irr); });
       document.querySelectorAll('.js-total').forEach((el) => { el.textContent = formatIrr(quote?.total_irr); });
-      if (progress) progress.textContent = Number(quote?.shipping_irr || 0) === 0
-        ? '✓ سفارش شما با ارسال استاندارد شامل ارسال رایگان است.'
-        : 'هزینه ارسال و مبلغ نهایی مستقیماً توسط سرور محاسبه شده است.';
+      if (progress) progress.textContent = Number(quote?.shipping_irr || 0) === 0 ? '✓ سفارش شما با ارسال استاندارد شامل ارسال رایگان است.' : 'هزینه ارسال و مبلغ نهایی مستقیماً توسط سرور محاسبه شده است.';
     } catch (error) {
       if (progress) progress.textContent = error?.message || 'محاسبه مبلغ نهایی ناموفق بود.';
     }
   }
 
   function syncOptionGroup(groupName) {
-    document.querySelectorAll(`input[name="${groupName}"]`).forEach((input) => {
-      input.closest('.checkout-option')?.classList.toggle('is-selected', input.checked);
-    });
+    document.querySelectorAll(`input[name="${groupName}"]`).forEach((input) => input.closest('.checkout-option')?.classList.toggle('is-selected', input.checked));
   }
 
   const selectedShipping = () => document.querySelector('input[name="shipping"]:checked')?.value || 'standard';
@@ -151,30 +131,31 @@
     }
 
     const quoteItems = Array.isArray(checkoutQuote?.items) ? checkoutQuote.items : [];
-    summary.innerHTML = quoteItems.map((item) => `
-      <div class="checkout-summary-item">
-        <span>${safe(item.product_name)}${item.variant_title ? ` — ${safe(item.variant_title)}` : ''} × ${Number(item.quantity).toLocaleString('fa-IR')}</span>
-        <strong>${formatIrr(item.line_total_irr)}</strong>
-      </div>`).join('');
+    summary.innerHTML = quoteItems.map((item) => `<div class="checkout-summary-item"><span>${safe(item.product_name)}${item.variant_title ? ` — ${safe(item.variant_title)}` : ''} × ${Number(item.quantity).toLocaleString('fa-IR')}</span><strong>${formatIrr(item.line_total_irr)}</strong></div>`).join('');
 
     if (submit) submit.disabled = false;
     if (warning) warning.hidden = true;
     document.querySelectorAll('.js-subtotal').forEach((el) => { el.textContent = formatIrr(checkoutQuote?.subtotal_irr); });
     document.querySelectorAll('.js-shipping').forEach((el) => { el.textContent = Number(checkoutQuote?.shipping_irr || 0) === 0 ? 'رایگان' : formatIrr(checkoutQuote?.shipping_irr); });
     document.querySelectorAll('.js-total').forEach((el) => { el.textContent = formatIrr(checkoutQuote?.total_irr); });
+    const discount = Number(checkoutQuote?.discount_irr || 0);
+    document.querySelectorAll('.js-discount').forEach((el) => { el.textContent = discount > 0 ? `− ${formatIrr(discount)}` : '۰ تومان'; });
+    document.querySelectorAll('.js-discount-row').forEach((el) => { el.hidden = discount <= 0; });
+    const status = document.querySelector('.js-coupon-status');
+    if (status) status.textContent = appliedCouponCode ? `کد ${appliedCouponCode} اعمال شد.` : '';
   }
 
-  async function refreshQuote() {
-    if (!api || !checkoutCart.length) return;
+  async function refreshQuote(couponCode = appliedCouponCode, showError = true) {
+    if (!api || !checkoutCart.length) return false;
     try {
-      const payload = await api.checkout.quote(selectedShipping());
+      const payload = await api.checkout.quote(selectedShipping(), couponCode || null);
       checkoutQuote = payload?.data || null;
+      appliedCouponCode = checkoutQuote?.coupon_code || null;
       renderCheckoutSummary();
+      return true;
     } catch (error) {
-      checkoutQuote = null;
-      toast(error?.message || 'محاسبه سفارش ناموفق بود.', 3200);
-      const submit = document.querySelector('.js-checkout-submit');
-      if (submit) submit.disabled = true;
+      if (showError) toast(error?.message || 'محاسبه سفارش ناموفق بود.', 3200);
+      return false;
     }
   }
 
@@ -193,7 +174,6 @@
   async function initCheckoutPage() {
     const form = document.querySelector('.js-checkout-form');
     if (!form || !api || !cartApi) return;
-
     let user;
     try {
       user = await api.currentUser();
@@ -219,7 +199,7 @@
       checkoutAddress = addresses.find((address) => address.is_default) || addresses[0] || null;
       if (checkoutAddress) fillAddressForm(checkoutAddress);
       else if (user.mobile) form.elements.phone.value = user.mobile;
-      await refreshQuote();
+      await refreshQuote(null);
     } catch (error) {
       toast(error?.message || 'دریافت اطلاعات تکمیل خرید ناموفق بود.', 3200);
     }
@@ -235,6 +215,27 @@
         });
       });
     });
+
+    const couponInput = document.querySelector('.js-coupon-code');
+    const couponButton = document.querySelector('.js-apply-coupon');
+    couponButton?.addEventListener('click', async () => {
+      const desired = String(couponInput?.value || '').trim().toUpperCase();
+      couponButton.disabled = true;
+      const previousQuote = checkoutQuote;
+      const previousCoupon = appliedCouponCode;
+      const ok = await refreshQuote(desired || null, false);
+      couponButton.disabled = false;
+      const status = document.querySelector('.js-coupon-status');
+      if (ok) {
+        if (couponInput) couponInput.value = appliedCouponCode || '';
+        if (status) status.textContent = appliedCouponCode ? `کد ${appliedCouponCode} اعمال شد.` : 'کد تخفیف حذف شد.';
+      } else {
+        checkoutQuote = previousQuote;
+        appliedCouponCode = previousCoupon;
+        renderCheckoutSummary();
+        if (status) status.textContent = desired ? 'این کد قابل اعمال نیست؛ مبلغ سفارش تغییر نکرد.' : '';
+      }
+    });
   }
 
   async function saveCheckoutAddress(form) {
@@ -248,10 +249,7 @@
       address_line: form.elements.address.value.trim(),
       is_default: true,
     };
-
-    const payload = checkoutAddress
-      ? await api.addresses.update(checkoutAddress.id, data)
-      : await api.addresses.create(data);
+    const payload = checkoutAddress ? await api.addresses.update(checkoutAddress.id, data) : await api.addresses.create(data);
     checkoutAddress = payload?.data || null;
     return checkoutAddress;
   }
@@ -259,7 +257,6 @@
   function initCheckoutForm() {
     const form = document.querySelector('.js-checkout-form');
     if (!form || !api) return;
-
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (submitting) return;
@@ -288,10 +285,10 @@
       try {
         const address = await saveCheckoutAddress(form);
         if (!address?.id) throw new Error('ذخیره آدرس ناموفق بود.');
-
         const orderData = {
           address_id: address.id,
           shipping_method: selectedShipping(),
+          ...(appliedCouponCode ? { coupon_code: appliedCouponCode } : {}),
         };
         const fingerprint = JSON.stringify(orderData);
         const orderKey = stableIdempotencyKey('sharafi:order-key', fingerprint, 'order');
@@ -301,21 +298,16 @@
 
         sessionStorage.setItem('sharafi:last-order', orderNumber);
         if (submit) submit.textContent = 'در حال اتصال به درگاه...';
-
         const paymentKey = stableIdempotencyKey(`sharafi:payment-key:${orderNumber}`, String(orderNumber), 'payment');
         const paymentPayload = await api.payments.initiate(orderNumber, paymentKey);
         const redirectUrl = paymentPayload?.data?.attempt?.redirect_url;
         if (!redirectUrl) throw new Error('آدرس درگاه پرداخت دریافت نشد.');
         const target = new URL(redirectUrl, window.location.href);
         if (!['http:', 'https:'].includes(target.protocol)) throw new Error('آدرس درگاه معتبر نیست.');
-
         window.location.assign(target.href);
       } catch (error) {
-        if (orderNumber) {
-          toast(`سفارش ${orderNumber} ثبت شد، اما اتصال به درگاه ناموفق بود. از حساب کاربری دوباره تلاش کنید.`, 5000);
-        } else {
-          toast(error?.message || 'ثبت سفارش ناموفق بود.', 4000);
-        }
+        if (orderNumber) toast(`سفارش ${orderNumber} ثبت شد، اما اتصال به درگاه ناموفق بود. از حساب کاربری دوباره تلاش کنید.`, 5000);
+        else toast(error?.message || 'ثبت سفارش ناموفق بود.', 4000);
       } finally {
         submitting = false;
         if (submit) {
