@@ -36,6 +36,7 @@ jobs:
           set -euo pipefail
           sh -n deploy/php/entrypoint.sh
           sh -n deploy/staging/deploy.sh
+          sh -n deploy/staging/http-smoke.sh
 
       - name: Prepare non-secret compose validation environment
         shell: bash
