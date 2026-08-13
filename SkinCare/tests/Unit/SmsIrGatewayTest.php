@@ -37,6 +37,21 @@ class SmsIrGatewayTest extends TestCase
         });
     }
 
+    public function test_api_key_length_is_not_guessed_when_provider_does_not_document_a_format(): void
+    {
+        Http::fake([
+            'https://api.sms.ir/v1/send/verify' => Http::response([
+                'status' => 1,
+                'message' => 'موفق',
+                'data' => ['messageId' => 89545112, 'cost' => 1.0],
+            ]),
+        ]);
+
+        $this->gateway(['api_key' => 'short-key'])->sendOtp('09121234567', '123456', 120);
+
+        Http::assertSent(fn (Request $request): bool => $request->hasHeader('X-API-KEY', 'short-key'));
+    }
+
     public function test_production_otp_requires_explicit_template_id_before_network_call(): void
     {
         Http::preventStrayRequests();
