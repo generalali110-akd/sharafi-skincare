@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 const root = path.resolve(process.cwd(), 'frontend');
+const assetsJsRoot = path.join(root, 'assets', 'js') + path.sep;
 const violations = [];
 
 function walk(directory) {
@@ -55,6 +56,8 @@ function scanJs(file, source) {
     [/setAttribute\(\s*(["'])style\1\s*,/g, 'runtime inline style mutation'],
     [/Object\.assign\([^,]+\.style\s*,/g, 'runtime inline style mutation'],
     [/setAttribute\(\s*(["'])on[a-z][\w:-]*\1\s*,/gi, 'runtime inline event handler'],
+    [/\sstyle\s*=\s*(["'])/gi, 'inline style inside generated markup'],
+    [/\son[a-z][\w:-]*\s*=\s*(["'])/gi, 'inline event handler inside generated markup'],
   ];
 
   for (const [pattern, message] of rules) {
@@ -69,10 +72,8 @@ if (!fs.existsSync(root)) {
 
 for (const file of walk(root).sort()) {
   const ext = path.extname(file).toLowerCase();
-  if (ext !== '.html' && ext !== '.js') continue;
-  const source = fs.readFileSync(file, 'utf8');
-  if (ext === '.html') scanHtml(file, source);
-  if (ext === '.js') scanJs(file, source);
+  if (ext === '.html') scanHtml(file, fs.readFileSync(file, 'utf8'));
+  if (ext === '.js' && file.startsWith(assetsJsRoot)) scanJs(file, fs.readFileSync(file, 'utf8'));
 }
 
 if (violations.length) {
