@@ -18,7 +18,7 @@ class PublicCatalogTest extends TestCase
     public function test_public_catalog_only_returns_published_products(): void
     {
         $published = Product::factory()->published()->create(['name' => 'Published Product']);
-        ProductVariant::factory()->create(['product_id' => $published->id, 'price_irr' => 4_850_000]);
+        $variant = ProductVariant::factory()->create(['product_id' => $published->id, 'price_irr' => 4_850_000]);
 
         Product::factory()->create(['name' => 'Draft Product']);
         Product::factory()->create([
@@ -31,7 +31,20 @@ class PublicCatalogTest extends TestCase
             ->assertOk()
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.name', 'Published Product')
-            ->assertJsonPath('data.0.pricing.min', 4_850_000);
+            ->assertJsonPath('data.0.pricing.min', 4_850_000)
+            ->assertJsonPath('data.0.purchase.variant_id', $variant->id)
+            ->assertJsonPath('data.0.purchase.requires_selection', false);
+    }
+
+    public function test_catalog_does_not_guess_a_variant_when_product_requires_selection(): void
+    {
+        $product = Product::factory()->published()->create(['name' => 'Multi Variant Product']);
+        ProductVariant::factory()->count(2)->create(['product_id' => $product->id]);
+
+        $this->getJson('/api/v1/catalog/products')
+            ->assertOk()
+            ->assertJsonPath('data.0.purchase.variant_id', null)
+            ->assertJsonPath('data.0.purchase.requires_selection', true);
     }
 
     public function test_catalog_filters_by_category_brand_and_price_and_reports_stock_without_quantity(): void
