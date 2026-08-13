@@ -2,6 +2,7 @@
 
 return [
     'currency' => 'IRR',
+    'timezone' => env('SHOP_TIMEZONE', 'Asia/Tehran'),
     'max_item_quantity' => (int) env('SHOP_MAX_ITEM_QUANTITY', 99),
     'max_variant_price_irr' => (int) env('SHOP_MAX_VARIANT_PRICE_IRR', 1_000_000_000_000),
     'free_shipping_threshold_irr' => (int) env('SHOP_FREE_SHIPPING_THRESHOLD_IRR', 8_000_000),
