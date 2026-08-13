@@ -9,6 +9,8 @@ class ProductListResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $hasSingleActiveVariant = (int) $this->active_variants_count === 1;
+
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -26,6 +28,10 @@ class ProductListResource extends JsonResource
                 'currency' => 'IRR',
                 'min' => $this->min_price_irr !== null ? (int) $this->min_price_irr : null,
                 'max' => $this->max_price_irr !== null ? (int) $this->max_price_irr : null,
+            ],
+            'purchase' => [
+                'variant_id' => $hasSingleActiveVariant ? (int) $this->single_variant_id : null,
+                'requires_selection' => ! $hasSingleActiveVariant,
             ],
             'in_stock' => (bool) $this->in_stock,
         ];
