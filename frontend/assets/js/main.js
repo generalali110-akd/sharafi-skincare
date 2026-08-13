@@ -18,7 +18,36 @@ function ensureCspSafeStylesheet() {
   document.head.appendChild(link);
 }
 
+function enforceRuntimeCspHygiene() {
+  const cleanElement = (element) => {
+    if (!(element instanceof Element)) return;
+    if (element.hasAttribute('style')) element.removeAttribute('style');
+    for (const attribute of [...element.attributes]) {
+      if (/^on/i.test(attribute.name)) element.removeAttribute(attribute.name);
+    }
+    element.querySelectorAll?.('[style]').forEach((child) => child.removeAttribute('style'));
+    element.querySelectorAll?.('*').forEach((child) => {
+      for (const attribute of [...child.attributes]) {
+        if (/^on/i.test(attribute.name)) child.removeAttribute(attribute.name);
+      }
+    });
+  };
+
+  document.querySelectorAll('[style]').forEach((element) => element.removeAttribute('style'));
+  const observer = new MutationObserver((records) => {
+    for (const record of records) {
+      if (record.type === 'attributes' && record.target instanceof Element) {
+        if (record.attributeName === 'style') record.target.removeAttribute('style');
+        continue;
+      }
+      for (const node of record.addedNodes) cleanElement(node);
+    }
+  });
+  observer.observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['style'] });
+}
+
 ensureCspSafeStylesheet();
+enforceRuntimeCspHygiene();
 
 function ensureSharafiApi() {
   if (window.SharafiAPI) return Promise.resolve(window.SharafiAPI);
