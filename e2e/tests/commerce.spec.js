@@ -51,7 +51,7 @@ test.describe.serial('Sharafi production commerce flow', () => {
     await expect(page.locator('.js-payment-status')).toHaveText('پرداخت موفق');
 
     await page.goto('/account.html#orders');
-    await expect(page.getByText(orderNumber, { exact: true })).toBeVisible();
+    await expect(page.locator('#orders')).toContainText(orderNumber);
   });
 
   test('admin signs in with OTP and loads permission-protected live dashboard', async ({ page }) => {
