@@ -1,8 +1,8 @@
 // ===== Sharafi product detail interactions =====
 (() => {
   const MAX_QTY = 99;
-  const api = window.SharafiAPI;
   const cart = window.SharafiCart;
+  let api = window.SharafiAPI || null;
   let product = null;
   let selectedVariant = null;
   let quantity = 1;
@@ -11,6 +11,15 @@
   const minusButtons = document.querySelectorAll('.js-product-minus');
   const plusButtons = document.querySelectorAll('.js-product-plus');
   const addButtons = document.querySelectorAll('.js-product-add');
+
+  const getApi = async () => {
+    if (api) return api;
+    if (window.SharafiApiReady) api = await window.SharafiApiReady;
+    else if (typeof window.ensureSharafiApi === 'function') api = await window.ensureSharafiApi();
+    return api;
+  };
+
+  const safe = (value) => typeof escapeHTML === 'function' ? escapeHTML(value) : String(value ?? '');
 
   const renderQuantity = () => {
     if (quantityOutput) quantityOutput.value = quantity;
@@ -38,7 +47,7 @@
   };
 
   const renderVariant = () => {
-    if (!selectedVariant) return;
+    if (!api || !selectedVariant) return;
     const amount = Number(selectedVariant.price?.amount || 0);
     const compareAt = Number(selectedVariant.price?.compare_at || 0);
     setText('.product-sku', `کد محصول: ${selectedVariant.sku || '—'}`);
@@ -117,9 +126,37 @@
     const breadcrumb = document.querySelector('.breadcrumb');
     if (breadcrumb) {
       const category = product.categories?.[0];
-      breadcrumb.innerHTML = `<a href="index.html">صفحه اصلی</a> / <a href="category.html${category ? `?category=${encodeURIComponent(category.slug)}` : ''}">${typeof escapeHTML === 'function' ? escapeHTML(category?.name || 'محصولات') : 'محصولات'}</a> / ${typeof escapeHTML === 'function' ? escapeHTML(product.name) : product.name}`;
+      breadcrumb.innerHTML = `<a href="index.html">صفحه اصلی</a> / <a href="category.html${category ? `?category=${encodeURIComponent(category.slug)}` : ''}">${safe(category?.name || 'محصولات')}</a> / ${safe(product.name)}`;
     }
     renderVariantSelector();
+  };
+
+  const relatedCard = (item) => {
+    const variantId = Number(item?.purchase?.variant_id);
+    const direct = Number.isInteger(variantId) && variantId > 0 && !item?.purchase?.requires_selection;
+    const inStock = Boolean(item.in_stock);
+    const detail = `product.html?slug=${encodeURIComponent(item.slug)}`;
+    const action = direct
+      ? `<button class="product-card-add" type="button" data-variant-id="${variantId}" data-cart-name="${safe(item.name)}" data-cart-slug="${safe(item.slug)}" data-price-irr="${Number(item.pricing?.min || 0)}" data-in-stock="${String(inStock)}" ${inStock ? '' : 'disabled'}>🛒 ${inStock ? 'افزودن به سبد' : 'ناموجود'}</button>`
+      : `<a class="product-card-add" href="${detail}">${inStock ? 'انتخاب گزینه‌ها' : 'مشاهده محصول'}</a>`;
+    return `<article class="product-card-v2"><div class="product-card-media"><div class="product-placeholder" aria-hidden="true">🧴</div></div><div class="product-card-body"><span class="product-card-brand">${safe(item.brand?.name || 'شرفی')}</span><a class="product-card-link" href="${detail}"><h3 class="product-card-title">${safe(item.name)}</h3></a><div class="product-card-price-area"><div class="product-price-stack"><span class="product-current-price">${safe(api.formatIrr(item.pricing?.min || 0))}</span></div></div><div class="product-card-actions">${action}</div></div></article>`;
+  };
+
+  const renderRelatedProducts = async () => {
+    const grid = document.querySelector('.product-page .section .prod-grid');
+    if (!grid || !product || !api) return;
+    try {
+      const category = product.categories?.[0]?.slug || null;
+      const payload = await api.catalog.products({ category, per_page: 5 });
+      const items = (Array.isArray(payload?.data) ? payload.data : [])
+        .filter((item) => item.slug !== product.slug)
+        .slice(0, 4);
+      grid.innerHTML = items.length
+        ? items.map(relatedCard).join('')
+        : '<div class="cart-empty-v2"><p>محصول مرتبط دیگری برای نمایش وجود ندارد.</p></div>';
+    } catch {
+      grid.innerHTML = '<div class="cart-empty-v2"><p>دریافت محصولات مرتبط ناموفق بود.</p></div>';
+    }
   };
 
   const resolveSlug = async () => {
@@ -134,14 +171,16 @@
   };
 
   const loadProduct = async () => {
-    if (!api) return;
     try {
+      api = await getApi();
+      if (!api) throw new Error('ارتباط با API آماده نیست.');
       const slug = await resolveSlug();
       if (!slug) throw new Error('محصول فعالی برای نمایش وجود ندارد.');
       const payload = await api.catalog.product(slug);
       product = payload?.data || null;
       if (!product) throw new Error('اطلاعات محصول دریافت نشد.');
       renderProduct();
+      await renderRelatedProducts();
     } catch (error) {
       addButtons.forEach((button) => { button.disabled = true; });
       toast(error?.message || 'دریافت اطلاعات محصول ناموفق بود.', 3500);
@@ -150,7 +189,8 @@
 
   addButtons.forEach((button) => {
     button.addEventListener('click', async () => {
-      if (!product || !selectedVariant || !selectedVariant.in_stock || !cart) return;
+      api = await getApi().catch(() => null);
+      if (!api || !product || !selectedVariant || !selectedVariant.in_stock || !cart) return;
       button.disabled = true;
       try {
         await cart.add({
@@ -213,5 +253,6 @@
 
   activateTab(tabs.find((tab) => tab.getAttribute('aria-selected') === 'true') || tabs[0]);
   renderQuantity();
-  document.addEventListener('DOMContentLoaded', loadProduct);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadProduct, { once: true });
+  else loadProduct();
 })();
