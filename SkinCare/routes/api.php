@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminDiscountController;
 use App\Http\Controllers\Api\V1\Admin\AdminInventoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminOrderController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
+use App\Http\Controllers\Api\V1\Admin\AdminSessionController;
 use App\Http\Controllers\Api\V1\Admin\AdminTaxonomyController;
 use App\Http\Controllers\Api\V1\Auth\OtpAuthController;
 use App\Http\Controllers\Api\V1\CartController;
@@ -76,6 +77,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::post('/orders/{orderNumber}/payment-attempts', [PaymentController::class, 'store'])->middleware('throttle:10,1');
 
     Route::prefix('admin')->group(function (): void {
+        Route::get('/session', AdminSessionController::class);
+
         Route::get('/catalog/products', [AdminProductController::class, 'index'])->middleware('permission:'.Permissions::CATALOG_READ);
         Route::post('/catalog/products', [AdminProductController::class, 'store'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::patch('/catalog/products/{product}', [AdminProductController::class, 'update'])->middleware('permission:'.Permissions::CATALOG_WRITE);
