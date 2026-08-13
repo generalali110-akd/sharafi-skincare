@@ -186,6 +186,9 @@
     safeReturnTarget,
     toman,
     formatIrr,
+    storefront: Object.freeze({
+      config: () => request('/storefront/config'),
+    }),
     auth: Object.freeze({
       requestOtp: (mobile, name = null) => request('/auth/otp/request', { method: 'POST', json: { mobile, ...(name ? { name } : {}) } }),
       verifyOtp: (challengeId, code) => request('/auth/otp/verify', { method: 'POST', json: { challenge_id: challengeId, code } }),
