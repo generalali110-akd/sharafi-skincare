@@ -19,7 +19,7 @@
       <div class="auth-benefit"><span class="icon">📦</span><div><strong>پیگیری سفارش‌ها</strong><span>وضعیت سفارش‌های ثبت‌شده را در حساب خود ببینید.</span></div></div>
       <div class="auth-benefit"><span class="icon">📍</span><div><strong>ذخیره آدرس‌ها</strong><span>برای خریدهای بعدی، اطلاعات ارسال را دوباره وارد نکنید.</span></div></div>
       <div class="auth-benefit"><span class="icon">♡</span><div><strong>علاقه‌مندی‌ها</strong><span>محصولاتی که می‌پسندید برای بعد نگه دارید.</span></div></div>
-      <div class="auth-benefit"><span class="icon">🔐</span><div><strong>ورود بدون رمز ثابت</strong><span>احراز هویت با کد یکبارمصرف پس از اتصال سرویس Backend انجام می‌شود.</span></div></div>
+      <div class="auth-benefit"><span class="icon">🔐</span><div><strong>ورود بدون رمز ثابت</strong><span>احراز هویت با کد یکبارمصرف امن و Session سروری انجام می‌شود.</span></div></div>
     </div>
   </section>
 
@@ -46,7 +46,7 @@
         <div class="auth-error" id="login-mobile-error" aria-live="polite"></div>
       </div>
       <button class="auth-primary js-auth-request-otp" type="button">دریافت کد ورود</button>
-      <div class="auth-note">🔐 کد تأیید واقعی در نسخه نهایی فقط از طریق Backend و سرویس OTP ارسال و اعتبارسنجی می‌شود.</div>
+      <div class="auth-note">🔐 کد تأیید توسط Backend ارسال و فقط همان‌جا اعتبارسنجی می‌شود.</div>
     </section>
 
     <section class="auth-view" data-auth-view="register">
@@ -84,12 +84,13 @@
 
     <div class="auth-security" aria-label="اعتماد و امنیت">
       <div><span>🔒</span>عدم ذخیره رمز ثابت</div>
-      <div><span>🛡️</span>آماده احراز هویت سروری</div>
+      <div><span>🛡️</span>Session امن سروری</div>
       <div><span>📱</span>بهینه برای موبایل</div>
     </div>
   </section>
 </main>
 
+<script src="assets/js/api.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/clock.js"></script>
 <script src="assets/js/auth.js"></script>
