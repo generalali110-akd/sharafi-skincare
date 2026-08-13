@@ -4,6 +4,7 @@ namespace Tests\Feature\Outbox;
 
 use App\Contracts\SmsGateway;
 use App\Enums\OrderStatus;
+use App\Exceptions\PermanentSmsDeliveryException;
 use App\Models\Order;
 use App\Models\OutboxMessage;
 use App\Models\User;
@@ -77,6 +78,32 @@ class SmsOutboxDispatcherTest extends TestCase
         $this->assertSame('RuntimeException', $message->last_error);
         $this->assertStringNotContainsString('SECRET-provider-response', (string) $message->last_error);
         $this->assertTrue($message->available_at->isFuture());
+    }
+
+    public function test_permanent_delivery_failure_is_failed_immediately_without_retry_window(): void
+    {
+        $this->app->instance(SmsGateway::class, new class implements SmsGateway
+        {
+            public function sendOtp(string $mobile, string $code, int $ttlSeconds): void {}
+
+            public function sendMessage(string $mobile, string $message, string $idempotencyKey): void
+            {
+                throw new PermanentSmsDeliveryException('SECRET-invalid-template-details');
+            }
+        });
+
+        $message = $this->message($this->order(), 'payment_succeeded');
+
+        $result = $this->app->make(SmsOutboxDispatcher::class)->dispatchOne();
+        $message = $message->fresh();
+
+        $this->assertSame(SmsOutboxDispatcher::RESULT_FAILED, $result);
+        $this->assertNull($message->processed_at);
+        $this->assertNotNull($message->failed_at);
+        $this->assertNull($message->locked_at);
+        $this->assertSame('PermanentSmsDeliveryException', $message->last_error);
+        $this->assertStringNotContainsString('SECRET-invalid-template-details', (string) $message->last_error);
+        $this->assertSame(1, $message->attempts);
     }
 
     public function test_null_sms_driver_leaves_queued_messages_untouched(): void
