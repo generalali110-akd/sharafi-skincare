@@ -79,6 +79,8 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
 
       - name: Install backend dependencies
         working-directory: SkinCare
@@ -88,20 +90,13 @@ jobs:
         working-directory: SkinCare
         run: composer audit --locked
 
-      - name: Install E2E dependencies and generate lock
+      - name: Install locked E2E dependencies
         working-directory: e2e
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
 
       - name: Audit E2E dependencies
         working-directory: e2e
         run: npm audit --audit-level=high
-
-      - name: Emit generated package lock
-        working-directory: e2e
-        run: |
-          echo '---PACKAGE_LOCK_BEGIN---'
-          cat package-lock.json
-          echo '---PACKAGE_LOCK_END---'
 
       - name: Install Chromium
         working-directory: e2e
@@ -111,7 +106,7 @@ jobs:
         working-directory: SkinCare
         run: |
           php artisan migrate:fresh --force
-          php artisan db:seed --class='Database\\Seeders\\E2ESeeder' --force
+          php artisan db:seed --class=E2ESeeder --force
           rm -rf storage/framework/e2e
           mkdir -p storage/framework/e2e
           chmod 700 storage/framework/e2e
