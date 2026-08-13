@@ -13,6 +13,18 @@
   let brands = [];
   let requestSerial = 0;
 
+  const ensureGridHeading = () => {
+    const existing = document.querySelector('.js-catalog-grid-heading');
+    if (existing) return existing;
+    const heading = document.createElement('h2');
+    heading.className = 'sr-only js-catalog-grid-heading';
+    heading.textContent = 'محصولات';
+    grid.before(heading);
+    return heading;
+  };
+
+  ensureGridHeading();
+
   const tomanToIrr = (value) => {
     if (value === null || value === undefined || String(value).trim() === '') return null;
     const toman = Number(value);
