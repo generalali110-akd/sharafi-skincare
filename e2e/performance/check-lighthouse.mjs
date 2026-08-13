@@ -28,12 +28,25 @@ for (const reportPath of reportPaths) {
   console.log(`\nLighthouse: ${label}`);
 
   for (const [categoryId, minimum] of Object.entries(categoryBudgets)) {
-    const score = report.categories?.[categoryId]?.score;
+    const category = report.categories?.[categoryId];
+    const score = category?.score;
     const printable = typeof score === 'number' ? Math.round(score * 100) : 'n/a';
     console.log(`  ${categoryId}: ${printable}`);
 
     if (typeof score !== 'number' || score < minimum) {
       console.error(`  FAIL ${categoryId}: expected >= ${Math.round(minimum * 100)}`);
+
+      const failedAudits = (category?.auditRefs || [])
+        .filter((reference) => reference.weight > 0)
+        .map((reference) => report.audits?.[reference.id])
+        .filter((audit) => audit && typeof audit.score === 'number' && audit.score < 1)
+        .sort((left, right) => left.score - right.score);
+
+      for (const audit of failedAudits) {
+        const scorePercent = Math.round(audit.score * 100);
+        console.error(`    audit ${audit.id}: ${scorePercent} — ${audit.title}`);
+      }
+
       failed = true;
     }
   }
