@@ -33,6 +33,23 @@ final class OrderReservationService
         }, attempts: 3);
     }
 
+    public function cancelAsAdmin(User $actor, Order $order, ?string $reason = null): Order
+    {
+        return DB::transaction(function () use ($actor, $order, $reason): Order {
+            $locked = Order::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
+            if ($locked->status !== OrderStatus::PendingPayment) {
+                throw new CheckoutConflictException('فقط سفارش در انتظار پرداخت از این مسیر قابل لغو است.');
+            }
+
+            return $this->releaseLocked(
+                $locked,
+                OrderStatus::Cancelled,
+                $actor,
+                $reason ?: 'admin_cancelled',
+            );
+        }, attempts: 3);
+    }
+
     public function expire(Order $order): bool
     {
         return DB::transaction(function () use ($order): bool {
@@ -51,8 +68,12 @@ final class OrderReservationService
         }, attempts: 3);
     }
 
-    private function releaseLocked(Order $order, OrderStatus $target, ?User $actor): Order
-    {
+    private function releaseLocked(
+        Order $order,
+        OrderStatus $target,
+        ?User $actor,
+        ?string $reason = null,
+    ): Order {
         $items = $order->items()->whereNotNull('variant_id')->orderBy('variant_id')->get();
         $variantIds = $items->pluck('variant_id')->all();
         $inventories = InventoryItem::query()
@@ -84,7 +105,7 @@ final class OrderReservationService
         }
 
         $this->discounts->releaseForOrder($order);
-        $this->stateMachine->transition($order, $target, $actor, $target->value);
+        $this->stateMachine->transition($order, $target, $actor, $reason ?: $target->value);
 
         return $order->load('items');
     }
