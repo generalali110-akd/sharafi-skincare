@@ -19,6 +19,7 @@ class AdminCustomerController extends Controller
         ]);
 
         $query = User::query()
+            ->whereDoesntHave('roles')
             ->withCount('orders')
             ->withMax('orders', 'created_at')
             ->latest('id');
