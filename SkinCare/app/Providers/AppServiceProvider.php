@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\PaymentGateway;
 use App\Contracts\SmsGateway;
 use App\Infrastructure\Payments\NullPaymentGateway;
+use App\Infrastructure\Payments\ZarinpalPaymentGateway;
 use App\Infrastructure\Sms\NullSmsGateway;
 use Illuminate\Support\ServiceProvider;
 use LogicException;
@@ -23,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentGateway::class, function () {
             return match (config('payment.driver')) {
                 'null' => new NullPaymentGateway,
+                'zarinpal' => new ZarinpalPaymentGateway((array) config('payment.zarinpal', [])),
                 default => throw new LogicException('Unsupported payment driver configured.'),
             };
         });
