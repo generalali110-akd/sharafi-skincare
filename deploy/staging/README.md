@@ -44,7 +44,7 @@ Keep SMS.ir and Zarinpal in sandbox mode until their staging smoke tests have pa
 ## Deploy
 
 ```bash
-./deploy/staging/deploy.sh
+sh deploy/staging/deploy.sh
 ```
 
 The script validates the Compose model, builds pinned PHP/Caddy images, starts the private PostgreSQL service, runs migrations before exposing the new application containers, starts web/app/queue/scheduler, runs provider/security readiness, and verifies the public HTTPS health endpoint.
