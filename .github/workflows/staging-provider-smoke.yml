@@ -2,60 +2,72 @@ name: Staging Provider Smoke
 
 on:
   workflow_dispatch:
+    inputs:
+      zarinpal_order_number:
+        description: Existing pending-payment staging order number used for real Zarinpal initiation
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
-  provider-readiness:
+  provider-smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     environment: staging
 
-    defaults:
-      run:
-        working-directory: SkinCare
-
-    env:
-      APP_ENV: staging
-      APP_DEBUG: 'false'
-      APP_KEY: 'base64:MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY='
-      APP_URL: ${{ vars.STAGING_APP_URL }}
-      SESSION_ENCRYPT: 'true'
-      SESSION_SECURE_COOKIE: 'true'
-      SMS_DRIVER: smsir
-      SMSIR_API_KEY: ${{ secrets.SMSIR_API_KEY }}
-      SMSIR_SANDBOX: ${{ vars.SMSIR_SANDBOX || 'true' }}
-      SMSIR_OTP_TEMPLATE_ID: ${{ vars.SMSIR_OTP_TEMPLATE_ID }}
-      SMSIR_OTP_CODE_PARAMETER: ${{ vars.SMSIR_OTP_CODE_PARAMETER || 'CODE' }}
-      SMSIR_LINE_NUMBER: ${{ vars.SMSIR_LINE_NUMBER }}
-      PAYMENT_DRIVER: zarinpal
-      ZARINPAL_MERCHANT_ID: ${{ secrets.ZARINPAL_MERCHANT_ID }}
-      ZARINPAL_SANDBOX: ${{ vars.ZARINPAL_SANDBOX || 'true' }}
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
-        with:
-          php-version: '8.5'
-          extensions: mbstring, openssl
-          coverage: none
-          tools: composer:v2
-
-      - name: Install locked production dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --no-dev --optimize-autoloader
-
-      - name: Audit locked dependencies
-        run: composer audit --locked
-
-      - name: Validate staging provider configuration and SMS.ir credentials
+      - name: Validate required staging connection metadata
         shell: bash
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          STAGING_SSH_HOST_KEY: ${{ secrets.STAGING_SSH_HOST_KEY }}
+          STAGING_DEPLOY_PATH: ${{ vars.STAGING_DEPLOY_PATH }}
+          ORDER_NUMBER: ${{ inputs.zarinpal_order_number }}
         run: |
           set -euo pipefail
-          : "${APP_URL:?STAGING_APP_URL environment variable is required}"
-          export PAYMENT_CALLBACK_URL="${APP_URL%/}/api/v1/payments/zarinpal/callback"
-          export PAYMENT_RESULT_URL="${APP_URL%/}/payment-result.html"
-          php artisan ops:provider-readiness --probe-smsir --json
+          : "${STAGING_SSH_HOST:?STAGING_SSH_HOST secret is required}"
+          : "${STAGING_SSH_USER:?STAGING_SSH_USER secret is required}"
+          : "${STAGING_SSH_PRIVATE_KEY:?STAGING_SSH_PRIVATE_KEY secret is required}"
+          : "${STAGING_SSH_HOST_KEY:?STAGING_SSH_HOST_KEY secret is required}"
+          : "${STAGING_DEPLOY_PATH:?STAGING_DEPLOY_PATH environment variable is required}"
+          [[ "$STAGING_DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]+$ ]] || { echo 'Invalid STAGING_DEPLOY_PATH.' >&2; exit 2; }
+          [[ "$ORDER_NUMBER" =~ ^SHR-[A-Za-z0-9-]+$ ]] || { echo 'Invalid staging order number.' >&2; exit 2; }
+
+      - name: Configure pinned SSH host identity
+        shell: bash
+        env:
+          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          STAGING_SSH_HOST_KEY: ${{ secrets.STAGING_SSH_HOST_KEY }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$STAGING_SSH_PRIVATE_KEY" > "$HOME/.ssh/id_ed25519"
+          chmod 600 "$HOME/.ssh/id_ed25519"
+          printf '%s\n' "$STAGING_SSH_HOST_KEY" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Run SMS.ir readiness probe and Zarinpal smoke in deployed app
+        shell: bash
+        env:
+          STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_DEPLOY_PATH: ${{ vars.STAGING_DEPLOY_PATH }}
+          ORDER_NUMBER: ${{ inputs.zarinpal_order_number }}
+        run: |
+          set -euo pipefail
+
+          remote="${STAGING_SSH_USER}@${STAGING_SSH_HOST}"
+          compose='docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml'
+
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes "$remote" \
+            "cd '$STAGING_DEPLOY_PATH' && $compose exec -T app php artisan ops:provider-readiness --probe-smsir --json"
+
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes "$remote" \
+            "cd '$STAGING_DEPLOY_PATH' && $compose exec -T app php artisan ops:zarinpal-smoke '$ORDER_NUMBER' --json"
+
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes "$remote" \
+            "cd '$STAGING_DEPLOY_PATH' && $compose exec -T app php artisan ops:runtime-health --json"
