@@ -60,6 +60,10 @@ Artisan::command('outbox:dispatch-sms {--limit=100}', function (): void {
     $this->info("SMS outbox: {$processed} processed, {$failed} deferred/failed.");
 })->purpose('Dispatch committed SMS notifications from the transactional outbox');
 
+Schedule::command('ops:scheduler-heartbeat')
+    ->everyMinute()
+    ->withoutOverlapping();
+
 Schedule::command('orders:expire-reservations')
     ->everyMinute()
     ->withoutOverlapping();
