@@ -5,6 +5,7 @@ namespace Tests\Feature\Auth;
 use App\Contracts\SmsGateway;
 use App\Models\OtpChallenge;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Tests\Fakes\FakeSmsGateway;
 use Tests\TestCase;
 
@@ -68,5 +69,25 @@ class OtpAuthTest extends TestCase
 
         $this->fromStorefront()->postJson('/api/v1/auth/otp/request', $payload)->assertCreated();
         $this->fromStorefront()->postJson('/api/v1/auth/otp/request', $payload)->assertStatus(429);
+    }
+
+    public function test_concurrent_request_for_same_mobile_is_rejected_while_lock_is_held(): void
+    {
+        config()->set('sms.otp.request_lock_wait_seconds', 0);
+
+        $mobile = '09121234567';
+        $lock = Cache::lock('otp:request:lock:'.hash('sha256', $mobile), 30);
+        $this->assertTrue($lock->get());
+
+        try {
+            $this->fromStorefront()->postJson('/api/v1/auth/otp/request', [
+                'mobile' => $mobile,
+            ])->assertStatus(429)
+                ->assertJsonPath('message', 'درخواست دیگری برای این شماره در حال پردازش است.');
+
+            $this->assertDatabaseCount('otp_challenges', 0);
+        } finally {
+            $lock->release();
+        }
     }
 }
