@@ -58,6 +58,7 @@ class AdminProductController extends Controller
             'brand:id,name,slug',
             'categories:id,name,slug',
             'variants.inventory:id,variant_id,on_hand,reserved,reorder_level',
+            'images',
         ]);
 
         return new AdminProductDetailResource($product);
