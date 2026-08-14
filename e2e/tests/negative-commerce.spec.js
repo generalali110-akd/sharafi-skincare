@@ -3,6 +3,7 @@ const { waitForOtp, clearOtp, setStock, enterOtp } = require('./helpers');
 
 const INVALID_OTP_MOBILE = '09120000004';
 const STOCK_CONFLICT_MOBILE = '09120000005';
+const CANCEL_ORDER_MOBILE = '09120000006';
 const PRODUCT_NAME = 'سرم تست E2E شرفی';
 const PRODUCT_SKU = 'E2E-SERUM-001';
 
@@ -18,6 +19,15 @@ async function loginFromCheckout(page, mobile) {
   await enterOtp(page, otp);
   await page.getByRole('button', { name: 'تأیید و ادامه' }).click();
   await expect(page).toHaveURL(/\/checkout\.html$/);
+}
+
+async function fillCheckoutAddress(page, mobile, recipient) {
+  await page.getByLabel('نام و نام خانوادگی').fill(recipient);
+  await page.getByLabel('شماره موبایل').fill(mobile);
+  await page.getByLabel('استان').fill('تهران');
+  await page.getByLabel('شهر').fill('تهران');
+  await page.getByLabel('آدرس دقیق پستی').fill('خیابان تست، کوچه مرورگر، پلاک ۱۰');
+  await page.getByLabel('کد پستی').fill('1234567890');
 }
 
 test.describe.serial('Sharafi negative commerce paths', () => {
@@ -51,12 +61,7 @@ test.describe.serial('Sharafi negative commerce paths', () => {
       await loginFromCheckout(page, STOCK_CONFLICT_MOBILE);
 
       await expect(page.locator('.js-checkout-items')).toContainText(PRODUCT_NAME);
-      await page.getByLabel('نام و نام خانوادگی').fill('مشتری تعارض موجودی');
-      await page.getByLabel('شماره موبایل').fill(STOCK_CONFLICT_MOBILE);
-      await page.getByLabel('استان').fill('تهران');
-      await page.getByLabel('شهر').fill('تهران');
-      await page.getByLabel('آدرس دقیق پستی').fill('خیابان تست تعارض، پلاک ۱۰');
-      await page.getByLabel('کد پستی').fill('1234567890');
+      await fillCheckoutAddress(page, STOCK_CONFLICT_MOBILE, 'مشتری تعارض موجودی');
 
       await setStock(PRODUCT_SKU, 0);
       await page.getByRole('button', { name: 'ثبت سفارش و ادامه پرداخت' }).click();
@@ -64,6 +69,48 @@ test.describe.serial('Sharafi negative commerce paths', () => {
       await expect(page.getByText(`موجودی «${PRODUCT_NAME}» کافی نیست.`, { exact: true })).toBeVisible();
       await expect(page).toHaveURL(/\/checkout\.html$/);
       await expect(page.locator('.js-checkout-submit')).toBeEnabled();
+    } finally {
+      await setStock(PRODUCT_SKU, 20);
+    }
+  });
+
+  test('customer can cancel pending payment order and reservation becomes sellable again', async ({ page }) => {
+    await setStock(PRODUCT_SKU, 1);
+    await clearOtp(CANCEL_ORDER_MOBILE);
+
+    try {
+      await page.goto('/product.html?slug=e2e-test-serum');
+      const addToCart = page.locator('.product-purchase .js-product-add');
+      await expect(addToCart).toBeEnabled();
+      await addToCart.click();
+
+      await page.goto('/cart.html');
+      await page.locator('.js-checkout-btn').click();
+      await expect(page).toHaveURL(/\/login\.html\?return=/);
+      await loginFromCheckout(page, CANCEL_ORDER_MOBILE);
+      await fillCheckoutAddress(page, CANCEL_ORDER_MOBILE, 'مشتری لغو سفارش');
+
+      await page.getByRole('button', { name: 'ثبت سفارش و ادامه پرداخت' }).click();
+      await expect(page).toHaveURL(/\/payment-result\.html\?order=SHR-/);
+      const orderNumber = new URL(page.url()).searchParams.get('order');
+      expect(orderNumber).toMatch(/^SHR-/);
+
+      await page.goto('/product.html?slug=e2e-test-serum');
+      await expect(page.locator('.product-purchase .js-product-add')).toBeDisabled();
+
+      await page.goto('/account.html#orders');
+      const orderRow = page.locator(`[data-order="${orderNumber}"]`);
+      await expect(orderRow).toContainText('در انتظار پرداخت');
+      page.once('dialog', (dialog) => dialog.accept());
+      await orderRow.getByRole('button', { name: 'لغو سفارش' }).click();
+
+      const cancelledRow = page.locator(`[data-order="${orderNumber}"]`);
+      await expect(cancelledRow).toContainText('لغوشده');
+      await expect(cancelledRow.getByRole('button', { name: 'ادامه پرداخت' })).toHaveCount(0);
+      await expect(cancelledRow.getByRole('button', { name: 'لغو سفارش' })).toHaveCount(0);
+
+      await page.goto('/product.html?slug=e2e-test-serum');
+      await expect(page.locator('.product-purchase .js-product-add')).toBeEnabled();
     } finally {
       await setStock(PRODUCT_SKU, 20);
     }
