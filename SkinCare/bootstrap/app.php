@@ -4,6 +4,7 @@ use App\Exceptions\CheckoutConflictException;
 use App\Exceptions\InventoryConflictException;
 use App\Exceptions\PaymentAttemptRetryRequiredException;
 use App\Exceptions\PaymentUnavailableException;
+use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsurePermission;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api/v1',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(AssignRequestId::class);
         $middleware->statefulApi();
         $middleware->alias([
             'permission' => EnsurePermission::class,
