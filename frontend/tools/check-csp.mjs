@@ -48,6 +48,8 @@ function scanHtml(file, source) {
 
 function scanJs(file, source) {
   const rules = [
+    [/<[^>]*\sstyle\s*=\s*(["'])/gi, 'inline style attribute in generated markup'],
+    [/<[^>]*\son[a-z][\w:-]*\s*=\s*(["'])/gi, 'inline event handler in generated markup'],
     [/\.style\.[A-Za-z_$][\w$]*\s*=/g, 'runtime inline style mutation'],
     [/\.style\s*\[[^\]]+\]\s*=/g, 'runtime inline style mutation'],
     [/\.style\.setProperty\s*\(/g, 'runtime inline style mutation'],
@@ -58,6 +60,9 @@ function scanJs(file, source) {
     [/setAttribute\(\s*(["'])on[a-z][\w:-]*\1\s*,/gi, 'runtime inline event handler'],
     [/\sstyle\s*=\s*(["'])/gi, 'inline style inside generated markup'],
     [/\son[a-z][\w:-]*\s*=\s*(["'])/gi, 'inline event handler inside generated markup'],
+    [/\beval\s*\(/g, 'eval is incompatible with strict script-src'],
+    [/\bnew\s+Function\s*\(/g, 'Function constructor is incompatible with strict script-src'],
+    [/\b(?:setTimeout|setInterval)\s*\(\s*(["'])/g, 'string timer is incompatible with strict script-src'],
   ];
 
   for (const [pattern, message] of rules) {

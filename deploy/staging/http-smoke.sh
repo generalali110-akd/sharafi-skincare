@@ -58,6 +58,11 @@ assert_header_contains 'X-Content-Type-Options' 'nosniff' "$TMP_DIR/health.heade
 assert_header_contains 'X-Frame-Options' 'SAMEORIGIN' "$TMP_DIR/health.headers"
 assert_header_contains 'Referrer-Policy' 'strict-origin-when-cross-origin' "$TMP_DIR/health.headers"
 assert_header_contains 'Permissions-Policy' 'camera=()' "$TMP_DIR/health.headers"
+assert_header_contains 'Content-Security-Policy' "default-src 'self'" "$TMP_DIR/health.headers"
+assert_header_contains 'Content-Security-Policy' "script-src 'self'" "$TMP_DIR/health.headers"
+assert_header_contains 'Content-Security-Policy' "style-src 'self'" "$TMP_DIR/health.headers"
+assert_header_contains 'Content-Security-Policy' "object-src 'none'" "$TMP_DIR/health.headers"
+assert_header_contains 'Content-Security-Policy' "frame-ancestors 'self'" "$TMP_DIR/health.headers"
 
 http_status=$(curl --silent --show-error --max-time 15 \
     --dump-header "$TMP_DIR/http.headers" \
