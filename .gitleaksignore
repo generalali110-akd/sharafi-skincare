@@ -1,0 +1,8 @@
+# Verified false positives only. Each fingerprint points to a deterministic
+# Idempotency-Key literal in backend tests, not a credential or provider secret.
+# Keep entries commit-specific so new findings in the same files/rules still fail CI.
+bfdb5b785711587c744a1c32497a2acdd68516aa:SkinCare/tests/Feature/Commerce/CommerceFlowTest.php:generic-api-key:130
+ff694785242cb98c8b5d4423e435a463771bd412:SkinCare/tests/Feature/Commerce/CommerceFlowTest.php:generic-api-key:131
+a62716a6168bcbc7933e63471b6fd4839d347e30:SkinCare/tests/Feature/Commerce/DiscountPaymentFlowTest.php:generic-api-key:50
+c75d7d1107b14a9c51256f639511780041866417:SkinCare/tests/Feature/Commerce/PaymentInitiationRecoveryTest.php:generic-api-key:79
+cc2c58a9ec161d6ec85b2ec561c6a99886226e48:SkinCare/tests/Feature/Commerce/ZarinpalCallbackTest.php:generic-api-key:140
