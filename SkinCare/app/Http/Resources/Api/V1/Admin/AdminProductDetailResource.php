@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Admin;
 
+use App\Support\ProductImagePayload;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -44,6 +45,9 @@ class AdminProductDetailResource extends JsonResource
                     'reorder_level' => $variant->inventory?->reorder_level ?? 0,
                 ],
             ])->values(),
+            'images' => $this->whenLoaded('images', fn () => $this->images
+                ->map(fn ($image) => ProductImagePayload::make($image))
+                ->values()),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
     }
