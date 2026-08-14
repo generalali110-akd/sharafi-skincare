@@ -7,19 +7,6 @@ let maxCartQty = DEFAULT_MAX_CART_QTY;
 let serverCartItems = [];
 let cartLoadPromise = null;
 
-function ensureCspSafeStylesheet() {
-  const href = new URL('../css/csp-safe.css', SHARAFI_MAIN_SCRIPT_URL).href;
-  if ([...document.styleSheets].some((sheet) => sheet.href === href)) return;
-  const existing = [...document.querySelectorAll('link[rel="stylesheet"]')].find((link) => link.href === href);
-  if (existing) return;
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = href;
-  document.head.appendChild(link);
-}
-
-ensureCspSafeStylesheet();
-
 function ensureSharafiApi() {
   if (window.SharafiAPI) return Promise.resolve(window.SharafiAPI);
   if (window.SharafiApiReady) return window.SharafiApiReady;
