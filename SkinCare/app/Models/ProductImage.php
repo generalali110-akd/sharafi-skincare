@@ -15,6 +15,11 @@ class ProductImage extends Model
         'variant_id',
         'disk',
         'path',
+        'avif_path',
+        'source_mime',
+        'width',
+        'height',
+        'bytes',
         'alt_text',
         'sort_order',
         'is_primary',
@@ -23,6 +28,9 @@ class ProductImage extends Model
     protected function casts(): array
     {
         return [
+            'width' => 'integer',
+            'height' => 'integer',
+            'bytes' => 'integer',
             'sort_order' => 'integer',
             'is_primary' => 'boolean',
         ];
