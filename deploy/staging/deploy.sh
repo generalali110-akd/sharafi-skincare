@@ -23,6 +23,24 @@ case "$(uname -s)" in
         ;;
 esac
 
+env_value() {
+    key=$1
+    sed -n "s/^${key}=//p" "$ENV_FILE" | tail -n 1 | sed 's/^"//; s/"$//'
+}
+
+STAGING_DOMAIN=$(env_value STAGING_DOMAIN)
+BACKUP_AGE_RECIPIENT=$(env_value BACKUP_AGE_RECIPIENT)
+
+if [ -z "$STAGING_DOMAIN" ]; then
+    echo "STAGING_DOMAIN is missing." >&2
+    exit 1
+fi
+
+if [ -z "$BACKUP_AGE_RECIPIENT" ]; then
+    echo "BACKUP_AGE_RECIPIENT is required; deploys without encrypted backups are blocked." >&2
+    exit 1
+fi
+
 compose() {
     docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"
 }
@@ -63,10 +81,36 @@ wait_for_app() {
     return 1
 }
 
+service_is_running() {
+    service=$1
+    container_id=$(compose ps -q "$service")
+    [ -n "$container_id" ] || return 1
+    [ "$(docker inspect --format '{{.State.Status}}' "$container_id" 2>/dev/null || true)" = "running" ]
+}
+
+wait_for_runtime_health() {
+    attempt=1
+    while [ "$attempt" -le 45 ]; do
+        if service_is_running queue \
+            && service_is_running scheduler \
+            && compose exec -T app php artisan ops:runtime-health --json >/dev/null 2>&1; then
+            return 0
+        fi
+
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+
+    echo "Runtime health did not become ready within 90 seconds." >&2
+    compose exec -T app php artisan ops:runtime-health --json >&2 || true
+    compose logs --no-color app queue scheduler >&2 || true
+    return 1
+}
+
 cd "$ROOT_DIR"
 
 compose config --quiet
-compose build --pull app web
+compose build --pull app web backup
 
 # PostgreSQL 18 is private to the Docker network; wait for an actual database response.
 compose up -d db
@@ -77,15 +121,13 @@ compose run --rm app php artisan migrate --force --no-interaction
 
 compose up -d --remove-orphans
 wait_for_app
+wait_for_runtime_health
 
 # Fail the deployment if internal provider/security readiness is not valid.
 compose exec -T app php artisan ops:provider-readiness
 
-STAGING_DOMAIN=$(sed -n 's/^STAGING_DOMAIN=//p' "$ENV_FILE" | tail -n 1)
-if [ -z "$STAGING_DOMAIN" ]; then
-    echo "STAGING_DOMAIN is missing." >&2
-    exit 1
-fi
+# Every successful staging deploy must prove that an encrypted database backup can be created.
+compose run --rm --entrypoint /usr/local/bin/sharafi-backup backup
 
 attempt=1
 while [ "$attempt" -le 30 ]; do
@@ -100,5 +142,5 @@ done
 
 echo "Staging HTTPS health check failed after 60 seconds." >&2
 compose ps >&2 || true
-compose logs --no-color web app >&2 || true
+compose logs --no-color web app queue scheduler backup >&2 || true
 exit 1

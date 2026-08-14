@@ -6,6 +6,8 @@ use App\Contracts\SmsGateway;
 use App\Exceptions\SmsDeliveryException;
 use App\Models\OtpChallenge;
 use App\Services\Auth\OtpCodeHasher;
+use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -23,54 +25,64 @@ final class RequestOtpAction
         $ttl = max(60, (int) config('sms.otp.ttl_seconds', 120));
         $resend = max(30, (int) config('sms.otp.resend_seconds', 45));
         $maxAttempts = max(3, (int) config('sms.otp.max_attempts', 5));
+        $lockSeconds = max(10, min(120, (int) config('sms.otp.request_lock_seconds', 30)));
+        $lockWaitSeconds = max(0, min(10, (int) config('sms.otp.request_lock_wait_seconds', 3)));
 
         $this->enforceRateLimits($mobile, $ipAddress);
 
-        $latest = OtpChallenge::query()
-            ->where('mobile', $mobile)
-            ->where('purpose', 'auth')
-            ->whereNull('consumed_at')
-            ->latest('created_at')
-            ->first();
-
-        if ($latest && $latest->created_at->greaterThan(now()->subSeconds($resend))) {
-            $retryAfter = max(1, (int) now()->diffInSeconds($latest->created_at->copy()->addSeconds($resend)));
-            throw new TooManyRequestsHttpException($retryAfter, 'لطفاً کمی بعد دوباره درخواست کد بدهید.');
-        }
-
-        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        $challenge = DB::transaction(function () use ($mobile, $name, $code, $ttl, $maxAttempts): OtpChallenge {
-            OtpChallenge::query()
-                ->where('mobile', $mobile)
-                ->where('purpose', 'auth')
-                ->whereNull('consumed_at')
-                ->update(['consumed_at' => now()]);
-
-            return OtpChallenge::query()->create([
-                'mobile' => $mobile,
-                'purpose' => 'auth',
-                'code_hash' => $this->hasher->hash($code),
-                'context' => $name ? ['name' => trim($name)] : [],
-                'attempt_count' => 0,
-                'max_attempts' => $maxAttempts,
-                'expires_at' => now()->addSeconds($ttl),
-            ]);
-        });
+        $lock = Cache::lock('otp:request:lock:'.hash('sha256', $mobile), $lockSeconds);
 
         try {
-            $this->smsGateway->sendOtp($mobile, $code, $ttl);
-        } catch (Throwable $exception) {
-            $challenge->forceFill(['consumed_at' => now()])->save();
+            return $lock->block($lockWaitSeconds, function () use ($mobile, $name, $ttl, $resend, $maxAttempts): OtpChallenge {
+                $latest = OtpChallenge::query()
+                    ->where('mobile', $mobile)
+                    ->where('purpose', 'auth')
+                    ->whereNull('consumed_at')
+                    ->latest('created_at')
+                    ->first();
 
-            if ($exception instanceof SmsDeliveryException) {
-                throw $exception;
-            }
+                if ($latest && $latest->created_at->greaterThan(now()->subSeconds($resend))) {
+                    $retryAfter = max(1, (int) now()->diffInSeconds($latest->created_at->copy()->addSeconds($resend)));
+                    throw new TooManyRequestsHttpException($retryAfter, 'لطفاً کمی بعد دوباره درخواست کد بدهید.');
+                }
 
-            throw new SmsDeliveryException('SMS provider failed.', previous: $exception);
+                $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+                $challenge = DB::transaction(function () use ($mobile, $name, $code, $ttl, $maxAttempts): OtpChallenge {
+                    OtpChallenge::query()
+                        ->where('mobile', $mobile)
+                        ->where('purpose', 'auth')
+                        ->whereNull('consumed_at')
+                        ->update(['consumed_at' => now()]);
+
+                    return OtpChallenge::query()->create([
+                        'mobile' => $mobile,
+                        'purpose' => 'auth',
+                        'code_hash' => $this->hasher->hash($code),
+                        'context' => $name ? ['name' => trim($name)] : [],
+                        'attempt_count' => 0,
+                        'max_attempts' => $maxAttempts,
+                        'expires_at' => now()->addSeconds($ttl),
+                    ]);
+                });
+
+                try {
+                    $this->smsGateway->sendOtp($mobile, $code, $ttl);
+                } catch (Throwable $exception) {
+                    $challenge->forceFill(['consumed_at' => now()])->save();
+
+                    if ($exception instanceof SmsDeliveryException) {
+                        throw $exception;
+                    }
+
+                    throw new SmsDeliveryException('SMS provider failed.', previous: $exception);
+                }
+
+                return $challenge;
+            });
+        } catch (LockTimeoutException) {
+            throw new TooManyRequestsHttpException(1, 'درخواست دیگری برای این شماره در حال پردازش است.');
         }
-
-        return $challenge;
     }
 
     private function enforceRateLimits(string $mobile, ?string $ipAddress): void

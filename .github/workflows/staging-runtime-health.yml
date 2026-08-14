@@ -1,24 +1,25 @@
-name: Staging Provider Smoke
+name: Staging Runtime Health
 
 on:
+  schedule:
+    - cron: '7 * * * *'
   workflow_dispatch:
-    inputs:
-      zarinpal_order_number:
-        description: Existing pending-payment staging order number used for real Zarinpal initiation
-        required: true
-        type: string
 
 permissions:
   contents: read
 
+concurrency:
+  group: staging-runtime-health
+  cancel-in-progress: false
+
 jobs:
-  provider-smoke:
+  runtime-health:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     environment: staging
 
     steps:
-      - name: Validate required staging connection metadata
+      - name: Validate staging connection metadata
         shell: bash
         env:
           STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
@@ -26,7 +27,6 @@ jobs:
           STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
           STAGING_SSH_HOST_KEY: ${{ secrets.STAGING_SSH_HOST_KEY }}
           STAGING_DEPLOY_PATH: ${{ vars.STAGING_DEPLOY_PATH }}
-          ORDER_NUMBER: ${{ inputs.zarinpal_order_number }}
         run: |
           set -euo pipefail
           : "${STAGING_SSH_HOST:?STAGING_SSH_HOST secret is required}"
@@ -35,7 +35,6 @@ jobs:
           : "${STAGING_SSH_HOST_KEY:?STAGING_SSH_HOST_KEY secret is required}"
           : "${STAGING_DEPLOY_PATH:?STAGING_DEPLOY_PATH environment variable is required}"
           [[ "$STAGING_DEPLOY_PATH" =~ ^/[A-Za-z0-9._/-]+$ ]] || { echo 'Invalid STAGING_DEPLOY_PATH.' >&2; exit 2; }
-          [[ "$ORDER_NUMBER" =~ ^SHR-[A-Za-z0-9-]+$ ]] || { echo 'Invalid staging order number.' >&2; exit 2; }
 
       - name: Configure pinned SSH host identity
         shell: bash
@@ -50,24 +49,15 @@ jobs:
           printf '%s\n' "$STAGING_SSH_HOST_KEY" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/known_hosts"
 
-      - name: Run SMS.ir readiness probe and Zarinpal smoke in deployed app
+      - name: Check deployed runtime health
         shell: bash
         env:
           STAGING_SSH_HOST: ${{ secrets.STAGING_SSH_HOST }}
           STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
           STAGING_DEPLOY_PATH: ${{ vars.STAGING_DEPLOY_PATH }}
-          ORDER_NUMBER: ${{ inputs.zarinpal_order_number }}
         run: |
           set -euo pipefail
-
           remote="${STAGING_SSH_USER}@${STAGING_SSH_HOST}"
           compose='docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml'
-
-          ssh -o BatchMode=yes -o IdentitiesOnly=yes "$remote" \
-            "cd '$STAGING_DEPLOY_PATH' && $compose exec -T app php artisan ops:provider-readiness --probe-smsir --json"
-
-          ssh -o BatchMode=yes -o IdentitiesOnly=yes "$remote" \
-            "cd '$STAGING_DEPLOY_PATH' && $compose exec -T app php artisan ops:zarinpal-smoke '$ORDER_NUMBER' --json"
-
           ssh -o BatchMode=yes -o IdentitiesOnly=yes "$remote" \
             "cd '$STAGING_DEPLOY_PATH' && $compose exec -T app php artisan ops:runtime-health --json"

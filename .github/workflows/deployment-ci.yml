@@ -37,6 +37,9 @@ jobs:
           sh -n deploy/php/entrypoint.sh
           sh -n deploy/staging/deploy.sh
           sh -n deploy/staging/http-smoke.sh
+          sh -n deploy/backup/entrypoint.sh
+          sh -n deploy/backup/backup.sh
+          sh -n deploy/backup/restore-verify.sh
 
       - name: Enforce strict CSP policy
         shell: bash
@@ -69,8 +72,8 @@ jobs:
       - name: Validate Compose model
         run: docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml config --quiet
 
-      - name: Build application and web images
-        run: docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml build app web
+      - name: Build application, web, and backup images
+        run: docker compose --env-file SkinCare/.env.staging -f deploy/staging/compose.yml build app web backup
 
       - name: Validate PHP runtime image
         shell: bash
@@ -93,7 +96,7 @@ jobs:
           sharafi-skincare-web:ci
           caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
-      - name: Exercise migrations and application container
+      - name: Exercise migrations, application, backup, and isolated restore
         shell: bash
         run: |
           set -euo pipefail
@@ -139,6 +142,30 @@ jobs:
           fi
 
           compose exec -T app php artisan ops:provider-readiness --json
+
+          mkdir -p .ci-backup-key
+          docker run --rm \
+            -v "$PWD/.ci-backup-key:/work" \
+            --entrypoint age-keygen \
+            sharafi-skincare-backup:ci \
+            -o /work/identity.txt
+          recipient=$(docker run --rm \
+            -v "$PWD/.ci-backup-key:/work:ro" \
+            --entrypoint age-keygen \
+            sharafi-skincare-backup:ci \
+            -y /work/identity.txt)
+
+          compose run --rm \
+            -e BACKUP_AGE_RECIPIENT="$recipient" \
+            --entrypoint /usr/local/bin/sharafi-backup \
+            backup
+
+          compose run --rm \
+            -v "$PWD/.ci-backup-key:/identity:ro" \
+            -e BACKUP_AGE_IDENTITY_FILE=/identity/identity.txt \
+            --entrypoint /bin/sh \
+            backup \
+            -c 'latest=$(ls -1t /backups/sharafi-*.dump.age | head -n 1); /usr/local/bin/sharafi-restore-verify "$latest"'
 
       - name: Cleanup staging containers
         if: always()

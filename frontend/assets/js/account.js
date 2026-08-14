@@ -9,7 +9,7 @@
     paid: 'پرداخت‌شده',
     processing: 'در حال پردازش',
     shipped: 'ارسال‌شده',
-    delivered: 'تحویل‌غده',
+    delivered: 'تحویل‌شده',
     cancelled: 'لغوشده',
     expired: 'منقضی‌شده',
     refund_pending: 'در انتظار بازگشت وجه',
@@ -88,12 +88,39 @@
           <span>${safe(statusLabels[order.status] || order.status)} · ${safe(api.formatIrr(order.total_irr))}</span>
           <span>${Number(order.items?.length || 0).toLocaleString('fa-IR')} قلم</span>
         </div>
-        ${order.status === 'pending_payment' ? `<button type="button" class="btn btn-primary btn-sm js-account-pay" data-order-pay="${safe(order.order_number)}">ادامه پرداخت</button>` : ''}
+        ${order.status === 'pending_payment' ? `<div class="account-order-actions"><button type="button" class="btn btn-primary btn-sm js-account-pay" data-order-pay="${safe(order.order_number)}">ادامه پرداخت</button><button type="button" class="btn btn-outline btn-sm js-account-cancel" data-order-cancel="${safe(order.order_number)}">لغو سفارش</button></div>` : ''}
       </article>`).join('');
     old?.replaceWith(container);
     container.querySelectorAll('.js-account-pay').forEach((button) => {
       button.addEventListener('click', () => continuePayment(button.dataset.orderPay, button));
     });
+    container.querySelectorAll('.js-account-cancel').forEach((button) => {
+      button.addEventListener('click', () => cancelPendingOrder(button.dataset.orderCancel, button));
+    });
+  };
+
+  const refreshOrders = async () => {
+    const orders = await api.orders.list();
+    renderOrders(orders);
+  };
+
+  const cancelPendingOrder = async (orderNumber, button) => {
+    if (!window.confirm('این سفارش لغو شود؟ موجودی رزروشده آزاد خواهد شد.')) return;
+
+    const row = button.closest('.account-order-row');
+    row?.querySelectorAll('button').forEach((action) => { action.disabled = true; });
+    const oldText = button.textContent;
+    button.textContent = 'در حال لغو...';
+
+    try {
+      await api.orders.cancel(orderNumber);
+      await refreshOrders();
+      toast('سفارش لغو شد و رزرو موجودی آزاد شد.');
+    } catch (error) {
+      row?.querySelectorAll('button').forEach((action) => { action.disabled = false; });
+      button.textContent = oldText;
+      toast(error?.message || 'لغو سفارش ناموفق بود.', 3500);
+    }
   };
 
   const renderAddresses = (addressesPayload) => {

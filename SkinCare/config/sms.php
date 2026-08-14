@@ -9,6 +9,8 @@ return [
         'max_attempts' => (int) env('OTP_MAX_ATTEMPTS', 5),
         'requests_per_mobile_10_minutes' => (int) env('OTP_REQUESTS_PER_MOBILE_10_MINUTES', 5),
         'requests_per_ip_10_minutes' => (int) env('OTP_REQUESTS_PER_IP_10_MINUTES', 20),
+        'request_lock_seconds' => (int) env('OTP_REQUEST_LOCK_SECONDS', 30),
+        'request_lock_wait_seconds' => (int) env('OTP_REQUEST_LOCK_WAIT_SECONDS', 3),
     ],
     'outbox' => [
         'max_attempts' => (int) env('SMS_OUTBOX_MAX_ATTEMPTS', 8),

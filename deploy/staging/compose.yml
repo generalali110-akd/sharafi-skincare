@@ -59,6 +59,25 @@ services:
     command: ["php", "artisan", "schedule:work"]
     stop_grace_period: 30s
 
+  backup:
+    image: sharafi-skincare-backup:${IMAGE_TAG:-staging}
+    build:
+      context: ../..
+      dockerfile: deploy/backup/Dockerfile
+    env_file:
+      - ../../SkinCare/.env.staging
+    restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+    volumes:
+      - encrypted_backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
   web:
     image: sharafi-skincare-web:${IMAGE_TAG:-staging}
     build:
@@ -91,5 +110,6 @@ networks:
 volumes:
   postgres_data:
   app_storage:
+  encrypted_backups:
   caddy_data:
   caddy_config:

@@ -31,14 +31,34 @@ async function clearOtp(mobile) {
   await fs.rm(otpPath, { force: true });
 }
 
-async function settleOrder(orderNumber) {
-  const { stdout, stderr } = await execFileAsync('php', ['artisan', 'e2e:settle-order', orderNumber], {
+async function artisan(args, timeout = 15_000) {
+  const { stdout, stderr } = await execFileAsync('php', ['artisan', ...args], {
     cwd: backendRoot,
     env: process.env,
-    timeout: 15_000,
+    timeout,
   });
   if (stderr.trim()) throw new Error(stderr.trim());
+  return stdout;
+}
+
+async function settleOrder(orderNumber) {
+  const stdout = await artisan(['e2e:settle-order', orderNumber]);
   if (!stdout.includes('paid')) throw new Error(`Unexpected settlement output: ${stdout}`);
+}
+
+async function setStock(sku, onHand) {
+  const stdout = await artisan(['e2e:set-stock', sku, String(onHand)]);
+  if (!stdout.includes(`on_hand=${onHand}`)) throw new Error(`Unexpected stock output: ${stdout}`);
+}
+
+async function expireOtp(mobile) {
+  const stdout = await artisan(['e2e:expire-otp', mobile]);
+  if (!stdout.includes('expired')) throw new Error(`Unexpected OTP expiry output: ${stdout}`);
+}
+
+async function setPaymentMode(mode) {
+  const stdout = await artisan(['e2e:payment-mode', mode]);
+  if (!stdout.includes(mode)) throw new Error(`Unexpected payment mode output: ${stdout}`);
 }
 
 async function enterOtp(page, code) {
@@ -53,5 +73,8 @@ module.exports = {
   waitForOtp,
   clearOtp,
   settleOrder,
+  setStock,
+  expireOtp,
+  setPaymentMode,
   enterOtp,
 };
