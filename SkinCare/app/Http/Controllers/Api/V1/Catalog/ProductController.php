@@ -21,6 +21,7 @@ class ProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
+                'primaryImage',
             ])
             ->withCount([
                 'variants as active_variants_count' => fn ($query) => $query->active(),
@@ -71,14 +72,8 @@ class ProductController extends Controller
 
             $query->whereHas('variants', function (Builder $variant) use ($minimum, $maximum): void {
                 $variant->active();
-
-                if ($minimum !== null) {
-                    $variant->where('price_irr', '>=', $minimum);
-                }
-
-                if ($maximum !== null) {
-                    $variant->where('price_irr', '<=', $maximum);
-                }
+                if ($minimum !== null) $variant->where('price_irr', '>=', $minimum);
+                if ($maximum !== null) $variant->where('price_irr', '<=', $maximum);
             });
         }
 
@@ -102,6 +97,7 @@ class ProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
+                'images',
                 'variants' => fn ($query) => $query
                     ->active()
                     ->orderBy('sort_order')
