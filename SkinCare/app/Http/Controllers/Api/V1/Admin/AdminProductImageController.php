@@ -10,6 +10,7 @@ use App\Models\ProductImage;
 use App\Services\Catalog\ProductImageService;
 use App\Support\ProductImagePayload;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 final class AdminProductImageController extends Controller
@@ -50,7 +51,7 @@ final class AdminProductImageController extends Controller
     }
 
     public function destroy(
-        StoreProductImageRequest $request,
+        Request $request,
         Product $product,
         ProductImage $image,
         ProductImageService $images,
