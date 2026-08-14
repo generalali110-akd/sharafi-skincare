@@ -1,17 +1,17 @@
 # Staging provider smoke runbook
 
-This runbook validates SMS.ir and Zarinpal without committing provider credentials.
+This runbook validates SMS.ir and Zarinpal without committing provider credentials and runs the decisive smoke commands inside the deployed staging host.
 
 ## Safety boundary
 
 - Provider secrets live only in staging environment/secret storage.
-- Never paste SMS.ir API keys, OTP pepper, database passwords, or payment credentials into repository files or CI logs.
-- The previously exposed SMS.ir key must not be reused; rotate it before any live validation.
+- Never paste SMS.ir API keys, OTP pepper, database passwords, payment credentials, SSH private keys, or backup identities into repository files or CI logs.
 - `ops:provider-readiness --probe-smsir` is read-only: it calls SMS.ir credit and line-list endpoints and does not send an SMS.
 - `ops:zarinpal-smoke` is staging/testing-only. It creates a real, recorded payment attempt for an existing pending-payment staging order, but it does not mark the order paid.
 - Payment success is accepted only through the normal Zarinpal callback + server-to-server verify + `PaymentSettlementService` path.
+- The GitHub workflow pins the staging SSH host key instead of disabling host-key verification.
 
-## Required staging configuration
+## Required application configuration
 
 Start from `.env.staging.example` and inject real values through the deployment secret store.
 
@@ -23,10 +23,11 @@ Required values include:
 - `SMSIR_LINE_NUMBER`
 - `ZARINPAL_MERCHANT_ID`
 - PostgreSQL credentials
+- `BACKUP_AGE_RECIPIENT` containing only the public age recipient
 
 For safe provider testing, keep `SMSIR_SANDBOX=true` and `ZARINPAL_SANDBOX=true` until a deliberate live-provider test is scheduled.
 
-## Readiness check
+## Readiness check on the staging host
 
 ```bash
 php artisan ops:provider-readiness
@@ -35,16 +36,16 @@ php artisan ops:provider-readiness
 Read-only SMS.ir credential/connectivity probe:
 
 ```bash
-php artisan ops:provider-readiness --probe-smsir
-```
-
-Machine-readable mode:
-
-```bash
 php artisan ops:provider-readiness --probe-smsir --json
 ```
 
-The command checks HTTPS, secure/encrypted sessions, active provider drivers, SMS.ir key/template/line configuration, Zarinpal Merchant ID format, payment result/callback HTTPS URLs, and the active Zarinpal base URL.
+Runtime health gate:
+
+```bash
+php artisan ops:runtime-health --json
+```
+
+The readiness command checks HTTPS, secure/encrypted sessions, active provider drivers, SMS.ir key/template/line configuration, Zarinpal Merchant ID format, payment result/callback HTTPS URLs, and the active Zarinpal base URL.
 
 The SMS.ir probe additionally calls:
 
@@ -55,10 +56,10 @@ No account balance, API key, or full secret value is printed by the command.
 
 ## Zarinpal initiation smoke
 
-Create a normal staging order through the Storefront and leave it in `pending_payment` with an active reservation. Then run:
+Create a normal staging order through the Storefront and leave it in `pending_payment` with an active reservation. Then run inside the deployed application container:
 
 ```bash
-php artisan ops:zarinpal-smoke SHR-ORDER-NUMBER
+php artisan ops:zarinpal-smoke SHR-ORDER-NUMBER --json
 ```
 
 The command uses the production `PaymentService`, creates a persisted `PaymentAttempt`, and returns the provider redirect URL. Open that URL to continue the sandbox checkout.
@@ -85,24 +86,27 @@ The application must then:
 
 Repeated callbacks must remain idempotent and must not decrement inventory twice.
 
-## Manual GitHub gate
+## GitHub staging environment gate
 
-`.github/workflows/staging-provider-smoke.yml` is `workflow_dispatch` only. It uses the protected GitHub `staging` environment and never runs on pull-request code with secrets.
+`.github/workflows/staging-provider-smoke.yml` is `workflow_dispatch` only. It does not copy provider credentials to a generic runner. Instead it connects to the deployed staging host using a pinned SSH host key and executes the application commands in the existing container.
 
-Configure these GitHub environment values before triggering it:
+Create a protected GitHub environment named `staging` and configure:
 
 Secrets:
 
-- `SMSIR_API_KEY`
-- `ZARINPAL_MERCHANT_ID`
+- `STAGING_SSH_HOST`
+- `STAGING_SSH_USER`
+- `STAGING_SSH_PRIVATE_KEY`
+- `STAGING_SSH_HOST_KEY` (the exact known_hosts line for the staging host)
 
 Variables:
 
-- `STAGING_APP_URL`
-- `SMSIR_SANDBOX`
-- `SMSIR_OTP_TEMPLATE_ID`
-- `SMSIR_OTP_CODE_PARAMETER`
-- `SMSIR_LINE_NUMBER`
-- `ZARINPAL_SANDBOX`
+- `STAGING_DEPLOY_PATH` (absolute repository path on the host, for example `/srv/sharafi-skincare`)
 
-The workflow runs a Composer audit and the read-only readiness/SMS.ir provider probe. Real Zarinpal initiation remains an explicit staging-order operation so every generated authority is recorded in the application database.
+Trigger the workflow with an existing pending-payment staging order number. The workflow runs, in order:
+
+1. the read-only SMS.ir credential/connectivity probe,
+2. a real persisted Zarinpal initiation for the supplied order,
+3. the internal runtime-health gate.
+
+The resulting Zarinpal redirect still requires the controlled operator to complete the sandbox payment and confirm the normal callback/verify/result flow.
