@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminDiscountController;
 use App\Http\Controllers\Api\V1\Admin\AdminInventoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminOrderController;
 use App\Http\Controllers\Api\V1\Admin\AdminProductController;
+use App\Http\Controllers\Api\V1\Admin\AdminProductImageController;
 use App\Http\Controllers\Api\V1\Admin\AdminSessionController;
 use App\Http\Controllers\Api\V1\Admin\AdminTaxonomyController;
 use App\Http\Controllers\Api\V1\Auth\OtpAuthController;
@@ -88,6 +89,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::patch('/catalog/products/{product}', [AdminProductController::class, 'update'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::post('/catalog/products/{product}/variants', [AdminProductController::class, 'storeVariant'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::patch('/catalog/variants/{variant}', [AdminProductController::class, 'updateVariant'])->middleware('permission:'.Permissions::CATALOG_WRITE);
+        Route::post('/catalog/products/{product}/images', [AdminProductImageController::class, 'store'])->middleware('permission:'.Permissions::CATALOG_WRITE);
+        Route::patch('/catalog/products/{product}/images/{image}', [AdminProductImageController::class, 'update'])->middleware('permission:'.Permissions::CATALOG_WRITE);
+        Route::delete('/catalog/products/{product}/images/{image}', [AdminProductImageController::class, 'destroy'])->middleware('permission:'.Permissions::CATALOG_WRITE);
 
         Route::post('/catalog/brands', [AdminTaxonomyController::class, 'storeBrand'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::patch('/catalog/brands/{brand}', [AdminTaxonomyController::class, 'updateBrand'])->middleware('permission:'.Permissions::CATALOG_WRITE);
