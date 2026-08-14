@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Catalog;
 
+use App\Support\ProductImagePayload;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -16,6 +17,9 @@ class ProductListResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'short_description' => $this->short_description,
+            'image' => $this->whenLoaded('primaryImage', fn () => $this->primaryImage
+                ? ProductImagePayload::make($this->primaryImage)
+                : null),
             'brand' => $this->whenLoaded('brand', fn () => $this->brand ? [
                 'name' => $this->brand->name,
                 'slug' => $this->brand->slug,
