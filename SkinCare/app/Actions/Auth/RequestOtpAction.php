@@ -26,21 +26,23 @@ final class RequestOtpAction
 
         $this->enforceRateLimits($mobile, $ipAddress);
 
-        $latest = OtpChallenge::query()
-            ->where('mobile', $mobile)
-            ->where('purpose', 'auth')
-            ->whereNull('consumed_at')
-            ->latest('created_at')
-            ->first();
-
-        if ($latest && $latest->created_at->greaterThan(now()->subSeconds($resend))) {
-            $retryAfter = max(1, (int) now()->diffInSeconds($latest->created_at->copy()->addSeconds($resend)));
-            throw new TooManyRequestsHttpException($retryAfter, 'لطفاً کمی بعد دوباره درخواست کد بدهید.');
-        }
-
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        $challenge = DB::transaction(function () use ($mobile, $name, $code, $ttl, $maxAttempts): OtpChallenge {
+        $challenge = DB::transaction(function () use ($mobile, $name, $code, $ttl, $resend, $maxAttempts): OtpChallenge {
+            $this->lockOtpRequest($mobile);
+
+            $latest = OtpChallenge::query()
+                ->where('mobile', $mobile)
+                ->where('purpose', 'auth')
+                ->whereNull('consumed_at')
+                ->latest('created_at')
+                ->first();
+
+            if ($latest && $latest->created_at->greaterThan(now()->subSeconds($resend))) {
+                $retryAfter = max(1, (int) now()->diffInSeconds($latest->created_at->copy()->addSeconds($resend)));
+                throw new TooManyRequestsHttpException($retryAfter, 'لطفاً کمی بعد دوباره درخواست کد بدهید.');
+            }
+
             OtpChallenge::query()
                 ->where('mobile', $mobile)
                 ->where('purpose', 'auth')
@@ -71,6 +73,15 @@ final class RequestOtpAction
         }
 
         return $challenge;
+    }
+
+    private function lockOtpRequest(string $mobile): void
+    {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
+        DB::select('SELECT pg_advisory_xact_lock(hashtext(?))', ['otp:auth:'.$mobile]);
     }
 
     private function enforceRateLimits(string $mobile, ?string $ipAddress): void
