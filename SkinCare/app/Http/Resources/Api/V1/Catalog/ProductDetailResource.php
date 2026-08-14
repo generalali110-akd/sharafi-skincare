@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1\Catalog;
 
+use App\Support\ProductImagePayload;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -23,6 +24,9 @@ class ProductDetailResource extends JsonResource
                 'name' => $category->name,
                 'slug' => $category->slug,
             ])->values(),
+            'images' => $this->whenLoaded('images', fn () => $this->images
+                ->map(fn ($image) => ProductImagePayload::make($image))
+                ->values()),
             'variants' => $this->variants->map(fn ($variant) => [
                 'id' => $variant->id,
                 'sku' => $variant->sku,
