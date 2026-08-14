@@ -1,0 +1,12 @@
+# Production ownership defaults to the repository owner until the team expands.
+* @generalali110-akd
+
+# Security-sensitive surfaces are called out explicitly for review visibility.
+/SkinCare/app/Actions/Auth/ @generalali110-akd
+/SkinCare/app/Infrastructure/Payments/ @generalali110-akd
+/SkinCare/app/Infrastructure/Sms/ @generalali110-akd
+/SkinCare/app/Services/Payments/ @generalali110-akd
+/SkinCare/bootstrap/ @generalali110-akd
+/SkinCare/config/ @generalali110-akd
+/deploy/ @generalali110-akd
+/.github/workflows/ @generalali110-akd
