@@ -73,6 +73,7 @@ class OtpAuthTest extends TestCase
 
     public function test_concurrent_request_for_same_mobile_is_rejected_while_lock_is_held(): void
     {
+        $this->app->instance(SmsGateway::class, new FakeSmsGateway);
         config()->set('sms.otp.request_lock_wait_seconds', 0);
 
         $mobile = '09121234567';
