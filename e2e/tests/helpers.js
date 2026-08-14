@@ -51,6 +51,11 @@ async function setStock(sku, onHand) {
   if (!stdout.includes(`on_hand=${onHand}`)) throw new Error(`Unexpected stock output: ${stdout}`);
 }
 
+async function expireOtp(mobile) {
+  const stdout = await artisan(['e2e:expire-otp', mobile]);
+  if (!stdout.includes('expired')) throw new Error(`Unexpected OTP expiry output: ${stdout}`);
+}
+
 async function enterOtp(page, code) {
   const inputs = page.locator('[data-auth-view="otp"] .otp-row-v2 input');
   await inputs.first().waitFor({ state: 'visible' });
@@ -64,5 +69,6 @@ module.exports = {
   clearOtp,
   settleOrder,
   setStock,
+  expireOtp,
   enterOtp,
 };
