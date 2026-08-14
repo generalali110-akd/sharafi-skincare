@@ -1,11 +1,20 @@
 const { test, expect } = require('@playwright/test');
-const { waitForOtp, clearOtp, setStock, expireOtp, enterOtp } = require('./helpers');
+const {
+  waitForOtp,
+  clearOtp,
+  settleOrder,
+  setStock,
+  expireOtp,
+  setPaymentMode,
+  enterOtp,
+} = require('./helpers');
 
 const INVALID_OTP_MOBILE = '09120000004';
 const STOCK_CONFLICT_MOBILE = '09120000005';
 const CANCEL_ORDER_MOBILE = '09120000006';
 const EXPIRED_OTP_MOBILE = '09120000007';
 const RESEND_LIMIT_MOBILE = '09120000008';
+const PAYMENT_RECOVERY_MOBILE = '09120000009';
 const PRODUCT_NAME = 'سرم تست E2E شرفی';
 const PRODUCT_SKU = 'E2E-SERUM-001';
 
@@ -146,6 +155,45 @@ test.describe.serial('Sharafi negative commerce paths', () => {
       await page.goto('/product.html?slug=e2e-test-serum');
       await expect(page.locator('.product-purchase .js-product-add')).toBeEnabled();
     } finally {
+      await setStock(PRODUCT_SKU, 20);
+    }
+  });
+
+  test('failed payment initiation recovers from account using a fresh idempotency key', async ({ page }) => {
+    await setStock(PRODUCT_SKU, 20);
+    await clearOtp(PAYMENT_RECOVERY_MOBILE);
+    await setPaymentMode('unavailable_once');
+
+    try {
+      await page.goto('/product.html?slug=e2e-test-serum');
+      await page.locator('.product-purchase .js-product-add').click();
+      await page.goto('/cart.html');
+      await page.locator('.js-checkout-btn').click();
+      await expect(page).toHaveURL(/\/login\.html\?return=/);
+      await loginFromCheckout(page, PAYMENT_RECOVERY_MOBILE);
+      await fillCheckoutAddress(page, PAYMENT_RECOVERY_MOBILE, 'مشتری بازیابی پرداخت');
+
+      await page.getByRole('button', { name: 'ثبت سفارش و ادامه پرداخت' }).click();
+      await expect(page.getByText(/سفارش SHR-.* ثبت شد، اما اتصال به درگاه ناموفق بود/)).toBeVisible();
+      await expect(page).toHaveURL(/\/checkout\.html$/);
+
+      const orderNumber = await page.evaluate(() => sessionStorage.getItem('sharafi:last-order'));
+      expect(orderNumber).toMatch(/^SHR-/);
+
+      await page.goto('/account.html#orders');
+      const orderRow = page.locator(`[data-order="${orderNumber}"]`);
+      await expect(orderRow).toContainText('در انتظار پرداخت');
+      await orderRow.getByRole('button', { name: 'ادامه پرداخت' }).click();
+
+      await expect(page).toHaveURL(new RegExp(`/payment-result\\.html\\?order=${orderNumber}$`));
+      await expect(page.locator('.js-payment-status')).toHaveText('در انتظار پرداخت');
+
+      await settleOrder(orderNumber);
+      await page.reload();
+      await expect(page.locator('.js-payment-result-title')).toHaveText('پرداخت با موفقیت تأیید شد ✓');
+      await expect(page.locator('.js-payment-status')).toHaveText('پرداخت موفق');
+    } finally {
+      await setPaymentMode('success');
       await setStock(PRODUCT_SKU, 20);
     }
   });
