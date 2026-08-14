@@ -5,8 +5,17 @@ const pages = [
   { name: 'category', path: '/category.html' },
   { name: 'product', path: '/product.html?slug=e2e-test-serum' },
   { name: 'cart', path: '/cart.html' },
+  { name: 'checkout', path: '/checkout.html' },
+  { name: 'payment-result', path: '/payment-result.html' },
+  { name: 'account', path: '/account.html' },
   { name: 'login', path: '/login.html' },
   { name: 'admin-login', path: '/admin/login.html' },
+  { name: 'admin-dashboard', path: '/admin/dashboard.html' },
+  { name: 'admin-products', path: '/admin/products.html' },
+  { name: 'admin-inventory', path: '/admin/inventory.html' },
+  { name: 'admin-orders', path: '/admin/orders.html' },
+  { name: 'admin-discounts', path: '/admin/discounts.html' },
+  { name: 'admin-customers', path: '/admin/users.html' },
 ];
 
 const viewports = [
