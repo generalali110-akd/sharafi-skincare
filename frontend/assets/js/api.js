@@ -213,10 +213,19 @@
       const retryRequired = error instanceof ApiError
         && error.status === 503
         && error.payload?.code === 'payment_attempt_retry_required';
+      const initiationUnavailable = error instanceof ApiError
+        && error.status === 503
+        && error.payload?.code === 'payment_unavailable';
 
       if (!recovered && retryRequired) {
         paymentIdempotencyKey(orderNumber, true);
         return initiatePayment(orderNumber, true);
+      }
+
+      if (initiationUnavailable) {
+        // A failed or unknown initiation must not pin the next explicit user retry
+        // to the same attempt. The next click gets a fresh server-side idempotency key.
+        paymentIdempotencyKey(orderNumber, true);
       }
 
       throw error;
