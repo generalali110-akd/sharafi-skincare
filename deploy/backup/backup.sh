@@ -36,7 +36,8 @@ umask 077
 mkdir -p "$BACKUP_DIR"
 
 timestamp=$(date -u '+%Y%m%dT%H%M%SZ')
-final="$BACKUP_DIR/sharafi-$timestamp.dump.age"
+filename="sharafi-$timestamp.dump.age"
+final="$BACKUP_DIR/$filename"
 tmp="$final.tmp"
 checksum="$final.sha256"
 
@@ -62,7 +63,10 @@ if ! pg_dump \
 fi
 
 mv "$tmp" "$final"
-sha256sum "$final" > "$checksum"
+(
+    cd "$BACKUP_DIR"
+    sha256sum "$filename" > "$filename.sha256"
+)
 
 find "$BACKUP_DIR" -type f \
     \( -name 'sharafi-*.dump.age' -o -name 'sharafi-*.dump.age.sha256' \) \
