@@ -56,6 +56,11 @@ async function expireOtp(mobile) {
   if (!stdout.includes('expired')) throw new Error(`Unexpected OTP expiry output: ${stdout}`);
 }
 
+async function setPaymentMode(mode) {
+  const stdout = await artisan(['e2e:payment-mode', mode]);
+  if (!stdout.includes(mode)) throw new Error(`Unexpected payment mode output: ${stdout}`);
+}
+
 async function enterOtp(page, code) {
   const inputs = page.locator('[data-auth-view="otp"] .otp-row-v2 input');
   await inputs.first().waitFor({ state: 'visible' });
@@ -70,5 +75,6 @@ module.exports = {
   settleOrder,
   setStock,
   expireOtp,
+  setPaymentMode,
   enterOtp,
 };
