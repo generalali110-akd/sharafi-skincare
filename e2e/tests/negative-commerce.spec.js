@@ -1,9 +1,11 @@
 const { test, expect } = require('@playwright/test');
-const { waitForOtp, clearOtp, setStock, enterOtp } = require('./helpers');
+const { waitForOtp, clearOtp, setStock, expireOtp, enterOtp } = require('./helpers');
 
 const INVALID_OTP_MOBILE = '09120000004';
 const STOCK_CONFLICT_MOBILE = '09120000005';
 const CANCEL_ORDER_MOBILE = '09120000006';
+const EXPIRED_OTP_MOBILE = '09120000007';
+const RESEND_LIMIT_MOBILE = '09120000008';
 const PRODUCT_NAME = 'سرم تست E2E شرفی';
 const PRODUCT_SKU = 'E2E-SERUM-001';
 
@@ -44,6 +46,38 @@ test.describe.serial('Sharafi negative commerce paths', () => {
     await expect(page.getByText('کد تأیید نامعتبر یا منقضی است.', { exact: true })).toBeVisible();
     await expect(page).toHaveURL(/\/login\.html$/);
     await expect(page.locator('[data-auth-view="otp"]')).toHaveClass(/is-active/);
+  });
+
+  test('expired OTP is rejected even when the entered code is correct', async ({ page }) => {
+    await clearOtp(EXPIRED_OTP_MOBILE);
+    await page.goto('/login.html');
+
+    await page.locator('#login-mobile').fill(EXPIRED_OTP_MOBILE);
+    await page.getByRole('button', { name: 'دریافت کد ورود' }).click();
+    const otp = await waitForOtp(EXPIRED_OTP_MOBILE);
+    await expireOtp(EXPIRED_OTP_MOBILE);
+    await enterOtp(page, otp);
+    await page.getByRole('button', { name: 'تأیید و ادامه' }).click();
+
+    await expect(page.getByText('کد تأیید نامعتبر یا منقضی است.', { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/\/login\.html$/);
+    await expect(page.locator('[data-auth-view="otp"]')).toHaveClass(/is-active/);
+  });
+
+  test('server resend window is surfaced after a page reload', async ({ page }) => {
+    await clearOtp(RESEND_LIMIT_MOBILE);
+    await page.goto('/login.html');
+
+    await page.locator('#login-mobile').fill(RESEND_LIMIT_MOBILE);
+    await page.getByRole('button', { name: 'دریافت کد ورود' }).click();
+    await waitForOtp(RESEND_LIMIT_MOBILE);
+
+    await page.reload();
+    await page.locator('#login-mobile').fill(RESEND_LIMIT_MOBILE);
+    await page.getByRole('button', { name: 'دریافت کد ورود' }).click();
+
+    await expect(page.getByText('لطفاً کمی بعد دوباره درخواست کد بدهید.', { exact: true })).toBeVisible();
+    await expect(page.locator('[data-auth-view="login"]')).toHaveClass(/is-active/);
   });
 
   test('stock change after checkout quote blocks order creation and keeps user on checkout', async ({ page }) => {
