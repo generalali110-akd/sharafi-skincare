@@ -60,19 +60,23 @@ async function loginAdmin(page) {
 }
 
 test.describe.serial('authenticated responsive release surfaces', () => {
-  for (const viewport of viewports) {
-    test(`${viewport.name} customer account and checkout surfaces stay responsive`, async ({ page }) => {
+  test('customer account and checkout surfaces stay responsive across release viewports', async ({ page }) => {
+    await loginCustomer(page);
+
+    for (const viewport of viewports) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await loginCustomer(page);
 
       for (const path of ['/account.html', '/checkout.html', '/payment-result.html']) {
         await assertResponsive(page, path, viewport.width);
       }
-    });
+    }
+  });
 
-    test(`${viewport.name} admin surfaces stay responsive after authorization`, async ({ page }) => {
+  test('admin surfaces stay responsive after authorization across release viewports', async ({ page }) => {
+    await loginAdmin(page);
+
+    for (const viewport of viewports) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await loginAdmin(page);
 
       for (const path of [
         '/admin/dashboard.html',
@@ -85,6 +89,6 @@ test.describe.serial('authenticated responsive release surfaces', () => {
         await assertResponsive(page, path, viewport.width);
         await expect(page.locator('html')).toHaveAttribute('data-admin-authorized', 'true');
       }
-    });
-  }
+    }
+  });
 });
