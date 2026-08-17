@@ -219,6 +219,7 @@ Customer purchase state is server-side and transaction-safe:
 - cancellation releases a reservation exactly once; invalid state transitions return HTTP 409
 - stale pending-payment reservations are released by `orders:expire-reservations`, scheduled every minute with overlap prevention
 - reservation TTL, quantity limits, and shipping rules are centralized in `config/shop.php` and environment settings
+- the initial business policy is documented in `docs/business-policy.md`
 - order/customer API payloads do not expose internal idempotency keys or another user's resources
 
 Current customer commerce endpoints (authentication required):
@@ -259,7 +260,7 @@ Current Admin endpoints:
 - `PATCH /api/v1/admin/inventory/{variant}/settings` — `inventory.write`
 - `GET /api/v1/admin/orders` — `orders.read`
 - `GET /api/v1/admin/orders/{orderNumber}` — `orders.read`
-- `PATCH /api/v1/admin/orders/{orderNumber}/status` — `orders.write`
+- `PATCH /api/v1/admin/orders/{orderNumber}/status` — `orders.write`; supports fulfillment statuses plus the guarded `refund_pending` → `refunded` admin refund workflow
 - `GET /api/v1/admin/audit-logs` — `audit.read`
 
 System roles/permissions can be created with `php artisan db:seed --class=SystemAccessSeeder`. Administrative access is then granted to an already verified user with `php artisan access:grant-role <mobile> <role>`. The command intentionally does not create or verify users and no default admin credentials are shipped with the application.
@@ -280,3 +281,11 @@ An SMS.ir adapter is implemented for test/staging use without coupling OTP, orde
 The detailed provider contract, environment variables, retry rules, and provider-swap boundary are documented in `docs/sms-provider-contract.md`.
 
 Plaintext OTP values must not be written to database-backed queues, logs, exceptions, analytics, or audit records. Replacing SMS.ir with the customer's final provider should require only an adapter/configuration/template mapping change; OTP, order/payment, outbox, API, and frontend contracts remain unchanged.
+
+## Operational release docs
+
+- `docs/business-policy.md` records the initial commerce policy decisions.
+- `docs/payment-discount-contract.md` and `docs/zarinpal-integration.md` define payment, discount, callback, and refund boundaries.
+- `docs/sms-provider-contract.md` defines SMS.ir, OTP, notification outbox, and provider-swap boundaries.
+- `docs/staging-provider-smoke.md` defines the staging provider validation runbook.
+- `docs/production-readiness-checklist.md` is the final production release gate.

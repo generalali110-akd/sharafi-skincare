@@ -43,6 +43,8 @@ Verification is safe to retry because Zarinpal documents repeat verification as 
 
 `Status=NOK` is intentionally not persisted as a final failed attempt. The callback query string is user-controlled; allowing it to mutate the attempt would let an attacker race a valid payment callback and block later settlement.
 
+Authoritative server-side verification failures are different: they mark the local attempt and payment as failed for customer support and payment-result visibility. Retrying after such a failure requires a fresh payment-attempt idempotency key.
+
 ## Settlement integrity
 
 After Zarinpal verification succeeds, the application still verifies its own invariants before settlement:
@@ -60,3 +62,7 @@ After Zarinpal verification succeeds, the application still verifies its own inv
 Zarinpal's V4 `payment/reverse.json` is implemented as the `ReversiblePaymentGateway` capability. Official documentation limits reverse to successful transactions within 30 minutes and requires the server IP to be registered for the terminal.
 
 This is not the same as Zarinpal's general refund service. General full/partial refund is documented through the authenticated Zarinpal GraphQL API, requires OAuth 2.0 credentials/access tokens and transaction/terminal identifiers, and supports PAYA or CARD refund methods. That OAuth refund flow is deliberately not faked or inferred from Merchant ID authentication; it will be implemented as a separate audited refund slice when credentials and operational policy are available.
+
+## Current operational decision
+
+Zarinpal remains the selected payment provider for local/staging preparation. The backend supports sandbox and production through environment configuration. Until Zarinpal GraphQL refund credentials and policy are available, admin refund completion records the operational state and payment status but does not call an automatic provider refund API.

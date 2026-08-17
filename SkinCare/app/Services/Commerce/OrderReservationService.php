@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Notifications\OrderNotificationOutbox;
 use Illuminate\Support\Facades\DB;
 
 final class OrderReservationService
@@ -15,6 +16,7 @@ final class OrderReservationService
     public function __construct(
         private readonly DiscountService $discounts,
         private readonly OrderStateMachine $stateMachine,
+        private readonly OrderNotificationOutbox $notifications,
     ) {}
 
     public function cancel(User $user, Order $order): Order
@@ -106,6 +108,9 @@ final class OrderReservationService
 
         $this->discounts->releaseForOrder($order);
         $this->stateMachine->transition($order, $target, $actor, $reason ?: $target->value);
+        if ($target === OrderStatus::Cancelled) {
+            $this->notifications->cancelled($order);
+        }
 
         return $order->load('items');
     }

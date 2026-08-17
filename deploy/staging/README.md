@@ -36,10 +36,11 @@ Set unique/private values for at least:
 - `SANCTUM_STATEFUL_DOMAINS`
 - `CORS_ALLOWED_ORIGINS`
 - `ACME_EMAIL`
+- `BACKUP_AGE_RECIPIENT`
 
 Never commit `SkinCare/.env.staging`. It is explicitly Git-ignored.
 
-Keep SMS.ir and Zarinpal in sandbox mode until their staging smoke tests have passed.
+Keep `SMSIR_SANDBOX=true` and `ZARINPAL_SANDBOX=true` until the staging smoke tests have passed and a separate live-provider cutover is approved. `APP_URL`, `PAYMENT_CALLBACK_URL`, `PAYMENT_RESULT_URL`, `SANCTUM_STATEFUL_DOMAINS`, and `CORS_ALLOWED_ORIGINS` must all point at the same public HTTPS staging origin unless a deliberate split-origin deployment is being tested.
 
 ## Deploy
 
@@ -48,6 +49,16 @@ sh deploy/staging/deploy.sh
 ```
 
 The script validates the Compose model, builds pinned PHP/Caddy images, starts the private PostgreSQL service, runs migrations before exposing the new application containers, starts web/app/queue/scheduler, runs provider/security readiness, and verifies the public HTTPS health endpoint.
+
+Recommended first deploy order:
+
+1. create `SkinCare/.env.staging` from the template and fill private values,
+2. run `sh deploy/staging/deploy.sh`,
+3. run the HTTP smoke probe against the public staging URL,
+4. run provider readiness with the read-only SMS.ir probe,
+5. create a pending-payment staging order and run the Zarinpal initiation smoke,
+6. complete the sandbox payment in the browser and confirm the normal callback/result flow,
+7. run `php artisan ops:runtime-health --json` inside the app container.
 
 ## Services
 

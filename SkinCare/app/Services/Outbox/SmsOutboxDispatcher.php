@@ -8,8 +8,10 @@ use App\Models\Order;
 use App\Models\OutboxMessage;
 use App\Services\Notifications\OrderSmsComposer;
 use App\Support\IranMobile;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Throwable;
+use UnexpectedValueException;
 
 final class SmsOutboxDispatcher
 {
@@ -68,7 +70,9 @@ final class SmsOutboxDispatcher
         } catch (Throwable $exception) {
             $safeError = class_basename($exception);
 
-            if ($exception instanceof PermanentSmsDeliveryException) {
+            if ($exception instanceof PermanentSmsDeliveryException
+                || $exception instanceof ModelNotFoundException
+                || $exception instanceof UnexpectedValueException) {
                 $this->failPermanently($message, $safeError);
             } else {
                 $this->releaseOrFail($message, $safeError);
@@ -118,7 +122,7 @@ final class SmsOutboxDispatcher
             return;
         }
 
-        $delaySeconds = min(3600, 30 * (2 ** min(6, max(0, $message->attempts - 1))));
+        $delaySeconds = $this->retryDelaySeconds($message);
 
         OutboxMessage::query()->whereKey($message->getKey())->update([
             'available_at' => now()->addSeconds($delaySeconds),
@@ -136,5 +140,15 @@ final class SmsOutboxDispatcher
             'last_error' => mb_substr($safeError, 0, 190),
             'updated_at' => now(),
         ]);
+    }
+
+    private function retryDelaySeconds(OutboxMessage $message): int
+    {
+        $initialBackoffSeconds = max(1, min(3600, (int) config('sms.outbox.initial_backoff_seconds', 30)));
+        $maxBackoffSeconds = max($initialBackoffSeconds, min(86400, (int) config('sms.outbox.max_backoff_seconds', 3600)));
+        $multiplier = max(1, min(10, (int) config('sms.outbox.backoff_multiplier', 2)));
+        $retryIndex = max(0, $message->attempts - 1);
+
+        return min($maxBackoffSeconds, $initialBackoffSeconds * ($multiplier ** min(10, $retryIndex)));
     }
 }

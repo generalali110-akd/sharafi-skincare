@@ -55,6 +55,9 @@ class SmsOutboxDispatcherTest extends TestCase
 
     public function test_delivery_failure_is_deferred_without_persisting_raw_exception_text(): void
     {
+        config()->set('sms.outbox.initial_backoff_seconds', 45);
+        config()->set('sms.outbox.max_backoff_seconds', 45);
+
         $this->app->instance(SmsGateway::class, new class implements SmsGateway
         {
             public function sendOtp(string $mobile, string $code, int $ttlSeconds): void {}
@@ -77,7 +80,56 @@ class SmsOutboxDispatcherTest extends TestCase
         $this->assertNull($message->locked_at);
         $this->assertSame('RuntimeException', $message->last_error);
         $this->assertStringNotContainsString('SECRET-provider-response', (string) $message->last_error);
-        $this->assertTrue($message->available_at->isFuture());
+        $this->assertTrue($message->available_at->greaterThanOrEqualTo(now()->addSeconds(44)));
+        $this->assertTrue($message->available_at->lessThanOrEqualTo(now()->addSeconds(46)));
+    }
+
+    public function test_transient_delivery_failure_marks_message_failed_after_max_attempts(): void
+    {
+        config()->set('sms.outbox.max_attempts', 2);
+
+        $this->app->instance(SmsGateway::class, new class implements SmsGateway
+        {
+            public function sendOtp(string $mobile, string $code, int $ttlSeconds): void {}
+
+            public function sendMessage(string $mobile, string $message, string $idempotencyKey): void
+            {
+                throw new RuntimeException('SECRET-final-provider-response');
+            }
+        });
+
+        $message = $this->message($this->order(), 'payment_succeeded');
+        $message->forceFill(['attempts' => 1])->save();
+
+        $result = $this->app->make(SmsOutboxDispatcher::class)->dispatchOne();
+        $message = $message->fresh();
+
+        $this->assertSame(SmsOutboxDispatcher::RESULT_FAILED, $result);
+        $this->assertSame(2, $message->attempts);
+        $this->assertNull($message->processed_at);
+        $this->assertNotNull($message->failed_at);
+        $this->assertNull($message->locked_at);
+        $this->assertSame('RuntimeException', $message->last_error);
+        $this->assertStringNotContainsString('SECRET-final-provider-response', (string) $message->last_error);
+    }
+
+    public function test_stale_locked_message_becomes_claimable_after_lock_ttl(): void
+    {
+        config()->set('sms.outbox.lock_ttl_seconds', 60);
+
+        $fake = new FakeSmsGateway;
+        $this->app->instance(SmsGateway::class, $fake);
+        $message = $this->message($this->order(), 'order_shipped');
+        $message->forceFill(['locked_at' => now()->subSeconds(61)])->save();
+
+        $result = $this->app->make(SmsOutboxDispatcher::class)->dispatchOne();
+        $message = $message->fresh();
+
+        $this->assertSame(SmsOutboxDispatcher::RESULT_PROCESSED, $result);
+        $this->assertCount(1, $fake->messages);
+        $this->assertNotNull($message->processed_at);
+        $this->assertNull($message->locked_at);
+        $this->assertSame(1, $message->attempts);
     }
 
     public function test_permanent_delivery_failure_is_failed_immediately_without_retry_window(): void
@@ -104,6 +156,40 @@ class SmsOutboxDispatcherTest extends TestCase
         $this->assertSame('PermanentSmsDeliveryException', $message->last_error);
         $this->assertStringNotContainsString('SECRET-invalid-template-details', (string) $message->last_error);
         $this->assertSame(1, $message->attempts);
+    }
+
+    public function test_malformed_outbox_message_is_failed_permanently_without_retrying(): void
+    {
+        $fake = new FakeSmsGateway;
+        $this->app->instance(SmsGateway::class, $fake);
+        $message = $this->message($this->order(), 'unsupported_template');
+
+        $result = $this->app->make(SmsOutboxDispatcher::class)->dispatchOne();
+        $message = $message->fresh();
+
+        $this->assertSame(SmsOutboxDispatcher::RESULT_FAILED, $result);
+        $this->assertCount(0, $fake->messages);
+        $this->assertNotNull($message->failed_at);
+        $this->assertNull($message->locked_at);
+        $this->assertSame('UnexpectedValueException', $message->last_error);
+        $this->assertSame(1, $message->attempts);
+    }
+
+    public function test_deleted_order_message_is_failed_permanently_without_external_send(): void
+    {
+        $fake = new FakeSmsGateway;
+        $this->app->instance(SmsGateway::class, $fake);
+        $order = $this->order();
+        $message = $this->message($order, 'order_shipped');
+        $order->delete();
+
+        $result = $this->app->make(SmsOutboxDispatcher::class)->dispatchOne();
+        $message = $message->fresh();
+
+        $this->assertSame(SmsOutboxDispatcher::RESULT_FAILED, $result);
+        $this->assertCount(0, $fake->messages);
+        $this->assertNotNull($message->failed_at);
+        $this->assertSame('ModelNotFoundException', $message->last_error);
     }
 
     public function test_null_sms_driver_leaves_queued_messages_untouched(): void

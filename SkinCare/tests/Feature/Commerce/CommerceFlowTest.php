@@ -4,6 +4,7 @@ namespace Tests\Feature\Commerce;
 
 use App\Enums\OrderStatus;
 use App\Models\Address;
+use App\Models\DiscountRule;
 use App\Models\InventoryItem;
 use App\Models\InventoryMovement;
 use App\Models\Order;
@@ -132,6 +133,7 @@ class CommerceFlowTest extends TestCase
             ->assertCreated();
 
         $orderNumber = $order->json('data.order_number');
+        $storedOrder = Order::query()->where('order_number', $orderNumber)->firstOrFail();
         $this->assertSame(2, $inventory->refresh()->reserved);
 
         $this->actingAs($user)
@@ -141,6 +143,10 @@ class CommerceFlowTest extends TestCase
 
         $this->assertSame(0, $inventory->refresh()->reserved);
         $this->assertSame(1, InventoryMovement::query()->where('type', 'reservation_release')->count());
+        $this->assertDatabaseHas('outbox_messages', [
+            'event_key' => 'order:'.$storedOrder->getKey().':order_cancelled:sms',
+            'topic' => 'sms',
+        ]);
 
         $this->actingAs($user)
             ->postJson("/api/v1/orders/{$orderNumber}/cancel")
@@ -148,6 +154,64 @@ class CommerceFlowTest extends TestCase
 
         $this->assertSame(0, $inventory->refresh()->reserved);
         $this->assertSame(1, InventoryMovement::query()->where('type', 'reservation_release')->count());
+    }
+
+    public function test_business_policy_uses_pre_discount_subtotal_for_free_shipping_and_sets_reservation_ttl(): void
+    {
+        $user = User::factory()->create();
+        [$variant] = $this->purchasableVariant(price: 8_000_000, stock: 2);
+        $address = $this->addressFor($user);
+        $this->discountRule('BIGSAVE', 7_900_000);
+
+        $this->actingAs($user)
+            ->putJson("/api/v1/cart/items/{$variant->id}", ['quantity' => 1])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->postJson('/api/v1/checkout/quote', [
+                'shipping_method' => 'standard',
+                'coupon_code' => 'BIGSAVE',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.subtotal_irr', 8_000_000)
+            ->assertJsonPath('data.discount_irr', 7_900_000)
+            ->assertJsonPath('data.shipping_irr', 0)
+            ->assertJsonPath('data.total_irr', 100_000);
+
+        $this->actingAs($user)
+            ->postJson('/api/v1/checkout/quote', [
+                'shipping_method' => 'courier',
+                'coupon_code' => 'BIGSAVE',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.shipping_irr', 650_000)
+            ->assertJsonPath('data.total_irr', 750_000);
+
+        $before = now()->addMinutes((int) config('shop.order_reservation_ttl_minutes'))->subSeconds(5);
+        $response = $this->actingAs($user)
+            ->withHeader('Idempotency-Key', 'policy-order-key-0001')
+            ->postJson('/api/v1/orders', [
+                'address_id' => $address->id,
+                'shipping_method' => 'standard',
+                'coupon_code' => 'BIGSAVE',
+            ])
+            ->assertCreated();
+        $after = now()->addMinutes((int) config('shop.order_reservation_ttl_minutes'))->addSeconds(5);
+
+        $order = Order::query()->where('order_number', $response->json('data.order_number'))->firstOrFail();
+        $this->assertTrue($order->reservation_expires_at->betweenIncluded($before, $after));
+    }
+
+    public function test_cart_quantity_cannot_exceed_shop_policy_limit(): void
+    {
+        $user = User::factory()->create();
+        [$variant] = $this->purchasableVariant(price: 1_000_000, stock: 200);
+
+        $this->actingAs($user)
+            ->putJson("/api/v1/cart/items/{$variant->id}", [
+                'quantity' => (int) config('shop.max_item_quantity') + 1,
+            ])
+            ->assertUnprocessable();
     }
 
     public function test_expiry_command_releases_stale_reservation(): void
@@ -262,6 +326,18 @@ class CommerceFlowTest extends TestCase
             'postal_code' => '1234567890',
             'address_line' => 'آدرس تست',
             'is_default' => true,
+        ]);
+    }
+
+    private function discountRule(string $code, int $amount): DiscountRule
+    {
+        return DiscountRule::query()->create([
+            'code' => $code,
+            'name' => $code,
+            'kind' => 'fixed',
+            'value' => $amount,
+            'min_subtotal_irr' => 0,
+            'is_active' => true,
         ]);
     }
 }
