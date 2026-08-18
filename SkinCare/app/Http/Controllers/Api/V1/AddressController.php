@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Services\Commerce\AddressService;
 use App\Support\IranMobile;
+use App\Support\PersianArabicDigits;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -52,6 +53,13 @@ class AddressController extends Controller
 
     private function validated(Request $request, bool $partial): array
     {
+        if ($request->has('mobile')) {
+            $request->merge(['mobile' => IranMobile::normalize((string) $request->input('mobile'))]);
+        }
+        if ($request->has('postal_code')) {
+            $request->merge(['postal_code' => PersianArabicDigits::normalize((string) $request->input('postal_code'))]);
+        }
+
         $presence = $partial ? 'sometimes' : 'required';
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:80'],

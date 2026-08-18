@@ -286,6 +286,28 @@ class CommerceFlowTest extends TestCase
         $this->assertSame(1, Address::query()->where('user_id', $user->id)->where('is_default', true)->count());
     }
 
+    public function test_address_accepts_and_stores_normalized_persian_digits(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->postJson('/api/v1/addresses', [
+            'recipient_name' => 'کاربر تست',
+            'mobile' => "\u{06F0}\u{06F9}\u{06F1}\u{06F2}\u{06F1}\u{06F2}\u{06F3}\u{06F4}\u{06F5}\u{06F6}\u{06F7}",
+            'province' => 'تهران',
+            'city' => 'تهران',
+            'postal_code' => "\u{06F1}\u{06F2}\u{06F3}\u{06F4}\u{06F5}\u{06F6}\u{06F7}\u{06F8}\u{06F9}\u{06F0}",
+            'address_line' => 'آدرس تست',
+        ])->assertCreated()
+            ->assertJsonPath('data.mobile', '09121234567')
+            ->assertJsonPath('data.postal_code', '1234567890');
+
+        $this->assertDatabaseHas('addresses', [
+            'user_id' => $user->id,
+            'mobile' => '09121234567',
+            'postal_code' => '1234567890',
+        ]);
+    }
+
     public function test_order_list_does_not_expose_idempotency_key(): void
     {
         $user = User::factory()->create();

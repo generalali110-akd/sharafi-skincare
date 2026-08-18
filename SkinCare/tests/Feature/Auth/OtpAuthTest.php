@@ -48,7 +48,7 @@ class OtpAuthTest extends TestCase
 
         $this->fromStorefront()->postJson('/api/v1/auth/otp/verify', [
             'challenge_id' => $challengeId,
-            'code' => $gateway->code,
+            'code' => $this->toPersianDigits($gateway->code),
         ])->assertOk()
             ->assertJsonPath('data.authenticated', true)
             ->assertJsonPath('data.user.mobile', '09121234567');
@@ -90,5 +90,21 @@ class OtpAuthTest extends TestCase
         } finally {
             $lock->release();
         }
+    }
+
+    private function toPersianDigits(string $value): string
+    {
+        return strtr($value, [
+            '0' => "\u{06F0}",
+            '1' => "\u{06F1}",
+            '2' => "\u{06F2}",
+            '3' => "\u{06F3}",
+            '4' => "\u{06F4}",
+            '5' => "\u{06F5}",
+            '6' => "\u{06F6}",
+            '7' => "\u{06F7}",
+            '8' => "\u{06F8}",
+            '9' => "\u{06F9}",
+        ]);
     }
 }
