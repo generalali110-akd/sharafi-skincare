@@ -145,8 +145,11 @@
   const loadCatalog = async () => {
     const serial = ++requestSerial;
     const params = apiParams();
+    const hasRenderedProducts = Boolean(grid.querySelector('.product-card-v2, .prod-card'));
     grid.setAttribute('aria-busy', 'true');
-    grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><h3>در حال دریافت محصولات واقعی...</h3></div>';
+    if (!hasRenderedProducts) {
+      grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><h3>در حال دریافت محصولات واقعی...</h3></div>';
+    }
     if (metaText) metaText.textContent = 'در حال دریافت محصولات...';
 
     try {
