@@ -65,22 +65,27 @@ function run(command, args, options = {}) {
 const node = process.execPath;
 const playwrightCli = path.join(e2eRoot, 'node_modules', 'playwright', 'cli.js');
 
-const server = spawn(node, [path.join(repoRoot, 'frontend', 'tools', 'static-server.mjs'), String(port)], {
-  cwd: repoRoot,
-  env: process.env,
-  shell: false,
-  stdio: ['ignore', 'pipe', 'pipe'],
-});
-
-server.stdout.on('data', (chunk) => process.stdout.write(chunk));
-server.stderr.on('data', (chunk) => process.stderr.write(chunk));
+let server = null;
 
 try {
-  await waitForServer(`${baseUrl}/index.html`);
-  await run(node, [playwrightCli, 'test', '--grep', 'responsive QA|strict-CSP'], {
+  try {
+    await waitForServer(`${baseUrl}/index.html`, 2);
+  } catch {
+    server = spawn(node, [path.join(repoRoot, 'frontend', 'tools', 'static-server.mjs'), String(port)], {
+      cwd: repoRoot,
+      env: process.env,
+      shell: false,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    server.stdout.on('data', (chunk) => process.stdout.write(chunk));
+    server.stderr.on('data', (chunk) => process.stderr.write(chunk));
+    await waitForServer(`${baseUrl}/index.html`);
+  }
+  await run(node, [playwrightCli, 'test', '--grep', 'responsive QA|strict-CSP|cart flow|storefront API fallback'], {
     cwd: e2eRoot,
     env: { E2E_BASE_URL: baseUrl },
   });
 } finally {
-  if (!server.killed) server.kill();
+  if (server && !server.killed) server.kill();
 }
