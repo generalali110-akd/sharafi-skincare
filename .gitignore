@@ -24,8 +24,10 @@ pnpm-debug.log*
 storage/logs/*
 bootstrap/cache/*
 .env
+/SkinCare/database/*.sqlite
 
 # Playwright runtime artifacts
+/e2e/.npm-cache/
 /e2e/test-results/
 /e2e/playwright-report/
 
@@ -39,4 +41,5 @@ Thumbs.db
 coverage/
 tmp/
 temp/
+output/
 *.docx

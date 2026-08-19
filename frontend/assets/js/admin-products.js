@@ -41,6 +41,50 @@
     categories.forEach((category) => categorySelect.appendChild(u.element('option', { text: category.name, attrs: { value: category.id } })));
   }
 
+  function renderProductImages(product) {
+    const list = u.$('.js-product-images');
+    if (!list) return;
+    u.clear(list);
+    const images = Array.isArray(product?.images) ? product.images : [];
+    if (!images.length) {
+      list.appendChild(u.element('div', { className: 'admin-image-empty', text: 'هنوز تصویری برای این محصول ثبت نشده است.' }));
+      return;
+    }
+
+    images.forEach((image) => {
+      const item = u.element('div', { className: `admin-image-item${image.is_primary ? ' is-primary' : ''}` });
+      const img = u.element('img', { attrs: { src: image.url, alt: image.alt_text || product.name || 'تصویر محصول' } });
+      const actions = u.element('div', { className: 'admin-image-actions' });
+      if (!image.is_primary) {
+        const primary = u.element('button', { className: 'btn btn-outline btn-sm js-image-primary', text: 'تصویر اصلی', attrs: { type: 'button' } });
+        primary.dataset.imageId = image.id;
+        primary.dataset.productId = product.id;
+        actions.appendChild(primary);
+      }
+      const remove = u.element('button', { className: 'btn btn-outline btn-sm js-image-remove', text: 'حذف', attrs: { type: 'button' } });
+      remove.dataset.imageId = image.id;
+      remove.dataset.productId = product.id;
+      actions.appendChild(remove);
+      item.append(img, actions);
+      if (image.is_primary) item.appendChild(u.element('span', { className: 'status-pill green', text: 'اصلی' }));
+      list.appendChild(item);
+    });
+  }
+
+  async function uploadSelectedImage(productId, form) {
+    const input = form.elements.namedItem('image');
+    const file = input?.files?.[0];
+    if (!file) return false;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('alt_text', form.elements.namedItem('name').value.trim());
+    formData.append('is_primary', '1');
+    await api.products.uploadImage(productId, formData);
+    input.value = '';
+    return true;
+  }
+
   function renderRows(items) {
     const tbody = u.$('#productsTable tbody');
     if (!tbody) return;
@@ -97,12 +141,14 @@
     const form = u.$('#productForm');
     form.reset();
     form.elements.namedItem('id').value = '';
+    form.elements.namedItem('image').value = '';
     form.elements.namedItem('status').value = 'draft';
     u.$('.js-product-modal-title').textContent = 'افزودن محصول';
     u.$('.js-create-variant-fields').hidden = false;
     form.elements.namedItem('sku').required = true;
     form.elements.namedItem('price_toman').required = true;
     populateTaxonomy();
+    renderProductImages(null);
   }
 
   async function editProduct(id) {
@@ -124,6 +170,8 @@
     form.elements.namedItem('status').value = product.status || 'draft';
     form.elements.namedItem('short_description').value = product.short_description || '';
     form.elements.namedItem('is_featured').checked = Boolean(product.is_featured);
+    form.elements.namedItem('image').value = '';
+    renderProductImages(product);
     u.$('.js-product-modal-title').textContent = 'ویرایش محصول';
     u.$('.js-create-variant-fields').hidden = true;
     form.elements.namedItem('sku').required = false;
@@ -316,6 +364,30 @@
         const variantEdit = event.target.closest('.js-edit-variant');
         if (variantEdit) {
           fillVariantForm(JSON.parse(variantEdit.dataset.variant));
+          return;
+        }
+        const primaryImage = event.target.closest('.js-image-primary');
+        if (primaryImage) {
+          primaryImage.disabled = true;
+          try {
+            await api.products.updateImage(primaryImage.dataset.productId, primaryImage.dataset.imageId, { is_primary: true });
+            await editProduct(primaryImage.dataset.productId);
+            await load();
+          } catch (error) {
+            showError(error);
+          }
+          return;
+        }
+        const removeImage = event.target.closest('.js-image-remove');
+        if (removeImage) {
+          removeImage.disabled = true;
+          try {
+            await api.products.removeImage(removeImage.dataset.productId, removeImage.dataset.imageId);
+            await editProduct(removeImage.dataset.productId);
+            await load();
+          } catch (error) {
+            showError(error);
+          }
         }
       });
 
@@ -327,8 +399,9 @@
         try {
           const id = form.elements.namedItem('id').value;
           const payload = productPayload(form, !id);
-          if (id) await api.products.update(id, payload);
-          else await api.products.create(payload);
+          const response = id ? await api.products.update(id, payload) : await api.products.create(payload);
+          const productId = id || response?.data?.id;
+          if (productId) await uploadSelectedImage(productId, form);
           closeModal(form.closest('.modal-overlay'));
           window.toastAdmin?.(id ? 'محصول به‌روزرسانی شد.' : 'محصول ایجاد شد؛ موجودی را از صفحه انبار ثبت کنید.');
           await load();

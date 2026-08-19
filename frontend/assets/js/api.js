@@ -97,6 +97,9 @@
       headers.set('Content-Type', 'application/json');
       body = JSON.stringify(options.json);
     }
+    if (options.formData instanceof FormData) {
+      body = options.formData;
+    }
 
     let response;
     try {
@@ -284,6 +287,7 @@
     }),
     cart: Object.freeze({
       get: () => request('/cart'),
+      clear: () => request('/cart', { method: 'DELETE' }),
       set: (variantId, quantity) => request(`/cart/items/${encodeURIComponent(variantId)}`, { method: 'PUT', json: { quantity } }),
       remove: (variantId) => request(`/cart/items/${encodeURIComponent(variantId)}`, { method: 'DELETE' }),
     }),

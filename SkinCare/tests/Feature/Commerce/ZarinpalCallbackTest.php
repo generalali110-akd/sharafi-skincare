@@ -108,9 +108,21 @@ class ZarinpalCallbackTest extends TestCase
             ->assertJsonPath('data.failure_code', 'zarinpal_-50');
 
         $this->assertSame(OrderStatus::PendingPayment, $order->refresh()->status);
+        $this->assertSame(PaymentAttemptStatus::Failed, $attempt->refresh()->status);
+        $this->assertSame(PaymentStatus::Failed, $attempt->payment->refresh()->status);
+        $this->assertSame('zarinpal_-50', $attempt->failure_code);
         $this->assertSame(1, $inventory->refresh()->reserved);
         $this->assertSame(5, $inventory->on_hand);
         $this->assertDatabaseCount('payment_events', 0);
+
+        $this->actingAs(User::query()->findOrFail($order->user_id))
+            ->getJson("/api/v1/orders/{$order->order_number}/payment")
+            ->assertOk()
+            ->assertJsonPath('data.status', 'failed')
+            ->assertJsonPath('data.order_status', 'pending_payment')
+            ->assertJsonPath('data.retry_allowed', true)
+            ->assertJsonPath('data.latest_attempt.status', 'failed')
+            ->assertJsonPath('data.latest_attempt.failure_code', 'zarinpal_-50');
     }
 
     private function pendingPayment(): array

@@ -3,8 +3,10 @@
 namespace App\Actions\Orders;
 
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Exceptions\CheckoutConflictException;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
 use App\Services\Commerce\OrderReservationService;
@@ -19,6 +21,8 @@ final class UpdateOrderStatusAction
         OrderStatus::Shipped,
         OrderStatus::Delivered,
         OrderStatus::Cancelled,
+        OrderStatus::RefundPending,
+        OrderStatus::Refunded,
     ];
 
     public function __construct(
@@ -60,6 +64,10 @@ final class UpdateOrderStatusAction
             if ($targetStatus === OrderStatus::Cancelled) {
                 $updated = $this->reservations->cancelAsAdmin($actor, $locked, $reason);
             } else {
+                if (in_array($targetStatus, [OrderStatus::RefundPending, OrderStatus::Refunded], true)) {
+                    $this->syncRefundPaymentState($locked, $targetStatus);
+                }
+
                 $updated = $this->stateMachine->transition(
                     $locked,
                     $targetStatus,
@@ -70,6 +78,12 @@ final class UpdateOrderStatusAction
 
             if ($targetStatus === OrderStatus::Shipped) {
                 $this->notifications->shipped($updated);
+            }
+            if ($targetStatus === OrderStatus::RefundPending) {
+                $this->notifications->refundPending($updated);
+            }
+            if ($targetStatus === OrderStatus::Refunded) {
+                $this->notifications->refunded($updated);
             }
 
             $this->audit->record(
@@ -92,5 +106,37 @@ final class UpdateOrderStatusAction
 
             return $updated->fresh();
         }, attempts: 3);
+    }
+
+    private function syncRefundPaymentState(Order $order, OrderStatus $targetStatus): void
+    {
+        $payment = $order->payment()->lockForUpdate()->first();
+        if (! $payment) {
+            throw new CheckoutConflictException('برای تغییر وضعیت بازپرداخت، رکورد پرداخت سفارش لازم است.');
+        }
+
+        if ($targetStatus === OrderStatus::RefundPending) {
+            if (! in_array($payment->status, [PaymentStatus::Paid, PaymentStatus::RefundPending], true)) {
+                throw new CheckoutConflictException('پرداخت سفارش در وضعیت قابل بازپرداخت نیست.');
+            }
+
+            $payment->status = PaymentStatus::RefundPending;
+            $payment->save();
+
+            return;
+        }
+
+        $this->assertRefundCanBeCompleted($order, $payment);
+
+        $payment->status = PaymentStatus::Refunded;
+        $payment->refunded_at ??= now();
+        $payment->save();
+    }
+
+    private function assertRefundCanBeCompleted(Order $order, Payment $payment): void
+    {
+        if ($order->status !== OrderStatus::RefundPending || $payment->status !== PaymentStatus::RefundPending) {
+            throw new CheckoutConflictException('تکمیل بازپرداخت فقط بعد از وضعیت refund_pending مجاز است.');
+        }
     }
 }

@@ -93,6 +93,8 @@ PAYMENT_RESULT_URL=https://shop.example.com/payment-result.html
 
 The query string returned to the browser is only a navigation hint. `payment-result.html` re-fetches the authenticated order and payment from the API and never treats `payment_status` from the URL as payment truth.
 
+`GET /api/v1/orders/{orderNumber}/payment` returns sanitized payment state for the authenticated order, including `order_status`, `retry_allowed`, `reservation_expires_at`, and the latest attempt status/failure message. The Storefront may use these values for user guidance, but retries must still go through `POST /payment-attempts` with a fresh idempotency key when the API asks for one.
+
 ## SMS and payment secrets
 
 Keep these values only in server environment/secret storage:

@@ -35,6 +35,10 @@ class UpdateProductVariantRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
+            if ($validator->errors()->hasAny(['price_irr', 'compare_at_price_irr'])) {
+                return;
+            }
+
             $variant = $this->route('variant');
             $price = $this->filled('price_irr') ? $this->integer('price_irr') : (int) $variant->price_irr;
             $compare = $this->has('compare_at_price_irr')

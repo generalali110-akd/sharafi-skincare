@@ -12,6 +12,30 @@
   let sourceView = 'login';
   let requestInFlight = false;
 
+  const params = new URLSearchParams(window.location.search);
+  const returnTarget = api?.safeReturnTarget(params.get('return'), 'account.html') || 'account.html';
+  const returningToCheckout = returnTarget.endsWith('/checkout.html') || returnTarget === 'checkout.html';
+
+  const guestCartCount = () => {
+    try {
+      return (window.SharafiCart?.getGuestCart?.() || [])
+        .reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+    } catch {
+      return 0;
+    }
+  };
+
+  const paintReturnNotice = () => {
+    const notice = document.querySelector('.js-auth-return-notice');
+    const copy = document.querySelector('.js-auth-return-copy');
+    if (!notice || !copy || !returningToCheckout) return;
+    const count = guestCartCount();
+    copy.textContent = count > 0
+      ? `پس از ورود، ${count.toLocaleString('fa-IR')} قلم از سبد شما حفظ می‌شود و به تکمیل خرید برمی‌گردید.`
+      : 'پس از ورود، مستقیم به تکمیل خرید برمی‌گردید.';
+    notice.hidden = false;
+  };
+
   const normalizeDigits = (value) => String(value || '')
     .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
     .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
@@ -195,14 +219,14 @@
       try {
         await api.auth.verifyOtp(challengeId, code);
         api.clearSessionCache();
+        setButtonBusy(button, true, guestCartCount() > 0 ? 'در حال انتقال سبد...' : 'در حال ورود...');
         if (window.SharafiCart?.syncGuestCart) {
           const result = await window.SharafiCart.syncGuestCart();
           if (result.failed > 0) toast('ورود انجام شد؛ بعضی اقلام سبد موقت قابل انتقال نبودند.', 3200);
+          else if (result.synced > 0) toast('سبد خرید شما حفظ شد.', 2200);
         }
         document.dispatchEvent(new CustomEvent('sharafi:authenticated'));
-        const params = new URLSearchParams(window.location.search);
-        const target = api.safeReturnTarget(params.get('return'), 'account.html');
-        window.location.assign(target);
+        window.location.assign(returnTarget);
       } catch (error) {
         toast(error?.message || 'کد تأیید معتبر نیست یا منقضی شده است.', 3200);
       } finally {
@@ -232,4 +256,5 @@
   });
   sourceView = initialTab?.dataset.authTarget || 'login';
   showView(sourceView);
+  paintReturnNotice();
 })();

@@ -123,6 +123,33 @@ class AdminCatalogWriteTest extends TestCase
             ->assertJsonValidationErrors('variants');
     }
 
+    public function test_variant_price_validation_does_not_add_misleading_compare_price_error(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $manager = User::factory()->create();
+        $manager->roles()->attach(Role::query()->where('slug', 'catalog-manager')->firstOrFail());
+        $product = Product::factory()->create();
+        $variant = ProductVariant::factory()->create(['product_id' => $product->id, 'price_irr' => 1_000_000]);
+
+        $this->actingAs($manager)
+            ->postJson("/api/v1/admin/catalog/products/{$product->id}/variants", [
+                'sku' => 'NO-PRICE-1',
+                'compare_at_price_irr' => 500_000,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('price_irr')
+            ->assertJsonMissingValidationErrors('compare_at_price_irr');
+
+        $this->actingAs($manager)
+            ->patchJson("/api/v1/admin/catalog/variants/{$variant->id}", [
+                'price_irr' => 'invalid-price',
+                'compare_at_price_irr' => 500_000,
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('price_irr')
+            ->assertJsonMissingValidationErrors('compare_at_price_irr');
+    }
+
     public function test_last_active_variant_of_active_product_cannot_be_disabled(): void
     {
         $this->seed(SystemAccessSeeder::class);

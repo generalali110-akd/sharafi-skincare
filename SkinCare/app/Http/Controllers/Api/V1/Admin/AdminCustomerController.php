@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\DatabaseLike;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,9 +26,10 @@ class AdminCustomerController extends Controller
             ->latest('id');
 
         if ($search = trim((string) ($validated['q'] ?? ''))) {
-            $query->where(function (Builder $query) use ($search): void {
-                $query->where('mobile', 'ilike', '%'.$search.'%')
-                    ->orWhere('name', 'ilike', '%'.$search.'%');
+            $like = DatabaseLike::caseInsensitiveOperator();
+            $query->where(function (Builder $query) use ($search, $like): void {
+                $query->where('mobile', $like, '%'.$search.'%')
+                    ->orWhere('name', $like, '%'.$search.'%');
             });
         }
 

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'driver' => env('PAYMENT_DRIVER', 'null'),
+    'driver' => env('PAYMENT_DRIVER') ?: 'null',
     'callback_url' => env('PAYMENT_CALLBACK_URL', env('APP_URL').'/api/v1/payments/zarinpal/callback'),
     'result_url' => env('PAYMENT_RESULT_URL'),
 

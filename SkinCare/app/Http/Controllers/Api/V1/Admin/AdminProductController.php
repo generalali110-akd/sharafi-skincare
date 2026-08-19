@@ -17,6 +17,7 @@ use App\Http\Resources\Api\V1\Admin\AdminProductDetailResource;
 use App\Http\Resources\Api\V1\Admin\AdminProductListResource;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\DatabaseLike;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -35,10 +36,11 @@ class AdminProductController extends Controller
 
         if ($request->filled('q')) {
             $search = trim((string) $request->validated('q'));
-            $query->where(function (Builder $query) use ($search): void {
+            $like = DatabaseLike::caseInsensitiveOperator();
+            $query->where(function (Builder $query) use ($search, $like): void {
                 $query
-                    ->where('name', 'ilike', '%'.$search.'%')
-                    ->orWhereHas('variants', fn (Builder $variant) => $variant->where('sku', 'ilike', '%'.$search.'%'));
+                    ->where('name', $like, '%'.$search.'%')
+                    ->orWhereHas('variants', fn (Builder $variant) => $variant->where('sku', $like, '%'.$search.'%'));
             });
         }
 
