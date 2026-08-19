@@ -41,7 +41,7 @@ final class SmsOutboxDispatcher
 
         try {
             if ($message->topic !== 'sms' || $message->aggregate_type !== 'order') {
-                throw new \UnexpectedValueException('Unsupported outbox message.');
+                throw new UnexpectedValueException('Unsupported outbox message.');
             }
 
             $order = Order::query()
@@ -50,7 +50,7 @@ final class SmsOutboxDispatcher
             $mobile = IranMobile::normalize((string) $order->user?->mobile);
 
             if (! IranMobile::isValid($mobile)) {
-                throw new \UnexpectedValueException('Order user mobile is invalid.');
+                throw new UnexpectedValueException('Order user mobile is invalid.');
             }
 
             $this->sms->sendMessage(
