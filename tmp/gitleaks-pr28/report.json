@@ -1,0 +1,23 @@
+[
+ {
+  "RuleID": "generic-api-key",
+  "Description": "Detected a Generic API Key, potentially exposing access to various services and sensitive operations.",
+  "StartLine": 192,
+  "EndLine": 192,
+  "StartColumn": 28,
+  "EndColumn": 68,
+  "Match": "Idempotency-Key', 'REDACTED'",
+  "Secret": "REDACTED",
+  "File": "SkinCare/tests/Feature/Commerce/CommerceFlowTest.php",
+  "SymlinkFile": "",
+  "Commit": "1f64fb77e525cb34ba49fc83184234cd48dd2a9a",
+  "Link": "https://github.com/generalali110-akd/sharafi-skincare/blob/1f64fb77e525cb34ba49fc83184234cd48dd2a9a/SkinCare/tests/Feature/Commerce/CommerceFlowTest.php#L192",
+  "Entropy": 3.5585186,
+  "Author": "generalali110-akd",
+  "Email": "generalali110@gmail.com",
+  "Date": "2026-08-17T01:10:52Z",
+  "Message": "Prepare Sharafi release hardening",
+  "Tags": [],
+  "Fingerprint": "1f64fb77e525cb34ba49fc83184234cd48dd2a9a:SkinCare/tests/Feature/Commerce/CommerceFlowTest.php:generic-api-key:192"
+ }
+]
