@@ -23,6 +23,10 @@ final class ProviderReadinessService
             $this->checkZarinpalMerchantId(),
             $this->check('payment.callback_https', $this->isHttpsUrl((string) config('payment.callback_url')), 'PAYMENT_CALLBACK_URL must use HTTPS.'),
             $this->check('payment.result_https', $this->isHttpsUrl((string) config('payment.result_url')), 'PAYMENT_RESULT_URL must use HTTPS.'),
+            $this->checkSameHost('payment.callback_host', (string) config('payment.callback_url'), (string) config('app.url'), 'PAYMENT_CALLBACK_URL must use the configured APP_URL host.'),
+            $this->checkSameHost('payment.result_host', (string) config('payment.result_url'), (string) config('app.url'), 'PAYMENT_RESULT_URL must use the configured APP_URL host.'),
+            $this->checkHostList('sanctum.stateful_domains', config('sanctum.stateful', []), (string) config('app.url'), 'SANCTUM_STATEFUL_DOMAINS must include the configured APP_URL host.'),
+            $this->checkOriginList('cors.allowed_origins', config('cors.allowed_origins', []), (string) config('app.url'), 'CORS_ALLOWED_ORIGINS must include the configured APP_URL origin.'),
             $this->checkZarinpalBaseUrl(),
         ];
 
@@ -125,6 +129,36 @@ final class ProviderReadinessService
         return $this->check('zarinpal.base_https', $this->isHttpsUrl($url), 'The active Zarinpal base URL must use HTTPS.');
     }
 
+    private function checkSameHost(string $name, string $url, string $appUrl, string $failure): array
+    {
+        $urlHost = $this->host($url);
+        $appHost = $this->host($appUrl);
+
+        return $this->check($name, $urlHost !== '' && $urlHost === $appHost, $failure);
+    }
+
+    private function checkHostList(string $name, mixed $hostList, string $appUrl, string $failure): array
+    {
+        $appHost = $this->host($appUrl);
+        $configuredHosts = is_array($hostList) ? $hostList : explode(',', (string) $hostList);
+        $hosts = array_filter(array_map(static function (string $host): string {
+            return strtolower(trim(explode(':', $host, 2)[0]));
+        }, $configuredHosts));
+
+        return $this->check($name, $appHost !== '' && in_array($appHost, $hosts, true), $failure);
+    }
+
+    private function checkOriginList(string $name, mixed $origins, string $appUrl, string $failure): array
+    {
+        $appOrigin = $this->origin($appUrl);
+        $configured = collect(is_array($origins) ? $origins : [])
+            ->map(fn (string $origin): string => $this->origin($origin))
+            ->filter()
+            ->all();
+
+        return $this->check($name, $appOrigin !== '' && in_array($appOrigin, $configured, true), $failure);
+    }
+
     private function validSmsIrApiKey(): bool
     {
         $apiKey = $this->smsIrApiKey();
@@ -147,6 +181,32 @@ final class ProviderReadinessService
         }
 
         return strtolower((string) parse_url($url, PHP_URL_SCHEME)) === 'https';
+    }
+
+    private function host(string $url): string
+    {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        return strtolower((string) parse_url($url, PHP_URL_HOST));
+    }
+
+    private function origin(string $url): string
+    {
+        if (! filter_var($url, FILTER_VALIDATE_URL)) {
+            return '';
+        }
+
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        $host = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $port = parse_url($url, PHP_URL_PORT);
+
+        if ($scheme === '' || $host === '') {
+            return '';
+        }
+
+        return $scheme.'://'.$host.($port ? ':'.$port : '');
     }
 
     private function check(string $name, bool $ok, string $failure): array

@@ -11,6 +11,7 @@ use App\Http\Resources\Api\V1\Admin\AdminOrderDetailResource;
 use App\Http\Resources\Api\V1\Admin\AdminOrderListResource;
 use App\Models\Order;
 use App\Models\OutboxMessage;
+use App\Support\DatabaseLike;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AdminOrderController extends Controller
@@ -29,11 +30,12 @@ class AdminOrderController extends Controller
         $search = trim((string) ($validated['q'] ?? ''));
         if ($search !== '') {
             $prefix = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search).'%';
-            $query->where(function ($query) use ($prefix): void {
-                $query->where('order_number', 'ilike', $prefix)
-                    ->orWhereHas('user', function ($query) use ($prefix): void {
-                        $query->where('mobile', 'ilike', $prefix)
-                            ->orWhere('name', 'ilike', $prefix);
+            $like = DatabaseLike::caseInsensitiveOperator();
+            $query->where(function ($query) use ($prefix, $like): void {
+                $query->where('order_number', $like, $prefix)
+                    ->orWhereHas('user', function ($query) use ($prefix, $like): void {
+                        $query->where('mobile', $like, $prefix)
+                            ->orWhere('name', $like, $prefix);
                     });
             });
         }

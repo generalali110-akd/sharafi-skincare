@@ -1,6 +1,6 @@
 # Payment, Discount, and Order State Contract
 
-This document defines the financial contract implemented by the Sharafi Skin Care backend. It is intentionally provider-neutral. No commercial payment gateway is considered live until a concrete `PaymentGateway` adapter and verified callback endpoint are implemented and configured.
+This document defines the financial contract implemented by the Sharafi Skin Care backend. The domain remains provider-neutral, while Zarinpal is the selected first Iranian gateway adapter. No environment is considered live until `PAYMENT_DRIVER=zarinpal`, provider secrets, HTTPS callback/result URLs, and staging smoke checks are configured.
 
 ## Order state machine
 
@@ -70,6 +70,8 @@ If a process crash leaves an attempt in the pre-redirect `created` state, retryi
 
 `PaymentSettlementService` is the only current domain path for a verified success. A real callback adapter must verify the provider response first and call settlement only after authoritative verification.
 
+If server-to-server provider verification returns an authoritative failure, the local payment attempt is marked `failed`, the payment is marked `failed` unless it was already paid/refunding/refunded, and the customer must create a fresh payment-attempt idempotency key for retry. Reusing the same failed payment idempotency key returns a retry-required error instead of a stale redirect.
+
 Settlement runs transactionally and checks:
 
 - payment attempt amount equals payment amount
@@ -114,13 +116,20 @@ Relevant environment variables:
 - `PAYMENT_DRIVER`
 - `PAYMENT_CALLBACK_URL`
 
-## Not live yet
+## Current live-readiness boundary
 
-The following are deliberately not implemented as fake behavior:
+The following are implemented and must be smoke-tested before staging/production traffic:
 
-- a commercial Iranian payment gateway adapter
-- a public payment callback route that claims verification
-- automatic refunds
+- Zarinpal payment request, redirect, callback lookup, and server-to-server verify
+- idempotent successful settlement and late-payment refund-pending handling
+- guarded admin refund state workflow: `refund_pending -> refunded`
+- sanitized payment result payload with latest-attempt status/failure details for the authenticated customer
+
+The following are deliberately not faked:
+
 - provider credentials
+- automatic general refunds through Zarinpal GraphQL/OAuth
+- partial refunds
+- treating browser callback query values as payment truth
 
-The next payment slice must select a real provider, implement request/verify/refund adapters from its current official API contract, add callback authenticity/idempotency tests, and keep all secrets in environment/secret storage.
+The next payment slice should wire provider credentials in staging, run the provider smoke workflow, and only then decide whether the separate Zarinpal GraphQL refund API is needed operationally.

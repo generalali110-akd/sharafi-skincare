@@ -55,6 +55,49 @@ class PaymentInitiationRecoveryTest extends TestCase
         $this->assertDatabaseCount('payment_attempts', 1);
     }
 
+    public function test_new_attempt_after_verified_failure_moves_payment_back_to_pending(): void
+    {
+        $this->app->instance(PaymentGateway::class, new FakePaymentGateway);
+        $user = User::factory()->create();
+        $order = $this->createPendingOrder($user);
+        $payment = Payment::query()->create([
+            'order_id' => $order->id,
+            'amount_irr' => $order->total_irr,
+            'currency' => 'IRR',
+            'provider' => 'fake',
+            'status' => PaymentStatus::Failed,
+        ]);
+        PaymentAttempt::query()->create([
+            'payment_id' => $payment->id,
+            'attempt_number' => 1,
+            'public_id' => (string) Str::ulid(),
+            'idempotency_key_hash' => hash('sha256', 'failed-payment-key-01'),
+            'provider' => 'fake',
+            'status' => PaymentAttemptStatus::Failed,
+            'amount_irr' => $order->total_irr,
+            'failure_code' => 'provider_verification_failed',
+            'failed_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->withHeader('Idempotency-Key', 'failed-payment-key-01')
+            ->postJson("/api/v1/orders/{$order->order_number}/payment-attempts")
+            ->assertServiceUnavailable()
+            ->assertJsonPath('code', 'payment_attempt_retry_required');
+
+        $this->assertSame(PaymentStatus::Failed, $payment->refresh()->status);
+
+        $this->actingAs($user)
+            ->withHeader('Idempotency-Key', 'retry-after-failed-payment')
+            ->postJson("/api/v1/orders/{$order->order_number}/payment-attempts")
+            ->assertCreated()
+            ->assertJsonPath('data.payment.status', 'pending')
+            ->assertJsonPath('data.payment.latest_attempt.status', 'pending');
+
+        $this->assertSame(PaymentStatus::Pending, $payment->refresh()->status);
+        $this->assertDatabaseCount('payment_attempts', 2);
+    }
+
     private function createPendingOrder(User $user): Order
     {
         $product = Product::factory()->published()->create();

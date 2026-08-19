@@ -47,6 +47,10 @@ class StoreProductRequest extends FormRequest
     {
         return [
             function (Validator $validator): void {
+                if ($validator->errors()->hasAny(['variants', 'variants.*.price_irr', 'variants.*.compare_at_price_irr'])) {
+                    return;
+                }
+
                 $variants = $this->input('variants', []);
 
                 foreach ($variants as $index => $variant) {

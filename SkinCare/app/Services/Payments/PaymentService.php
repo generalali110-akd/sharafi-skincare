@@ -71,6 +71,11 @@ final class PaymentService
                 return [$payment, $existing, false];
             }
 
+            if ($payment->status === PaymentStatus::Failed) {
+                $payment->status = PaymentStatus::Pending;
+                $payment->save();
+            }
+
             $attemptNumber = ((int) PaymentAttempt::query()
                 ->where('payment_id', $payment->getKey())
                 ->max('attempt_number')) + 1;
@@ -89,7 +94,7 @@ final class PaymentService
         }, attempts: 3);
 
         if (! $created) {
-            if ($attempt->status === PaymentAttemptStatus::Created) {
+            if (in_array($attempt->status, [PaymentAttemptStatus::Created, PaymentAttemptStatus::Failed], true)) {
                 throw new PaymentAttemptRetryRequiredException('وضعیت شروع پرداخت قبلی نامشخص است؛ برای تلاش جدید شناسه جدید ایجاد کنید.');
             }
 
