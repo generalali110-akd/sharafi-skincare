@@ -45,6 +45,7 @@ Use this as the final release gate after staging has already been deployed and s
 - [ ] `/sanctum/csrf-cookie` sets expected secure cookies for the production origin.
 - [ ] Credentialed CORS succeeds only for approved origins and rejects untrusted origins.
 - [ ] Admin API access requires authenticated users with explicit roles; no default admin account exists.
+- [ ] Private local storage serving remains disabled (`FILESYSTEM_PRIVATE_SERVE=false`) unless a reviewed, authenticated file-delivery route is implemented.
 - [ ] Upload, storage, and log paths are writable only where intended and do not expose executable files publicly.
 
 ## 6. Backup, observability, and rollback

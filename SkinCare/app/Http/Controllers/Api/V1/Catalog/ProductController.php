@@ -22,6 +22,7 @@ class ProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
+                'primaryImage:id,product_id,disk,path,alt_text,sort_order,is_primary',
             ])
             ->withCount([
                 'variants as active_variants_count' => fn ($query) => $query->active(),
@@ -104,6 +105,7 @@ class ProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
+                'images:id,product_id,variant_id,disk,path,alt_text,sort_order,is_primary',
                 'variants' => fn ($query) => $query
                     ->active()
                     ->orderBy('sort_order')

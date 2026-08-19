@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Orders;
 
+use App\Contracts\PaymentGateway;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentAttemptStatus;
 use App\Enums\PaymentStatus;
@@ -19,6 +20,7 @@ use App\Services\Commerce\OrderStateMachine;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Tests\Fakes\FakePaymentGateway;
 use Tests\TestCase;
 
 class AdminOrderManagementTest extends TestCase
@@ -186,12 +188,41 @@ class AdminOrderManagementTest extends TestCase
                 'status' => 'refunded',
                 'reason' => 'refund_completed_externally',
             ])
+            ->assertConflict();
+
+        $payment = $order->payment()->firstOrFail();
+        PaymentAttempt::query()->create([
+            'payment_id' => $payment->getKey(),
+            'attempt_number' => 1,
+            'public_id' => (string) Str::ulid(),
+            'idempotency_key_hash' => hash('sha256', 'refund-attempt-'.$order->getKey()),
+            'provider' => 'zarinpal',
+            'status' => PaymentAttemptStatus::Succeeded,
+            'amount_irr' => $order->total_irr,
+            'authority' => 'A'.str_repeat('B', 35),
+            'transaction_id' => '123456789',
+            'verified_at' => now(),
+        ]);
+        $fakeGateway = new FakePaymentGateway('zarinpal');
+        $this->app->instance(PaymentGateway::class, $fakeGateway);
+
+        $this->actingAs($manager)
+            ->patchJson('/api/v1/admin/orders/'.$order->order_number.'/status', [
+                'expected_status' => 'refund_pending',
+                'status' => 'refunded',
+                'reason' => 'refund_completed_externally',
+            ])
             ->assertOk()
             ->assertJsonPath('data.status', 'refunded')
             ->assertJsonPath('data.payment.status', 'refunded');
 
         $this->assertNotNull($order->fresh()->refunded_at);
         $this->assertNotNull($order->payment()->firstOrFail()->refunded_at);
+        $this->assertCount(1, $fakeGateway->reversals);
+        $this->assertDatabaseHas('payment_events', [
+            'provider' => 'zarinpal',
+            'event_type' => 'refund_succeeded',
+        ]);
         $this->assertDatabaseHas('outbox_messages', [
             'event_key' => 'order:'.$order->getKey().':refund_pending:sms',
             'topic' => 'sms',

@@ -6,11 +6,16 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Catalog\ProductImageService;
 use Database\Seeders\SystemAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 use Tests\TestCase;
 
 class AdminCatalogWriteTest extends TestCase
@@ -121,6 +126,70 @@ class AdminCatalogWriteTest extends TestCase
             ])
             ->assertUnprocessable()
             ->assertJsonValidationErrors('variants');
+    }
+
+    public function test_catalog_manager_can_upload_and_manage_product_images(): void
+    {
+        Storage::fake('public');
+        $this->seed(SystemAccessSeeder::class);
+        $manager = User::factory()->create();
+        $manager->roles()->attach(Role::query()->where('slug', 'catalog-manager')->firstOrFail());
+        $product = Product::factory()->create(['name' => 'Image Product']);
+        $imagePath = tempnam(sys_get_temp_dir(), 'sharafi-image-');
+        file_put_contents($imagePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='));
+
+        $response = $this->actingAs($manager)
+            ->post("/api/v1/admin/catalog/products/{$product->id}/images", [
+                'image' => new UploadedFile($imagePath, 'serum.png', 'image/png', null, true),
+                'alt_text' => 'Serum bottle',
+            ])
+            ->assertCreated()
+            ->assertJsonPath('data.alt_text', 'Serum bottle')
+            ->assertJsonPath('data.is_primary', true);
+
+        $imageId = (int) $response->json('data.id');
+        $path = $product->images()->firstOrFail()->path;
+        Storage::disk('public')->assertExists($path);
+
+        $this->actingAs($manager)
+            ->patchJson("/api/v1/admin/catalog/products/{$product->id}/images/{$imageId}", [
+                'alt_text' => 'Updated serum bottle',
+                'is_primary' => true,
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.alt_text', 'Updated serum bottle')
+            ->assertJsonPath('data.is_primary', true);
+
+        $this->actingAs($manager)
+            ->deleteJson("/api/v1/admin/catalog/products/{$product->id}/images/{$imageId}")
+            ->assertNoContent();
+
+        Storage::disk('public')->assertMissing($path);
+        $this->assertDatabaseMissing('product_images', ['id' => $imageId]);
+    }
+
+    public function test_product_image_upload_cleans_up_file_when_database_write_fails(): void
+    {
+        Storage::fake('public');
+        $product = Product::factory()->create(['name' => 'Image Product']);
+        $imagePath = tempnam(sys_get_temp_dir(), 'sharafi-image-');
+        file_put_contents($imagePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII='));
+
+        ProductImage::creating(static function (): void {
+            throw new RuntimeException('forced-db-failure');
+        });
+
+        try {
+            $this->expectException(RuntimeException::class);
+            app(ProductImageService::class)->store(
+                $product,
+                new UploadedFile($imagePath, 'serum.png', 'image/png', null, true),
+                ['alt_text' => 'Serum bottle'],
+            );
+        } finally {
+            $this->assertSame([], Storage::disk('public')->allFiles("products/{$product->id}"));
+            ProductImage::flushEventListeners();
+        }
     }
 
     public function test_variant_price_validation_does_not_add_misleading_compare_price_error(): void
