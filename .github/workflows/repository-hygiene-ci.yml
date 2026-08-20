@@ -1,0 +1,38 @@
+name: Repository Hygiene
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  tracked-artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Reject tracked local/runtime artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tracked="$(git ls-files)"
+          prohibited='(^|/)vendor/|(^|/)node_modules/|(^|/)\.env$|(^|/)\.env\.(staging|production)$|(^|/)database/.*\.(sqlite|sqlite-[^/]*|db|dump|sql|sql\.gz)$|(^|/)\.phpunit\.result\.cache$|(^|/)\.phpunit\.cache/|(^|/)bootstrap/cache/.*\.php$|(^|/)storage/logs/|(^|/)storage/framework/(cache|sessions|views)/|(^|/)storage/app/public/|(^|/)storage/app/backups/|(^|/)public/storage$|(^|/)\.deploy-state/|(^|/)playwright-report/|(^|/)test-results/|(^|/)coverage/'
+
+          violations="$(printf '%s\n' "$tracked" | grep -E "$prohibited" | grep -Ev '(^|/)\.gitignore$' || true)"
+          if [ -n "$violations" ]; then
+            echo 'Tracked local/runtime artifacts are forbidden:' >&2
+            printf '%s\n' "$violations" >&2
+            exit 1
+          fi
+
+          echo 'Repository hygiene guard passed.'

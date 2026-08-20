@@ -1,14 +1,17 @@
-# Node / Next.js
+# Node / frontend build output
 node_modules/
 .next/
 out/
 dist/
 build/
 
-# Environment files
+# Environment files and secrets
 .env
 .env.local
 .env.*.local
+/SkinCare/.env
+/SkinCare/.env.local
+/SkinCare/.env.*.local
 /SkinCare/.env.staging
 /SkinCare/.env.production
 
@@ -18,16 +21,38 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+/SkinCare/storage/logs/*
 
-# Laravel / PHP
+# Laravel / PHP dependencies and runtime
 /vendor/
-storage/logs/*
-bootstrap/cache/*
-.env
+/SkinCare/vendor/
+/SkinCare/.phpunit.result.cache
+/SkinCare/.phpunit.cache/
+/SkinCare/bootstrap/cache/*.php
+/SkinCare/storage/framework/cache/*
+/SkinCare/storage/framework/sessions/*
+/SkinCare/storage/framework/views/*
+/SkinCare/storage/app/public/*
+/SkinCare/public/storage
 
-# Playwright runtime artifacts
+# Local databases / dumps / backups
+/SkinCare/database/*.sqlite
+/SkinCare/database/*.sqlite-*
+/SkinCare/database/*.db
+/SkinCare/database/*.dump
+/SkinCare/database/*.sql
+/SkinCare/database/*.sql.gz
+/SkinCare/storage/app/backups/
+
+# Local deployment state
+/.deploy-state/
+
+# Playwright / test runtime artifacts
+/e2e/.npm-cache/
 /e2e/test-results/
 /e2e/playwright-report/
+coverage/
+/SkinCare/coverage/
 
 # IDE / OS
 .vscode/
@@ -35,8 +60,8 @@ bootstrap/cache/*
 .DS_Store
 Thumbs.db
 
-# Coverage / temp
-coverage/
+# Temporary / generated output
 tmp/
 temp/
+output/
 *.docx

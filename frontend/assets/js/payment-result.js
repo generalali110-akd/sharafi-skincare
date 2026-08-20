@@ -24,6 +24,12 @@
 
   const render = (order, payment) => {
     const status = order?.status || 'unknown';
+    const paymentStatus = payment?.status || 'unknown';
+    const latestAttempt = payment?.latest_attempt || null;
+    const reservationActive = order?.reservation_expires_at
+      ? new Date(order.reservation_expires_at).getTime() > Date.now()
+      : false;
+    const retryAllowed = payment?.retry_allowed ?? (status === 'pending_payment' && reservationActive);
     if (orderTarget) orderTarget.textContent = order?.order_number || '—';
     if (totalTarget) totalTarget.textContent = order ? api.formatIrr(order.total_irr) : '—';
     if (statusTarget) statusTarget.textContent = labels[status] || 'نامشخص';
@@ -38,9 +44,13 @@
         : 'پرداخت بعد از پایان وضعیت قابل‌پرداخت سفارش دریافت شده و برای بازگشت وجه در حال پیگیری است.';
     } else if (status === 'pending_payment') {
       if (title) title.textContent = 'پرداخت هنوز نهایی نشده است';
-      if (message) message.textContent = payment?.status === 'paid'
+      if (message) message.textContent = paymentStatus === 'paid'
         ? 'وضعیت پرداخت در حال همگام‌سازی است. از بخش سفارش‌ها دوباره بررسی کنید.'
-        : 'می‌توانید از بخش سفارش‌های حساب کاربری دوباره پرداخت را ادامه دهید.';
+        : paymentStatus === 'failed'
+          ? (latestAttempt?.failure_message || 'تأیید پرداخت ناموفق بود. در صورت باقی بودن مهلت سفارش، از بخش سفارش‌ها دوباره تلاش کنید.')
+          : retryAllowed
+            ? 'می‌توانید از بخش سفارش‌های حساب کاربری دوباره پرداخت را ادامه دهید.'
+            : 'مهلت ادامه پرداخت برای این سفارش به پایان رسیده است. وضعیت سفارش را از حساب کاربری بررسی کنید.';
     } else {
       if (title) title.textContent = 'پرداخت تکمیل نشد';
       if (message) message.textContent = 'هیچ پرداخت موفقی برای این سفارش در وضعیت فعلی تأیید نشده است.';

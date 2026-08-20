@@ -23,6 +23,16 @@ class ProductDetailResource extends JsonResource
                 'name' => $category->name,
                 'slug' => $category->slug,
             ])->values(),
+            'images' => $this->images
+                ->sortBy([['is_primary', 'desc'], ['sort_order', 'asc'], ['id', 'asc']])
+                ->map(fn ($image) => [
+                    'id' => $image->id,
+                    'url' => $image->publicUrl(),
+                    'alt_text' => $image->alt_text ?: $this->name,
+                    'is_primary' => $image->is_primary,
+                    'variant_id' => $image->variant_id,
+                ])
+                ->values(),
             'variants' => $this->variants->map(fn ($variant) => [
                 'id' => $variant->id,
                 'sku' => $variant->sku,

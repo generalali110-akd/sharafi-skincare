@@ -44,6 +44,12 @@ SMSIR_LINE_NUMBER=
 SMSIR_CONNECT_TIMEOUT_SECONDS=3
 SMSIR_TIMEOUT_SECONDS=8
 SMSIR_MAX_MESSAGE_CHARS=320
+SMS_OUTBOX_MAX_ATTEMPTS=8
+SMS_OUTBOX_LOCK_TTL_SECONDS=300
+SMS_OUTBOX_INITIAL_BACKOFF_SECONDS=30
+SMS_OUTBOX_MAX_BACKOFF_SECONDS=3600
+SMS_OUTBOX_BACKOFF_MULTIPLIER=2
+SMS_NOTIFICATION_EXPIRE_HOURS=24
 ```
 
 For SMS.ir Sandbox, `SMSIR_OTP_TEMPLATE_ID` may remain empty and the adapter uses the official built-in template `123456`. For Production, an explicit approved template ID is required.
@@ -55,7 +61,7 @@ For SMS.ir Sandbox, `SMSIR_OTP_TEMPLATE_ID` may remain empty and the adapter use
 Provider/network failures are intentionally classified:
 
 - transient: connection failures, server failures, provider rate limiting, temporary SMS.ir service errors, and insufficient credit. Transactional outbox messages remain retryable with bounded exponential backoff.
-- permanent: invalid/inactive API credentials, IP restriction mismatch, invalid sending line, invalid destination, missing/invalid template or parameters, blacklist rejection for the configured line, unsupported plan/template, and line activation errors. The outbox marks these failed immediately instead of hammering the provider.
+- permanent: invalid/inactive API credentials, IP restriction mismatch, invalid sending line, invalid destination, missing/invalid template or parameters, blacklist rejection for the configured line, unsupported plan/template, line activation errors, malformed outbox payloads, unknown order references, and unsupported notification templates. The outbox marks these failed immediately instead of hammering the provider.
 
 Raw provider response bodies, API keys, and secret details must never be persisted in `outbox_messages.last_error`, audit logs, application responses, or analytics.
 
@@ -68,6 +74,28 @@ Blind provider failover is intentionally not used for OTP or outbox delivery. A 
 ## Transactional outbox boundary
 
 Order notifications are enqueued transactionally with the order/payment state change and dispatched after commit. Delivery is **at least once** because SMS.ir does not document an idempotency-key field for Verify/Bulk requests. The stable outbox `event_key` remains part of the `SmsGateway` contract so a future provider with server-side idempotency can use it without changing business logic.
+
+Retry behavior:
+
+- failed transient deliveries clear the lock and move `available_at` forward with bounded exponential backoff.
+- backoff starts at `SMS_OUTBOX_INITIAL_BACKOFF_SECONDS`, multiplies by `SMS_OUTBOX_BACKOFF_MULTIPLIER`, and is capped by `SMS_OUTBOX_MAX_BACKOFF_SECONDS`.
+- retryable messages are marked failed after `SMS_OUTBOX_MAX_ATTEMPTS`.
+- stale locks become claimable after `SMS_OUTBOX_LOCK_TTL_SECONDS`.
+- expired notifications and permanent structural/provider errors are marked `failed_at` immediately.
+- `last_error` stores only sanitized class/category names or safe provider messages, never raw provider response bodies or secrets.
+
+## Initial message templates
+
+The first production policy uses these stable template keys in `outbox_messages.payload.template`:
+
+- `order_created`: order was created and is awaiting payment.
+- `payment_succeeded`: payment was verified and the order is ready for fulfillment.
+- `order_shipped`: order was handed to delivery.
+- `order_cancelled`: pending-payment order was cancelled and its reservation was released.
+- `refund_pending`: paid order entered refund review.
+- `refund_completed`: refund was completed externally/operationally.
+
+Provider-side SMS.ir template IDs are required only for OTP Verify. Order/payment notifications currently use plain transactional SMS text composed by the application and can later move to provider-side templates without changing order/payment domain events.
 
 ## Switching the customer's final SMS provider
 

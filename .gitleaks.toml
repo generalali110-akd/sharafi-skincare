@@ -1,0 +1,12 @@
+title = "Sharafi Skin Care secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Known synthetic idempotency test fixtures; path, rule and full line shape must all match"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''^SkinCare/tests/Feature/Commerce/CommerceFlowTest\.php$''']
+regexTarget = "line"
+regexes = ['''withHeader\('Idempotency-Key',\s*'[^']+'\)''']

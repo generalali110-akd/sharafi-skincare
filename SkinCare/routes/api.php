@@ -67,6 +67,7 @@ Route::middleware('auth:sanctum')->group(function (): void {
     Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
 
     Route::get('/cart', [CartController::class, 'show']);
+    Route::delete('/cart', [CartController::class, 'clear']);
     Route::put('/cart/items/{variant}', [CartController::class, 'setItem']);
     Route::delete('/cart/items/{variant}', [CartController::class, 'removeItem']);
     Route::post('/checkout/quote', [CheckoutController::class, 'quote']);
@@ -86,6 +87,9 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/catalog/products/{product}', [AdminProductController::class, 'show'])->middleware('permission:'.Permissions::CATALOG_READ);
         Route::post('/catalog/products', [AdminProductController::class, 'store'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::patch('/catalog/products/{product}', [AdminProductController::class, 'update'])->middleware('permission:'.Permissions::CATALOG_WRITE);
+        Route::post('/catalog/products/{product}/images', [AdminProductController::class, 'storeImage'])->middleware('permission:'.Permissions::CATALOG_WRITE);
+        Route::patch('/catalog/products/{product}/images/{image}', [AdminProductController::class, 'updateImage'])->middleware('permission:'.Permissions::CATALOG_WRITE);
+        Route::delete('/catalog/products/{product}/images/{image}', [AdminProductController::class, 'destroyImage'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::post('/catalog/products/{product}/variants', [AdminProductController::class, 'storeVariant'])->middleware('permission:'.Permissions::CATALOG_WRITE);
         Route::patch('/catalog/variants/{variant}', [AdminProductController::class, 'updateVariant'])->middleware('permission:'.Permissions::CATALOG_WRITE);
 

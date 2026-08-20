@@ -145,6 +145,68 @@ class AdminOrderManagementTest extends TestCase
         ]);
     }
 
+    public function test_admin_refund_flow_updates_order_and_payment_state_with_audit_trail(): void
+    {
+        $this->seed(SystemAccessSeeder::class);
+        $customer = User::factory()->create();
+        $manager = $this->userWithRole('order-manager');
+        $order = $this->order($customer, OrderStatus::Delivered);
+        app(OrderStateMachine::class)->recordInitial($order, $customer);
+
+        Payment::query()->create([
+            'order_id' => $order->getKey(),
+            'amount_irr' => $order->total_irr,
+            'currency' => 'IRR',
+            'provider' => 'zarinpal',
+            'status' => PaymentStatus::Paid,
+            'paid_at' => now(),
+        ]);
+
+        $this->actingAs($manager)
+            ->patchJson('/api/v1/admin/orders/'.$order->order_number.'/status', [
+                'expected_status' => 'delivered',
+                'status' => 'refunded',
+                'reason' => 'customer_refund_requested',
+            ])
+            ->assertConflict();
+
+        $this->actingAs($manager)
+            ->patchJson('/api/v1/admin/orders/'.$order->order_number.'/status', [
+                'expected_status' => 'delivered',
+                'status' => 'refund_pending',
+                'reason' => 'customer_refund_requested',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'refund_pending')
+            ->assertJsonPath('data.payment.status', 'refund_pending');
+
+        $this->actingAs($manager)
+            ->patchJson('/api/v1/admin/orders/'.$order->order_number.'/status', [
+                'expected_status' => 'refund_pending',
+                'status' => 'refunded',
+                'reason' => 'refund_completed_externally',
+            ])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'refunded')
+            ->assertJsonPath('data.payment.status', 'refunded');
+
+        $this->assertNotNull($order->fresh()->refunded_at);
+        $this->assertNotNull($order->payment()->firstOrFail()->refunded_at);
+        $this->assertDatabaseHas('outbox_messages', [
+            'event_key' => 'order:'.$order->getKey().':refund_pending:sms',
+            'topic' => 'sms',
+        ]);
+        $this->assertDatabaseHas('outbox_messages', [
+            'event_key' => 'order:'.$order->getKey().':refund_completed:sms',
+            'topic' => 'sms',
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_user_id' => $manager->getKey(),
+            'action' => 'order.status.updated',
+            'subject_id' => (string) $order->getKey(),
+        ]);
+    }
+
     public function test_order_detail_timeline_does_not_expose_raw_payment_metadata(): void
     {
         $this->seed(SystemAccessSeeder::class);

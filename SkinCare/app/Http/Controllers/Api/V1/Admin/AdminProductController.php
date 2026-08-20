@@ -9,14 +9,19 @@ use App\Actions\Catalog\UpdateProductVariantAction;
 use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Admin\AdminProductIndexRequest;
+use App\Http\Requests\Api\V1\Admin\StoreProductImageRequest;
 use App\Http\Requests\Api\V1\Admin\StoreProductRequest;
 use App\Http\Requests\Api\V1\Admin\StoreProductVariantRequest;
+use App\Http\Requests\Api\V1\Admin\UpdateProductImageRequest;
 use App\Http\Requests\Api\V1\Admin\UpdateProductRequest;
 use App\Http\Requests\Api\V1\Admin\UpdateProductVariantRequest;
 use App\Http\Resources\Api\V1\Admin\AdminProductDetailResource;
 use App\Http\Resources\Api\V1\Admin\AdminProductListResource;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
+use App\Services\Catalog\ProductImageService;
+use App\Support\DatabaseLike;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -30,15 +35,17 @@ class AdminProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'variants.inventory:id,variant_id,on_hand,reserved',
+                'primaryImage:id,product_id,disk,path,alt_text,sort_order,is_primary',
             ])
             ->latest('updated_at');
 
         if ($request->filled('q')) {
             $search = trim((string) $request->validated('q'));
-            $query->where(function (Builder $query) use ($search): void {
+            $like = DatabaseLike::caseInsensitiveOperator();
+            $query->where(function (Builder $query) use ($search, $like): void {
                 $query
-                    ->where('name', 'ilike', '%'.$search.'%')
-                    ->orWhereHas('variants', fn (Builder $variant) => $variant->where('sku', 'ilike', '%'.$search.'%'));
+                    ->where('name', $like, '%'.$search.'%')
+                    ->orWhereHas('variants', fn (Builder $variant) => $variant->where('sku', $like, '%'.$search.'%'));
             });
         }
 
@@ -58,6 +65,7 @@ class AdminProductController extends Controller
             'brand:id,name,slug',
             'categories:id,name,slug',
             'variants.inventory:id,variant_id,on_hand,reserved,reorder_level',
+            'images:id,product_id,variant_id,disk,path,alt_text,sort_order,is_primary',
         ]);
 
         return new AdminProductDetailResource($product);
@@ -125,6 +133,48 @@ class AdminProductController extends Controller
         );
 
         return response()->json(['data' => $this->variantPayload($variant)]);
+    }
+
+    public function storeImage(
+        StoreProductImageRequest $request,
+        Product $product,
+        ProductImageService $images,
+    ): JsonResponse {
+        $image = $images->store($product, $request->file('image'), $request->validated());
+
+        return response()->json(['data' => $this->imagePayload($image)], Response::HTTP_CREATED);
+    }
+
+    public function updateImage(
+        UpdateProductImageRequest $request,
+        Product $product,
+        int $image,
+        ProductImageService $images,
+    ): JsonResponse {
+        $productImage = $product->images()->findOrFail($image);
+        $productImage = $images->update($product, $productImage, $request->validated());
+
+        return response()->json(['data' => $this->imagePayload($productImage)]);
+    }
+
+    public function destroyImage(Product $product, int $image, ProductImageService $images): JsonResponse
+    {
+        $productImage = $product->images()->findOrFail($image);
+        $images->destroy($product, $productImage);
+
+        return response()->json(null, Response::HTTP_NO_CONTENT);
+    }
+
+    private function imagePayload(ProductImage $image): array
+    {
+        return [
+            'id' => $image->id,
+            'url' => $image->publicUrl(),
+            'alt_text' => $image->alt_text,
+            'is_primary' => $image->is_primary,
+            'sort_order' => $image->sort_order,
+            'variant_id' => $image->variant_id,
+        ];
     }
 
     private function variantPayload(ProductVariant $variant): array

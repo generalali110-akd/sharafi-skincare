@@ -3,10 +3,13 @@
 namespace App\Services\Payments;
 
 use App\Contracts\PaymentGateway;
+use App\Enums\PaymentAttemptStatus;
+use App\Enums\PaymentStatus;
 use App\Exceptions\CheckoutConflictException;
 use App\Exceptions\PaymentUnavailableException;
 use App\Models\PaymentAttempt;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 
 final class ZarinpalCallbackService
 {
@@ -48,6 +51,8 @@ final class ZarinpalCallbackService
 
         $result = $this->gateway->verify($attempt, $payload);
         if (! $result->successful) {
+            $this->markFailedVerification($attempt, $result->failureCode, $result->failureMessage);
+
             return [
                 'status' => 'failed',
                 'order_number' => $order->order_number,
@@ -90,5 +95,29 @@ final class ZarinpalCallbackService
             'order_number' => $order->order_number,
             'transaction_id' => $result->transactionId,
         ];
+    }
+
+    private function markFailedVerification(PaymentAttempt $attempt, ?string $failureCode, ?string $failureMessage): void
+    {
+        DB::transaction(function () use ($attempt, $failureCode, $failureMessage): void {
+            $lockedAttempt = PaymentAttempt::query()
+                ->whereKey($attempt->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+            $payment = $lockedAttempt->payment()->lockForUpdate()->firstOrFail();
+
+            if ($lockedAttempt->status !== PaymentAttemptStatus::Succeeded) {
+                $lockedAttempt->status = PaymentAttemptStatus::Failed;
+                $lockedAttempt->failure_code = $failureCode ?: 'provider_verification_failed';
+                $lockedAttempt->failure_message = mb_substr($failureMessage ?: 'Payment verification failed.', 0, 500);
+                $lockedAttempt->failed_at ??= now();
+                $lockedAttempt->save();
+            }
+
+            if (! in_array($payment->status, [PaymentStatus::Paid, PaymentStatus::RefundPending, PaymentStatus::Refunded], true)) {
+                $payment->status = PaymentStatus::Failed;
+                $payment->save();
+            }
+        }, attempts: 3);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'driver' => env('SMS_DRIVER', 'null'),
+    'driver' => env('SMS_DRIVER') ?: 'null',
     'otp' => [
         'pepper' => env('OTP_PEPPER'),
         'ttl_seconds' => (int) env('OTP_TTL_SECONDS', 120),
@@ -15,6 +15,9 @@ return [
     'outbox' => [
         'max_attempts' => (int) env('SMS_OUTBOX_MAX_ATTEMPTS', 8),
         'lock_ttl_seconds' => (int) env('SMS_OUTBOX_LOCK_TTL_SECONDS', 300),
+        'initial_backoff_seconds' => (int) env('SMS_OUTBOX_INITIAL_BACKOFF_SECONDS', 30),
+        'max_backoff_seconds' => (int) env('SMS_OUTBOX_MAX_BACKOFF_SECONDS', 3600),
+        'backoff_multiplier' => (int) env('SMS_OUTBOX_BACKOFF_MULTIPLIER', 2),
         'notification_expire_hours' => (int) env('SMS_NOTIFICATION_EXPIRE_HOURS', 24),
     ],
     'smsir' => [

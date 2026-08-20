@@ -15,7 +15,7 @@
 .cart-qty{display:inline-flex;align-items:center;gap:12px;margin-top:10px;padding:4px;border:1px solid #ead9dd;border-radius:12px;background:#fff;}
 .cart-qty button{width:32px;height:32px;border-radius:9px;background:var(--cream-2);color:var(--rose-dark);font-size:17px;}
 .cart-qty span{min-width:18px;text-align:center;font-weight:800;}
-.cart-remove{width:36px;height:36px;border-radius:10px;background:#fff1f3;color:#bc5870;}
+.cart-remove{min-width:52px;height:36px;padding:0 11px;border-radius:10px;background:#fff1f3;color:#bc5870;font-size:12px;font-weight:900;}
 
 .order-summary-v2{position:sticky;top:112px;padding:22px;border:1px solid #f1e1e5;border-radius:20px;background:#fff;box-shadow:var(--shadow-sm);}
 .order-summary-v2 h3{margin:0 0 16px;font-size:18px;}
@@ -25,6 +25,9 @@
 .free-shipping-progress{margin:14px 0;padding:12px 13px;border-radius:12px;background:#f0f8ef;color:#4f8058;font-size:12px;line-height:1.7;}
 .checkout-cta{display:flex;width:100%;align-items:center;justify-content:center;min-height:48px;margin-top:16px;border-radius:14px;background:linear-gradient(135deg,#72aa69,#4f8b5d);color:#fff;font-weight:900;box-shadow:0 8px 18px rgba(79,139,93,.18);}
 .checkout-cta[aria-disabled="true"]{pointer-events:none;opacity:.45;box-shadow:none;}
+.cart-cancel-purchase{width:100%;min-height:44px;margin-top:10px;border:1px solid #efc8cf;border-radius:14px;background:#fff7f8;color:#a64c61;font:inherit;font-size:12.5px;font-weight:900;}
+.cart-cancel-purchase:hover{background:#fff1f3;border-color:#e7aeb9;}
+.cart-cancel-purchase:disabled{opacity:.55;cursor:not-allowed;}
 .continue-shopping{display:flex;justify-content:center;margin-top:10px;color:var(--rose-dark);font-size:13px;font-weight:700;}
 .cart-empty-v2{padding:54px 24px;text-align:center;border:1px dashed #e8d5da;border-radius:20px;background:#fff;}
 .cart-empty-v2 .icon{font-size:54px;}
@@ -77,7 +80,7 @@
   .cart-item-v2{grid-template-columns:68px minmax(0,1fr) auto;gap:10px;padding:12px;border-radius:15px;}
   .cart-item-v2 .thumb{width:68px;height:68px;border-radius:13px;font-size:30px;}
   .cart-item-v2 .price-col{grid-column:2/3;font-size:13px;}
-  .cart-remove{grid-column:3;grid-row:1;width:32px;height:32px;}
+  .cart-remove{grid-column:3;grid-row:1;min-width:44px;height:32px;padding:0 8px;}
   .cart-qty{gap:8px;}
   .cart-qty button{width:29px;height:29px;}
   .order-summary-v2{padding:18px;border-radius:16px;}

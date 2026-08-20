@@ -24,6 +24,8 @@ class UpdateOrderStatusRequest extends FormRequest
                     OrderStatus::Shipped,
                     OrderStatus::Delivered,
                     OrderStatus::Cancelled,
+                    OrderStatus::RefundPending,
+                    OrderStatus::Refunded,
                 ]),
             ],
             'reason' => ['nullable', 'string', 'max:255'],

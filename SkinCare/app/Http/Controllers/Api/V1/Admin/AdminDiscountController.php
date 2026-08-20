@@ -11,6 +11,7 @@ use App\Http\Requests\Api\V1\Admin\UpdateDiscountRuleRequest;
 use App\Models\DiscountRedemption;
 use App\Models\DiscountRule;
 use App\Services\Audit\AuditLogger;
+use App\Support\DatabaseLike;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,9 +32,10 @@ class AdminDiscountController extends Controller
         $query = DiscountRule::query()->latest('id');
 
         if ($search = trim((string) ($validated['search'] ?? ''))) {
-            $query->where(function ($builder) use ($search): void {
-                $builder->where('code', 'ilike', "%{$search}%")
-                    ->orWhere('name', 'ilike', "%{$search}%");
+            $like = DatabaseLike::caseInsensitiveOperator();
+            $query->where(function ($builder) use ($search, $like): void {
+                $builder->where('code', $like, "%{$search}%")
+                    ->orWhere('name', $like, "%{$search}%");
             });
         }
         if (array_key_exists('is_active', $validated)) {

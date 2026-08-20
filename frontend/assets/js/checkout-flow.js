@@ -27,12 +27,16 @@
     const list = document.querySelector('.js-cart-list');
     if (!list || !cartApi) return;
     const checkoutLink = document.querySelector('.js-checkout-btn');
+    const clearButton = document.querySelector('.js-cart-clear');
     const progress = document.querySelector('.js-free-shipping-progress');
     let cart;
     let user = null;
 
     try {
-      [cart, user] = await Promise.all([cartApi.load(true), api?.currentUser() || null]);
+      [cart, user] = await Promise.all([
+        cartApi.load(true),
+        api?.currentUser().catch(() => null) || null,
+      ]);
     } catch (error) {
       list.innerHTML = `<div class="cart-empty-v2"><h3>دریافت سبد خرید ناموفق بود</h3><p>${safe(error?.message || 'لطفاً دوباره تلاش کنید.')}</p></div>`;
       return;
@@ -45,6 +49,7 @@
         checkoutLink.removeAttribute('href');
         checkoutLink.tabIndex = -1;
       }
+      if (clearButton) clearButton.hidden = true;
       if (progress) progress.textContent = 'برای محاسبه ارسال، ابتدا محصولی به سبد اضافه کنید.';
       document.querySelectorAll('.js-subtotal,.js-total').forEach((el) => { el.textContent = '۰ تومان'; });
       document.querySelectorAll('.js-shipping').forEach((el) => { el.textContent = '۰ تومان'; });
@@ -56,7 +61,7 @@
         <div class="thumb" aria-hidden="true">${safe(item.icon || '🧴')}</div>
         <div><h4>${safe(item.name)}</h4><div class="meta">${safe(item.variant_title || item.sku || '')}${item.in_stock === false ? ' · ناموجود' : ''}</div><div class="cart-qty" aria-label="تعداد ${safe(item.name)}"><button type="button" aria-label="کم کردن تعداد" data-cart-delta="-1" data-cart-id="${item.variant_id}">−</button><span>${Number(item.qty).toLocaleString('fa-IR')}</span><button type="button" aria-label="زیاد کردن تعداد" data-cart-delta="1" data-cart-id="${item.variant_id}">+</button></div></div>
         <div class="price-col">${fmtPrice(item.price * item.qty)}</div>
-        <button class="cart-remove" type="button" aria-label="حذف ${safe(item.name)} از سبد" data-cart-remove="${item.variant_id}">✕</button>
+        <button class="cart-remove" type="button" aria-label="حذف ${safe(item.name)} از سبد" data-cart-remove="${item.variant_id}">حذف</button>
       </article>`).join('');
 
     list.querySelectorAll('[data-cart-delta]').forEach((button) => {
@@ -90,6 +95,7 @@
       checkoutLink.setAttribute('aria-disabled', 'false');
       checkoutLink.removeAttribute('tabindex');
     }
+    if (clearButton) clearButton.hidden = false;
 
     if (!user || !api) {
       const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
@@ -109,6 +115,25 @@
     } catch (error) {
       if (progress) progress.textContent = error?.message || 'محاسبه مبلغ نهایی ناموفق بود.';
     }
+  }
+
+  function initCartClearAction() {
+    const clearButton = document.querySelector('.js-cart-clear');
+    if (!clearButton || !cartApi) return;
+    clearButton.addEventListener('click', async () => {
+      const accepted = window.confirm('آیا مطمئن هستید که می‌خواهید از خرید انصراف دهید و سبد خرید خالی شود؟');
+      if (!accepted) return;
+      clearButton.disabled = true;
+      try {
+        await cartApi.clear();
+        toast('سبد خرید خالی شد.');
+        await renderCartV2();
+      } catch (error) {
+        toast(error?.message || 'خالی کردن سبد خرید ناموفق بود.');
+      } finally {
+        clearButton.disabled = false;
+      }
+    });
   }
 
   function syncOptionGroup(groupName) {
@@ -320,6 +345,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     renderCartV2();
+    initCartClearAction();
     initCheckoutOptions();
     initCheckoutForm();
     initCheckoutPage();

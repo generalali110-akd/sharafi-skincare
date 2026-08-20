@@ -8,6 +8,7 @@ use App\Http\Resources\Api\V1\Catalog\ProductDetailResource;
 use App\Http\Resources\Api\V1\Catalog\ProductListResource;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\DatabaseLike;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -21,6 +22,7 @@ class ProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
+                'primaryImage:id,product_id,disk,path,alt_text,sort_order,is_primary',
             ])
             ->withCount([
                 'variants as active_variants_count' => fn ($query) => $query->active(),
@@ -44,10 +46,11 @@ class ProductController extends Controller
 
         if ($request->filled('q')) {
             $search = trim((string) $request->validated('q'));
-            $query->where(function (Builder $query) use ($search): void {
+            $like = DatabaseLike::caseInsensitiveOperator();
+            $query->where(function (Builder $query) use ($search, $like): void {
                 $query
-                    ->where('name', 'ilike', '%'.$search.'%')
-                    ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', 'ilike', '%'.$search.'%'));
+                    ->where('name', $like, '%'.$search.'%')
+                    ->orWhereHas('brand', fn (Builder $brand) => $brand->where('name', $like, '%'.$search.'%'));
             });
         }
 
@@ -102,6 +105,7 @@ class ProductController extends Controller
             ->with([
                 'brand:id,name,slug',
                 'categories' => fn ($query) => $query->active()->select('categories.id', 'name', 'slug'),
+                'images:id,product_id,variant_id,disk,path,alt_text,sort_order,is_primary',
                 'variants' => fn ($query) => $query
                     ->active()
                     ->orderBy('sort_order')

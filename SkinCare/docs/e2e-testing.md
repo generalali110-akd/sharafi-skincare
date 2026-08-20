@@ -72,6 +72,17 @@ Failure-only Playwright traces, screenshots/videos, and the Laravel E2E server l
 
 ## Local/staging boundary
 
+For a frontend-only local check on machines without PHP, Composer, PostgreSQL,
+or Docker, run the static Storefront/Admin smoke suite from the E2E directory:
+
+```bash
+npm run test:frontend-static
+```
+
+This starts the repository's static frontend server, runs the strict CSP source
+check and responsive no-overflow browser checks, then stops the server. It does
+not replace the full Laravel/PostgreSQL commerce E2E suite.
+
 Do not put real SMS.ir API keys, Zarinpal Merchant IDs, OTP peppers, or other production secrets in E2E fixtures, source files, Playwright configuration, or GitHub workflow YAML.
 
 Real provider validation must use rotated/private credentials supplied through environment or secret storage on a dedicated staging environment.
