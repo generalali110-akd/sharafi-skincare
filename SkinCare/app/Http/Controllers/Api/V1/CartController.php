@@ -41,6 +41,13 @@ class CartController extends Controller
         return response()->json(['data' => $this->payload($cart)]);
     }
 
+    public function clear(Request $request): JsonResponse
+    {
+        $cart = $this->carts->clear($request->user());
+
+        return response()->json(['data' => $this->payload($cart)]);
+    }
+
     private function payload(Cart $cart): array
     {
         return [

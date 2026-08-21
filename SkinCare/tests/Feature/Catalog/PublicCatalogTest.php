@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\InventoryItem;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -121,6 +122,32 @@ class PublicCatalogTest extends TestCase
 
         $this->assertArrayNotHasKey('available_stock', $response->json('data.variants.0'));
         $this->assertArrayNotHasKey('on_hand', $response->json('data.variants.0'));
+    }
+
+    public function test_catalog_exposes_product_images_without_inventory_leakage(): void
+    {
+        $product = Product::factory()->published()->create([
+            'name' => 'Photo Product',
+            'slug' => 'photo-product',
+        ]);
+        ProductVariant::factory()->create(['product_id' => $product->id]);
+        ProductImage::query()->create([
+            'product_id' => $product->id,
+            'disk' => 'public',
+            'path' => 'products/photo-product.jpg',
+            'alt_text' => 'Photo Product bottle',
+            'is_primary' => true,
+        ]);
+
+        $this->getJson('/api/v1/catalog/products')
+            ->assertOk()
+            ->assertJsonPath('data.0.primary_image.alt_text', 'Photo Product bottle')
+            ->assertJsonPath('data.0.primary_image.url', url('/storage/products/photo-product.jpg'));
+
+        $this->getJson('/api/v1/catalog/products/photo-product')
+            ->assertOk()
+            ->assertJsonPath('data.images.0.alt_text', 'Photo Product bottle')
+            ->assertJsonPath('data.images.0.is_primary', true);
     }
 
     public function test_invalid_price_range_is_rejected(): void

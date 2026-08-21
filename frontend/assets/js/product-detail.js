@@ -30,7 +30,66 @@
     return api;
   };
 
-  const safe = (value) => typeof escapeHTML === 'function' ? escapeHTML(value) : String(value ?? '');
+  const HTML_ENTITIES = Object.freeze({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  });
+  const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => HTML_ENTITIES[character]);
+
+  const renderProductUnavailable = () => {
+    const detail = document.querySelector('.product-detail-layout');
+    if (detail) {
+      const state = document.createElement('div');
+      state.className = 'catalog-api-state product-api-state';
+
+      const heading = document.createElement('h2');
+      heading.textContent = 'اتصال به کاتالوگ برقرار نیست';
+
+      const message = document.createElement('p');
+      message.textContent = 'برای نمایش اطلاعات واقعی محصول، سرویس فروشگاه باید در دسترس باشد.';
+
+      const link = document.createElement('a');
+      link.className = 'btn btn-primary';
+      link.href = 'category.html';
+      link.textContent = 'بازگشت به محصولات';
+
+      state.append(heading, message, link);
+      detail.replaceChildren(state);
+    }
+
+    const relatedGrid = document.querySelector('.product-page .section .prod-grid');
+    if (relatedGrid) {
+      relatedGrid.innerHTML = '<div class="catalog-api-state"><p>محصولات مرتبط فقط پس از اتصال به کاتالوگ واقعی نمایش داده می‌شوند.</p></div>';
+    }
+
+    document.querySelector('.product-tabs-v2')?.setAttribute('hidden', '');
+    document.querySelector('.mobile-purchase-bar')?.setAttribute('hidden', '');
+    const breadcrumb = document.querySelector('.breadcrumb');
+    if (breadcrumb) breadcrumb.innerHTML = '<a href="index.html">صفحه اصلی</a> / <a href="category.html">محصولات</a> / خطای اتصال';
+    document.title = 'اتصال به کاتالوگ برقرار نیست | فروشگاه شرفی';
+  };
+
+  const renderProductLoading = () => {
+    document.title = 'در حال دریافت محصول | فروشگاه شرفی';
+    setText('#product-title', 'در حال دریافت اطلاعات واقعی محصول...');
+    setText('.product-brand-pill', 'کاتالوگ فروشگاه');
+    setText('.product-sku', 'کد محصول: در حال دریافت');
+    setText('.product-price-v2 .current', 'در حال دریافت قیمت');
+    setText('.product-summary', 'اطلاعات محصول، قیمت و موجودی مستقیماً از سرویس فروشگاه دریافت می‌شود.');
+    document.querySelector('.product-price-v2 .old')?.setAttribute('hidden', '');
+    document.querySelector('.product-price-v2 .discount')?.setAttribute('hidden', '');
+    document.querySelector('.product-main-badge')?.setAttribute('hidden', '');
+    const mainMedia = document.querySelector('.product-main-media__visual');
+    if (mainMedia) mainMedia.textContent = '...';
+    addButtons.forEach((button) => {
+      button.disabled = true;
+      button.textContent = 'در حال دریافت محصول...';
+    });
+    document.querySelector('.mobile-purchase-bar')?.setAttribute('hidden', '');
+  };
 
   const renderQuantity = () => {
     if (quantityOutput) quantityOutput.value = quantity;
@@ -78,11 +137,15 @@
     }
 
     const stockBadge = document.querySelector('.product-main-badge');
-    if (stockBadge) stockBadge.textContent = selectedVariant.in_stock ? 'موجود' : 'ناموجود';
+    if (stockBadge) {
+      stockBadge.hidden = false;
+      stockBadge.textContent = selectedVariant.in_stock ? 'موجود' : 'ناموجود';
+    }
     addButtons.forEach((button) => {
       button.disabled = !selectedVariant.in_stock;
       button.textContent = selectedVariant.in_stock ? 'افزودن به سبد خرید 🛒' : 'در حال حاضر ناموجود';
     });
+    document.querySelector('.mobile-purchase-bar')?.removeAttribute('hidden');
   };
 
   const renderVariantSelector = () => {
@@ -132,6 +195,15 @@
     const descPanel = document.querySelector('[data-panel="desc"]');
     if (descPanel) descPanel.textContent = product.description || product.short_description || 'توضیحات تکمیلی برای این محصول ثبت نشده است.';
 
+    const images = Array.isArray(product.images) ? product.images : [];
+    const mainMedia = document.querySelector('.product-main-media__visual');
+    if (mainMedia) {
+      const primary = images.find((image) => image.is_primary) || images[0];
+      mainMedia.innerHTML = primary?.url
+        ? `<img class="product-main-img" src="${safe(primary.url)}" alt="${safe(primary.alt_text || product.name)}">`
+        : '🧴';
+    }
+
     const breadcrumb = document.querySelector('.breadcrumb');
     if (breadcrumb) {
       const category = product.categories?.[0];
@@ -148,19 +220,24 @@
     const action = direct
       ? `<button class="product-card-add" type="button" data-variant-id="${variantId}" data-cart-name="${safe(item.name)}" data-cart-slug="${safe(item.slug)}" data-price-irr="${Number(item.pricing?.min || 0)}" data-in-stock="${String(inStock)}" ${inStock ? '' : 'disabled'}>🛒 ${inStock ? 'افزودن به سبد' : 'ناموجود'}</button>`
       : `<a class="product-card-add" href="${detail}">${inStock ? 'انتخاب گزینه‌ها' : 'مشاهده محصول'}</a>`;
-    return `<article class="product-card-v2"><div class="product-card-media"><div class="product-placeholder" aria-hidden="true">🧴</div></div><div class="product-card-body"><span class="product-card-brand">${safe(item.brand?.name || 'شرفی')}</span><a class="product-card-link" href="${detail}"><h3 class="product-card-title">${safe(item.name)}</h3></a><div class="product-card-price-area"><div class="product-price-stack"><span class="product-current-price">${safe(api.formatIrr(item.pricing?.min || 0))}</span></div></div><div class="product-card-actions">${action}</div></div></article>`;
+    const image = item.primary_image;
+    const media = image?.url
+      ? `<img class="product-card-img" src="${safe(image.url)}" alt="${safe(image.alt_text || item.name)}" loading="lazy">`
+      : '<div class="product-placeholder" aria-hidden="true">🧴</div>';
+    return `<article class="product-card-v2"><div class="product-card-media">${media}</div><div class="product-card-body"><span class="product-card-brand">${safe(item.brand?.name || 'شرفی')}</span><a class="product-card-link" href="${detail}"><h3 class="product-card-title">${safe(item.name)}</h3></a><div class="product-card-price-area"><div class="product-price-stack"><span class="product-current-price">${safe(api.formatIrr(item.pricing?.min || 0))}</span></div></div><div class="product-card-actions">${action}</div></div></article>`;
   };
 
   const renderRelatedProducts = async () => {
     const grid = document.querySelector('.product-page .section .prod-grid');
     if (!grid || !product || !api) return;
+    grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><p>در حال دریافت محصولات مرتبط واقعی...</p></div>';
     try {
       const category = product.categories?.[0]?.slug || null;
       const payload = await api.catalog.products({ category, per_page: 5 });
       const items = (Array.isArray(payload?.data) ? payload.data : []).filter((item) => item.slug !== product.slug).slice(0, 4);
       grid.innerHTML = items.length ? items.map(relatedCard).join('') : '<div class="cart-empty-v2"><p>محصول مرتبط دیگری برای نمایش وجود ندارد.</p></div>';
     } catch {
-      grid.innerHTML = '<div class="cart-empty-v2"><p>دریافت محصولات مرتبط ناموفق بود.</p></div>';
+      grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><p>اتصال به کاتالوگ برای نمایش محصولات مرتبط برقرار نیست.</p></div>';
     }
   };
 
@@ -177,6 +254,9 @@
 
   const loadProduct = async () => {
     try {
+      renderProductLoading();
+      const relatedGrid = document.querySelector('.product-page .section .prod-grid');
+      if (relatedGrid) relatedGrid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><p>در حال دریافت محصولات مرتبط واقعی...</p></div>';
       api = await getApi();
       if (!api) throw new Error('ارتباط با API آماده نیست.');
       const slug = await resolveSlug();
@@ -186,9 +266,10 @@
       if (!product) throw new Error('اطلاعات محصول دریافت نشد.');
       renderProduct();
       await renderRelatedProducts();
-    } catch (error) {
+    } catch {
       addButtons.forEach((button) => { button.disabled = true; });
-      toast(error?.message || 'دریافت اطلاعات محصول ناموفق بود.', 3500);
+      renderProductUnavailable();
+      toast('دریافت اطلاعات محصول ناموفق بود.', 3500);
     }
   };
 

@@ -3,7 +3,7 @@
     admin off
 }
 
-{$STAGING_DOMAIN} {
+{$APP_DOMAIN} {
     encode zstd gzip
 
     root * /srv/public
@@ -24,15 +24,23 @@
         Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; media-src 'self'; worker-src 'self'; manifest-src 'self'; upgrade-insecure-requests"
     }
 
-    php_fastcgi app:9000 {
-        root /var/www/html/public
-        capture_stderr
-        dial_timeout 3s
-        read_timeout 65s
-        write_timeout 65s
+    handle_path /storage/* {
+        root * /srv/laravel-storage/app/public
+        header Cache-Control "public, max-age=86400"
+        file_server
     }
 
-    file_server
+    handle {
+        php_fastcgi app:9000 {
+            root /var/www/html/public
+            capture_stderr
+            dial_timeout 3s
+            read_timeout 65s
+            write_timeout 65s
+        }
+
+        file_server
+    }
 
     log {
         output stdout

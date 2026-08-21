@@ -262,6 +262,23 @@ async function removeFromCart(id) {
   return serverCartItems;
 }
 
+async function clearCart() {
+  const api = await ensureSharafiApi().catch(() => null);
+  const user = await currentUser();
+  if (!user || !api) {
+    saveGuestCart([]);
+    serverCartItems = [];
+    updateCartBadgeFromItems([]);
+    return [];
+  }
+
+  const payload = await api.cart.clear();
+  serverCartItems = normalizeServerCart(payload);
+  updateCartBadgeFromItems(serverCartItems);
+  saveGuestCart([]);
+  return serverCartItems;
+}
+
 function cartCount() {
   return getCart().reduce((sum, item) => sum + item.qty, 0);
 }
@@ -375,6 +392,7 @@ window.SharafiCart = Object.freeze({
   add: addToCart,
   changeQty,
   remove: removeFromCart,
+  clear: clearCart,
   syncGuestCart,
   getGuestCart,
 });

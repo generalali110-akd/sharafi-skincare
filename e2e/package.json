@@ -3,7 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:frontend-static": "node tools/run-static-qa.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.60.0"

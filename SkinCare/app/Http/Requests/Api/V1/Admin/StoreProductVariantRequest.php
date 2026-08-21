@@ -34,6 +34,10 @@ class StoreProductVariantRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
+            if ($validator->errors()->hasAny(['price_irr', 'compare_at_price_irr'])) {
+                return;
+            }
+
             if ($this->filled('compare_at_price_irr') && $this->integer('compare_at_price_irr') < $this->integer('price_irr')) {
                 $validator->errors()->add('compare_at_price_irr', 'قیمت قبل از تخفیف نمی‌تواند کمتر از قیمت فروش باشد.');
             }

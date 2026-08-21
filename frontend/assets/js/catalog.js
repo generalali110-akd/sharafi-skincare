@@ -2,9 +2,16 @@
 (() => {
   const api = window.SharafiAPI;
   const grid = document.querySelector('.category-main .prod-grid');
-  if (!api || !grid) return;
+  if (!grid) return;
 
-  const safe = (value) => typeof escapeHTML === 'function' ? escapeHTML(value) : String(value ?? '');
+  const HTML_ENTITIES = Object.freeze({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  });
+  const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => HTML_ENTITIES[character]);
   const metaText = document.querySelector('.category-toolbar__meta');
   const categoryTitle = document.querySelector('#category-title');
   const categoryHeroText = document.querySelector('.category-hero p');
@@ -12,6 +19,17 @@
   let categories = [];
   let brands = [];
   let requestSerial = 0;
+
+  const unavailable = () => {
+    grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><h3>اتصال به کاتالوگ برقرار نیست</h3><p>برای نمایش محصولات واقعی، سرویس فروشگاه باید در دسترس باشد.</p></div>';
+    grid.setAttribute('aria-busy', 'false');
+    if (metaText) metaText.textContent = 'خطا در اتصال به کاتالوگ';
+  };
+
+  if (!api) {
+    unavailable();
+    return;
+  }
 
   const ensureGridHeading = () => {
     const existing = document.querySelector('.js-catalog-grid-heading');
@@ -23,7 +41,16 @@
     return heading;
   };
 
+  const renderLoadingState = () => {
+    grid.setAttribute('aria-busy', 'true');
+    grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><h3>در حال دریافت محصولات واقعی...</h3></div>';
+    if (metaText) metaText.textContent = 'در حال دریافت محصولات...';
+  };
+
   ensureGridHeading();
+  // Replace legacy static/demo cards as soon as this script is parsed. The grid CSS
+  // reserves a stable results region, so async API swaps do not pull the footer upward.
+  renderLoadingState();
 
   const tomanToIrr = (value) => {
     if (value === null || value === undefined || String(value).trim() === '') return null;
@@ -56,6 +83,12 @@
     return `<span class="product-current-price">${safe(api.formatIrr(min))}</span>`;
   };
 
+  const imageMarkup = (product) => {
+    const image = product?.primary_image;
+    if (!image?.url) return '<div class="product-placeholder" aria-hidden="true">🧴</div>';
+    return `<img class="product-card-img" src="${safe(image.url)}" alt="${safe(image.alt_text || product.name)}" loading="lazy">`;
+  };
+
   const productCard = (product) => {
     const variantId = Number(product?.purchase?.variant_id);
     const canDirectAdd = Number.isInteger(variantId) && variantId > 0 && !product?.purchase?.requires_selection;
@@ -67,7 +100,7 @@
 
     return `
       <article class="product-card-v2">
-        <div class="product-card-media"><div class="product-placeholder" aria-hidden="true">🧴</div></div>
+        <div class="product-card-media">${imageMarkup(product)}</div>
         <div class="product-card-body">
           <span class="product-card-brand">${safe(product.brand?.name || 'شرفی')}</span>
           <a class="product-card-link" href="${detailUrl}"><h3 class="product-card-title">${safe(product.name)}</h3></a>
@@ -129,8 +162,7 @@
   const loadCatalog = async () => {
     const serial = ++requestSerial;
     const params = apiParams();
-    grid.setAttribute('aria-busy', 'true');
-    if (metaText) metaText.textContent = 'در حال دریافت محصولات...';
+    renderLoadingState();
 
     try {
       const payload = await api.catalog.products(params);
@@ -143,9 +175,9 @@
       if (metaText) metaText.textContent = `${total.toLocaleString('fa-IR')} محصول`;
       updateHero(params, total);
       renderPagination(payload?.meta);
-    } catch (error) {
+    } catch {
       if (serial !== requestSerial) return;
-      grid.innerHTML = `<div class="cart-empty-v2"><h3>دریافت محصولات ناموفق بود</h3><p>${safe(error?.message || 'لطفاً دوباره تلاش کنید.')}</p><button class="btn btn-primary js-catalog-retry" type="button">تلاش دوباره</button></div>`;
+      grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><h3>اتصال به کاتالوگ برقرار نیست</h3><p>برای نمایش محصولات واقعی، سرویس فروشگاه باید در دسترس باشد.</p><button class="btn btn-primary js-catalog-retry" type="button">تلاش دوباره</button></div>';
       grid.querySelector('.js-catalog-retry')?.addEventListener('click', loadCatalog);
       if (metaText) metaText.textContent = 'خطا در دریافت محصولات';
     } finally {
@@ -189,9 +221,11 @@
     }
   };
 
-  const init = async () => {
-    await loadTaxonomies();
-    await loadCatalog();
+  const init = () => {
+    // Product data and filter taxonomies are independent reads. Starting them together
+    // lowers time-to-content and avoids holding the grid in a transient layout state.
+    void loadCatalog();
+    void loadTaxonomies();
   };
 
   document.addEventListener('sharafi:catalog-query-changed', loadCatalog);

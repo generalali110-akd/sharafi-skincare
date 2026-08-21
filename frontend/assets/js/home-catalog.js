@@ -2,9 +2,22 @@
 (() => {
   const api = window.SharafiAPI;
   const grid = document.querySelector('.hero ~ .section .prod-grid') || document.querySelector('.prod-grid');
-  if (!api || !grid) return;
+  if (!grid) return;
 
   const safe = (value) => typeof escapeHTML === 'function' ? escapeHTML(value) : String(value ?? '');
+  const unavailable = () => {
+    grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><h3>اتصال به کاتالوگ برقرار نیست</h3><p>برای نمایش محصولات واقعی، سرویس فروشگاه باید در دسترس باشد.</p></div>';
+    grid.setAttribute('aria-busy', 'false');
+  };
+  if (!api) {
+    unavailable();
+    return;
+  }
+  const imageMarkup = (product) => {
+    const image = product?.primary_image;
+    if (!image?.url) return '<div class="product-placeholder" aria-hidden="true">🧴</div>';
+    return `<img class="product-card-img" src="${safe(image.url)}" alt="${safe(image.alt_text || product.name)}" loading="lazy">`;
+  };
 
   const card = (product) => {
     const variantId = Number(product?.purchase?.variant_id);
@@ -17,7 +30,7 @@
 
     return `
       <article class="product-card-v2">
-        <div class="product-card-media"><div class="product-placeholder" aria-hidden="true">🧴</div></div>
+        <div class="product-card-media">${imageMarkup(product)}</div>
         <div class="product-card-body">
           <span class="product-card-brand">${safe(product.brand?.name || 'شرفی')}</span>
           <a class="product-card-link" href="${detail}"><h3 class="product-card-title">${safe(product.name)}</h3></a>
@@ -30,13 +43,15 @@
 
   const init = async () => {
     grid.setAttribute('aria-busy', 'true');
+    grid.innerHTML = '<div class="cart-empty-v2 catalog-api-state"><h3>در حال دریافت محصولات واقعی...</h3></div>';
     try {
       const payload = await api.catalog.products({ per_page: 4 });
       const products = Array.isArray(payload?.data) ? payload.data : [];
       if (products.length) grid.innerHTML = products.map(card).join('');
       else grid.innerHTML = '<div class="cart-empty-v2"><h3>هنوز محصول فعالی ثبت نشده است</h3></div>';
     } catch (error) {
-      grid.innerHTML = `<div class="cart-empty-v2"><h3>دریافت محصولات ناموفق بود</h3><p>${safe(error?.message || 'لطفاً دوباره تلاش کنید.')}</p></div>`;
+      grid.innerHTML = `<div class="cart-empty-v2 catalog-api-state"><h3>اتصال به کاتالوگ برقرار نیست</h3><p>${safe(error?.message || 'برای نمایش محصولات واقعی، سرویس فروشگاه باید در دسترس باشد.')}</p><button class="btn btn-primary js-home-catalog-retry" type="button">تلاش دوباره</button></div>`;
+      grid.querySelector('.js-home-catalog-retry')?.addEventListener('click', init);
     } finally {
       grid.setAttribute('aria-busy', 'false');
     }

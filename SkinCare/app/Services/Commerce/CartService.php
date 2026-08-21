@@ -82,4 +82,19 @@ final class CartService
             return $this->get($user);
         });
     }
+
+    public function clear(User $user): Cart
+    {
+        return DB::transaction(function () use ($user): Cart {
+            $cart = Cart::query()->where('user_id', $user->getKey())->lockForUpdate()->first();
+
+            if ($cart) {
+                CartItem::query()
+                    ->where('cart_id', $cart->getKey())
+                    ->delete();
+            }
+
+            return $this->get($user);
+        });
+    }
 }

@@ -18,14 +18,20 @@ Start from `.env.staging.example` and inject real values through the deployment 
 Required values include:
 
 - `APP_URL` using public HTTPS
+- `APP_KEY`
 - `OTP_PEPPER`
 - `SMSIR_API_KEY`
 - `SMSIR_LINE_NUMBER`
 - `ZARINPAL_MERCHANT_ID`
 - PostgreSQL credentials
 - `BACKUP_AGE_RECIPIENT` containing only the public age recipient
+- `PAYMENT_CALLBACK_URL` ending in `/api/v1/payments/zarinpal/callback`
+- `PAYMENT_RESULT_URL` pointing at the deployed Storefront result page
+- `SANCTUM_STATEFUL_DOMAINS` and `CORS_ALLOWED_ORIGINS` matching the staging host
 
 For safe provider testing, keep `SMSIR_SANDBOX=true` and `ZARINPAL_SANDBOX=true` until a deliberate live-provider test is scheduled.
+
+Before the first deploy, confirm `SkinCare/.env.staging` is untracked and readable only by the deployment user. The template is safe to commit; the resolved staging environment file is not.
 
 ## Readiness check on the staging host
 
@@ -53,6 +59,8 @@ The SMS.ir probe additionally calls:
 - `GET https://api.sms.ir/v1/line`
 
 No account balance, API key, or full secret value is printed by the command.
+
+The runtime health gate must be green before provider smoke results are treated as release evidence. A stale scheduler heartbeat, failed outbox messages, or aged pending outbox item means the staging deployment still needs operational follow-up even if provider credentials are valid.
 
 ## Zarinpal initiation smoke
 

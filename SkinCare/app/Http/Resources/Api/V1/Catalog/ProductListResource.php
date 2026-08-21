@@ -29,6 +29,10 @@ class ProductListResource extends JsonResource
                 'min' => $this->min_price_irr !== null ? (int) $this->min_price_irr : null,
                 'max' => $this->max_price_irr !== null ? (int) $this->max_price_irr : null,
             ],
+            'primary_image' => $this->whenLoaded('primaryImage', fn () => $this->primaryImage ? [
+                'url' => $this->primaryImage->publicUrl(),
+                'alt_text' => $this->primaryImage->alt_text ?: $this->name,
+            ] : null),
             'purchase' => [
                 'variant_id' => $hasSingleActiveVariant ? (int) $this->single_variant_id : null,
                 'requires_selection' => ! $hasSingleActiveVariant,

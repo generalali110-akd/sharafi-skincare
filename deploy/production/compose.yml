@@ -1,0 +1,116 @@
+name: sharafi-production
+
+x-app-common: &app-common
+  image: sharafi-skincare-app:${IMAGE_TAG:?IMAGE_TAG is required}
+  env_file:
+    - ../../SkinCare/.env.production
+  restart: unless-stopped
+  init: true
+  security_opt:
+    - no-new-privileges:true
+  networks:
+    - backend
+  volumes:
+    - app_storage:/var/www/html/storage
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  db:
+    image: postgres:18.4
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-sharafi_production}
+      POSTGRES_USER: ${DB_USERNAME:-sharafi}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+    volumes:
+      - postgres_data:/var/lib/postgresql
+
+  app:
+    <<: *app-common
+    build:
+      context: ../..
+      dockerfile: deploy/php/Dockerfile
+    healthcheck:
+      test: ["CMD-SHELL", "php -r '$$s=@fsockopen(\"127.0.0.1\",9000,$$e,$$m,1); exit($$s ? 0 : 1);'"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+
+  queue:
+    <<: *app-common
+    command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--timeout=90", "--max-time=3600"]
+    stop_grace_period: 60s
+
+  scheduler:
+    <<: *app-common
+    command: ["php", "artisan", "schedule:work"]
+    stop_grace_period: 30s
+
+  backup:
+    image: sharafi-skincare-backup:${IMAGE_TAG:?IMAGE_TAG is required}
+    build:
+      context: ../..
+      dockerfile: deploy/backup/Dockerfile
+    env_file:
+      - ../../SkinCare/.env.production
+    restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+    volumes:
+      - encrypted_backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    image: sharafi-skincare-web:${IMAGE_TAG:?IMAGE_TAG is required}
+    build:
+      context: ../..
+      dockerfile: deploy/caddy/Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      APP_DOMAIN: ${PRODUCTION_DOMAIN:?PRODUCTION_DOMAIN is required}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL is required}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - backend
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+      - app_storage:/srv/laravel-storage:ro
+    depends_on:
+      app:
+        condition: service_healthy
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  app_storage:
+  encrypted_backups:
+  caddy_data:
+  caddy_config:

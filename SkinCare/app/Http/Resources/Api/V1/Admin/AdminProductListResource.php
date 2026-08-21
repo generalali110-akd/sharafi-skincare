@@ -25,6 +25,10 @@ class AdminProductListResource extends JsonResource
             'active_variant_count' => $activeVariants->count(),
             'available_stock' => $activeVariants->sum(fn ($variant) => $variant->inventory?->available ?? 0),
             'min_price_irr' => $activeVariants->min('price_irr'),
+            'primary_image' => $this->whenLoaded('primaryImage', fn () => $this->primaryImage ? [
+                'url' => $this->primaryImage->publicUrl(),
+                'alt_text' => $this->primaryImage->alt_text ?: $this->name,
+            ] : null),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
     }
