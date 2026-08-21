@@ -1,7 +1,7 @@
 const { expect, test } = require('@playwright/test');
 
 async function abortCatalog(page) {
-  await page.route('http://127.0.0.1:8000/api/v1/catalog/**', (route) => route.abort());
+  await page.route('**/api/v1/catalog/**', (route) => route.abort());
 }
 
 test.describe('storefront API fallback', () => {

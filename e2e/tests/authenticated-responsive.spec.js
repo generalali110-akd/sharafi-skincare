@@ -91,4 +91,31 @@ test.describe.serial('authenticated responsive release surfaces', () => {
       }
     }
   });
+
+  test('admin dialogs expose modal semantics and contain keyboard focus', async ({ page }) => {
+    await loginAdmin(page);
+    await page.goto('/admin/products.html');
+    await expect(page.locator('[data-kpi="products-total"] .kpi-value')).not.toHaveText('—');
+
+    const trigger = page.locator('.js-add-product');
+    await trigger.focus();
+    await trigger.click();
+
+    const dialog = page.locator('#productModal');
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute('role', 'dialog');
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+    await expect(dialog).toHaveAttribute('aria-label', /افزودن محصول/);
+
+    const close = dialog.locator('.icon-action.js-modal-close');
+    const cancel = dialog.getByRole('button', { name: 'انصراف' });
+    await expect(close).toHaveAttribute('aria-label', 'بستن پنجره');
+    await cancel.focus();
+    await page.keyboard.press('Tab');
+    await expect(close).toBeFocused();
+
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(trigger).toBeFocused();
+  });
 });
