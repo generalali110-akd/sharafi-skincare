@@ -25,6 +25,7 @@ function collectStaticViolations() {
   walk(frontendRoot);
 
   const htmlRules = [
+    { label: 'hard-coded loopback API endpoint', pattern: /<meta\s+name=(["'])sharafi-api-base\1\s+content=(["'])https?:\/\/(?:127\.0\.0\.1|localhost)(?::\d+)?\/api\/v1\2/gi },
     { label: 'inline style attribute', pattern: /\sstyle\s*=\s*(["'])/gi },
     { label: 'inline event handler', pattern: /\son[a-z]+\s*=\s*(["'])/gi },
     { label: 'dead hash navigation', pattern: /href\s*=\s*(["'])#\1/gi },
