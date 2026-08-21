@@ -10,6 +10,7 @@ use App\Models\OutboxMessage;
 use App\Models\User;
 use App\Services\Outbox\SmsOutboxDispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -57,31 +58,36 @@ class SmsOutboxDispatcherTest extends TestCase
     {
         config()->set('sms.outbox.initial_backoff_seconds', 45);
         config()->set('sms.outbox.max_backoff_seconds', 45);
+        $testNow = now()->startOfSecond();
+        Carbon::setTestNow($testNow);
 
-        $this->app->instance(SmsGateway::class, new class implements SmsGateway
-        {
-            public function sendOtp(string $mobile, string $code, int $ttlSeconds): void {}
-
-            public function sendMessage(string $mobile, string $message, string $idempotencyKey): void
+        try {
+            $this->app->instance(SmsGateway::class, new class implements SmsGateway
             {
-                throw new RuntimeException('SECRET-provider-response-must-not-be-persisted');
-            }
-        });
+                public function sendOtp(string $mobile, string $code, int $ttlSeconds): void {}
 
-        $order = $this->order();
-        $message = $this->message($order, 'payment_succeeded');
+                public function sendMessage(string $mobile, string $message, string $idempotencyKey): void
+                {
+                    throw new RuntimeException('SECRET-provider-response-must-not-be-persisted');
+                }
+            });
 
-        $result = $this->app->make(SmsOutboxDispatcher::class)->dispatchOne();
-        $message = $message->fresh();
+            $order = $this->order();
+            $message = $this->message($order, 'payment_succeeded');
 
-        $this->assertSame(SmsOutboxDispatcher::RESULT_FAILED, $result);
-        $this->assertNull($message->processed_at);
-        $this->assertNull($message->failed_at);
-        $this->assertNull($message->locked_at);
-        $this->assertSame('RuntimeException', $message->last_error);
-        $this->assertStringNotContainsString('SECRET-provider-response', (string) $message->last_error);
-        $this->assertTrue($message->available_at->greaterThanOrEqualTo(now()->addSeconds(44)));
-        $this->assertTrue($message->available_at->lessThanOrEqualTo(now()->addSeconds(46)));
+            $result = $this->app->make(SmsOutboxDispatcher::class)->dispatchOne();
+            $message = $message->fresh();
+
+            $this->assertSame(SmsOutboxDispatcher::RESULT_FAILED, $result);
+            $this->assertNull($message->processed_at);
+            $this->assertNull($message->failed_at);
+            $this->assertNull($message->locked_at);
+            $this->assertSame('RuntimeException', $message->last_error);
+            $this->assertStringNotContainsString('SECRET-provider-response', (string) $message->last_error);
+            $this->assertTrue($message->available_at->equalTo($testNow->copy()->addSeconds(45)));
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_transient_delivery_failure_marks_message_failed_after_max_attempts(): void
