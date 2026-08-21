@@ -95,6 +95,7 @@ test.describe.serial('authenticated responsive release surfaces', () => {
   test('admin dialogs expose modal semantics and contain keyboard focus', async ({ page }) => {
     await loginAdmin(page);
     await page.goto('/admin/products.html');
+    await expect(page.locator('[data-kpi="products-total"] .kpi-value')).not.toHaveText('—');
 
     const trigger = page.locator('.js-add-product');
     await trigger.focus();
