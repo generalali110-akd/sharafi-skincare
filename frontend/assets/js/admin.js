@@ -25,6 +25,8 @@
 
   let readyResolve;
   let readyReject;
+  let activeModal = null;
+  let modalRestoreTarget = null;
   window.SharafiAdminReady = new Promise((resolve, reject) => {
     readyResolve = resolve;
     readyReject = reject;
@@ -117,7 +119,6 @@
     if (!modal) return;
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
-    $('input,select,textarea,button', modal)?.focus();
   }
 
   function closeModal(modal) {
@@ -126,7 +127,48 @@
     modal.setAttribute('aria-hidden', 'true');
   }
 
+  const modalFocusable = (modal) => $$([
+    'a[href]',
+    'button:not([disabled])',
+    'input:not([disabled]):not([type="hidden"])',
+    'select:not([disabled])',
+    'textarea:not([disabled])',
+    '[tabindex]:not([tabindex="-1"])',
+  ].join(','), modal).filter((element) => !element.hidden && element.getAttribute('aria-hidden') !== 'true');
+
+  function syncActiveModal() {
+    const shown = $$('.modal-overlay.show').at(-1) || null;
+    if (shown === activeModal) return;
+
+    if (shown) {
+      if (!activeModal) modalRestoreTarget = document.activeElement;
+      activeModal = shown;
+      window.setTimeout(() => {
+        if (activeModal !== shown || shown.contains(document.activeElement)) return;
+        (modalFocusable(shown)[0] || shown).focus();
+      }, 0);
+      return;
+    }
+
+    activeModal = null;
+    const target = modalRestoreTarget;
+    modalRestoreTarget = null;
+    if (target instanceof HTMLElement && document.contains(target)) target.focus();
+  }
+
   function initModals() {
+    $$('.modal-overlay').forEach((modal) => {
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.tabIndex = -1;
+      if (!modal.hasAttribute('aria-label') && !modal.hasAttribute('aria-labelledby')) {
+        modal.setAttribute('aria-label', $('h3', modal)?.textContent?.trim() || 'پنجره مدیریت');
+      }
+      $$('.icon-action.js-modal-close', modal).forEach((button) => {
+        if (!button.hasAttribute('aria-label')) button.setAttribute('aria-label', 'بستن پنجره');
+      });
+    });
+
     $$('.js-open-modal').forEach((button) => {
       button.addEventListener('click', () => openModal(document.getElementById(button.dataset.modal)));
     });
@@ -137,6 +179,36 @@
       modal.addEventListener('click', (event) => {
         if (event.target === modal) closeModal(modal);
       });
+    });
+
+    const observer = new MutationObserver(syncActiveModal);
+    $$('.modal-overlay').forEach((modal) => observer.observe(modal, { attributes: true, attributeFilter: ['class', 'aria-hidden'] }));
+
+    document.addEventListener('keydown', (event) => {
+      if (!activeModal) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeModal(activeModal);
+        return;
+      }
+      if (event.key !== 'Tab') return;
+
+      const focusable = modalFocusable(activeModal);
+      if (!focusable.length) {
+        event.preventDefault();
+        activeModal.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     });
   }
 
