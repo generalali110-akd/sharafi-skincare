@@ -30,18 +30,34 @@
     return api;
   };
 
-  const safe = (value) => typeof escapeHTML === 'function' ? escapeHTML(value) : String(value ?? '');
+  const HTML_ENTITIES = Object.freeze({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  });
+  const safe = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => HTML_ENTITIES[character]);
 
-  const renderProductUnavailable = (error) => {
-    const message = safe(error?.message || 'برای نمایش اطلاعات واقعی محصول، سرویس فروشگاه باید در دسترس باشد.');
+  const renderProductUnavailable = () => {
     const detail = document.querySelector('.product-detail-layout');
     if (detail) {
-      detail.innerHTML = `
-        <div class="catalog-api-state product-api-state">
-          <h2>اتصال به کاتالوگ برقرار نیست</h2>
-          <p>${message}</p>
-          <a class="btn btn-primary" href="category.html">بازگشت به محصولات</a>
-        </div>`;
+      const state = document.createElement('div');
+      state.className = 'catalog-api-state product-api-state';
+
+      const heading = document.createElement('h2');
+      heading.textContent = 'اتصال به کاتالوگ برقرار نیست';
+
+      const message = document.createElement('p');
+      message.textContent = 'برای نمایش اطلاعات واقعی محصول، سرویس فروشگاه باید در دسترس باشد.';
+
+      const link = document.createElement('a');
+      link.className = 'btn btn-primary';
+      link.href = 'category.html';
+      link.textContent = 'بازگشت به محصولات';
+
+      state.append(heading, message, link);
+      detail.replaceChildren(state);
     }
 
     const relatedGrid = document.querySelector('.product-page .section .prod-grid');
@@ -250,10 +266,10 @@
       if (!product) throw new Error('اطلاعات محصول دریافت نشد.');
       renderProduct();
       await renderRelatedProducts();
-    } catch (error) {
+    } catch {
       addButtons.forEach((button) => { button.disabled = true; });
-      renderProductUnavailable(error);
-      toast(error?.message || 'دریافت اطلاعات محصول ناموفق بود.', 3500);
+      renderProductUnavailable();
+      toast('دریافت اطلاعات محصول ناموفق بود.', 3500);
     }
   };
 
