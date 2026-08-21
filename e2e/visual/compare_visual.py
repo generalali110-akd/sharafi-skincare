@@ -102,13 +102,50 @@ def compare(name: str, expected: dict, actual: dict) -> list[str]:
     return failures
 
 
+def load_approved_baselines(baseline_path: Path) -> dict:
+    baseline = json.loads(baseline_path.read_text(encoding='utf-8'))
+    baselines = baseline.get('baselines')
+    if not isinstance(baselines, dict) or not baselines:
+        raise ValueError('Baseline file must contain a non-empty baselines object.')
+
+    override_path = baseline_path.with_name('approved-overrides.json')
+    if not override_path.is_file():
+        return baseline
+
+    overrides = json.loads(override_path.read_text(encoding='utf-8'))
+    if overrides.get('version') != baseline.get('version'):
+        raise ValueError('Visual override version must match the baseline version.')
+
+    override_baselines = overrides.get('baselines')
+    if not isinstance(override_baselines, dict) or not override_baselines:
+        raise ValueError('Visual override file must contain a non-empty baselines object.')
+
+    unknown = sorted(set(override_baselines) - set(baselines))
+    if unknown:
+        raise ValueError(f"Visual overrides may only replace existing baseline keys: {', '.join(unknown)}")
+
+    for name, approved in override_baselines.items():
+        required = {'width', 'height', 'grid8_rgb', 'bands8_rgb', 'dhash'}
+        if not isinstance(approved, dict) or set(approved) != required:
+            raise ValueError(f'Visual override {name!r} does not have the exact fingerprint schema.')
+        baselines[name] = approved
+        print(f'[APPROVED OVERRIDE] {name}')
+
+    return baseline
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--baseline', required=True, type=Path)
     parser.add_argument('--current-dir', required=True, type=Path)
     args = parser.parse_args()
 
-    baseline = json.loads(args.baseline.read_text(encoding='utf-8'))
+    try:
+        baseline = load_approved_baselines(args.baseline)
+    except (OSError, json.JSONDecodeError, ValueError) as error:
+        print(f'Invalid visual baseline configuration: {error}', file=sys.stderr)
+        return 2
+
     failures = []
 
     for name, expected in baseline['baselines'].items():
