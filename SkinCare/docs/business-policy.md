@@ -29,10 +29,14 @@ This document records the initial backend policy decisions that are now treated 
 
 ## Refunds
 
-- General automatic provider refunds are not enabled yet.
 - Admin refund flow is deliberately two step: `refund_pending -> refunded`.
-- `refunded` requires an existing payment already marked `refund_pending`.
-- Refund completion records local operational state and timestamp. Provider-side GraphQL/OAuth refund automation is a separate future slice.
+- `refund_pending` requires a paid payment record and is the only state from which refund completion may be attempted.
+- `refunded` is a provider-backed financial state: local/manual status changes are not sufficient.
+- A gateway must implement the dedicated `RefundablePaymentGateway` contract and return a durable successful refund result before the order/payment state can become `refunded`.
+- Refund attempts are serialized with an atomic application lock so concurrent admin requests cannot start duplicate provider refund operations for the same order.
+- Provider failure records a `refund_failed` payment event and leaves both order and payment in `refund_pending`.
+- The current Zarinpal adapter supports payment request/verify and short-window reversal, but it does not masquerade reversal as a general refund.
+- Zarinpal's general refund API is a separate GraphQL flow requiring an access token and provider session ID. Until that provider-specific session mapping is implemented and verified, general Zarinpal refund completion intentionally fails closed instead of marking money as returned locally.
 
 ## SMS notifications
 

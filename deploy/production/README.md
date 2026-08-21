@@ -45,10 +45,16 @@ PRODUCTION_APP_URL=https://shop.example.com ./deploy/production/http-smoke.sh
 
 The smoke test checks HTTPS, HTTP→HTTPS redirect, HSTS, CSP and baseline security headers, unauthenticated API behavior, CSRF cookie security attributes and trusted/untrusted CORS behavior. Provider transactions are intentionally outside this script.
 
+## Refund safety
+
+Order/payment state must never be marked `refunded` merely because an operator changed a status. The application requires a provider-backed `RefundablePaymentGateway` result and keeps failed attempts in `refund_pending`.
+
+The bundled Zarinpal adapter intentionally does **not** use the REST reversal endpoint as a substitute for a general refund. Zarinpal general refunds use a separate GraphQL flow that requires an access token and provider session ID. Until that provider-specific mapping is implemented and validated with authorized provider access, general Zarinpal refund completion remains fail-closed. This is an operational gate, not permission to mark a refund complete manually.
+
 ## Release state
 
 Successful deploys record only image tag identifiers under `.deploy-state/production/` by default. That directory is local runtime state and is ignored by Git. Override it with `SHARAFI_RELEASE_STATE_DIR` when host policy requires state under `/var/lib` or another protected path.
 
 ## Operational gates not performed by repository code
 
-Real DNS/HTTPS issuance, real SMS.ir delivery, Zarinpal sandbox/production transaction verification, external monitoring integration, customer UAT and the actual production deployment require authorized infrastructure/provider access. The repository must not claim those gates have passed until evidence exists.
+Real DNS/HTTPS issuance, real SMS.ir delivery, Zarinpal sandbox/production transaction verification, Zarinpal GraphQL refund/session mapping validation, external monitoring integration, customer UAT and the actual production deployment require authorized infrastructure/provider access. The repository must not claim those gates have passed until evidence exists.
