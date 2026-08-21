@@ -1,6 +1,6 @@
 # Zarinpal payment gateway integration
 
-This adapter is based on the current official Zarinpal payment-gateway documentation reviewed on 2026-08-13.
+This adapter is based on the current official Zarinpal payment-gateway documentation reviewed on 2026-08-21.
 
 ## Production contract
 
@@ -61,8 +61,14 @@ After Zarinpal verification succeeds, the application still verifies its own inv
 
 Zarinpal's V4 `payment/reverse.json` is implemented as the `ReversiblePaymentGateway` capability. Official documentation limits reverse to successful transactions within 30 minutes and requires the server IP to be registered for the terminal.
 
-This is not the same as Zarinpal's general refund service. General full/partial refund is documented through the authenticated Zarinpal GraphQL API, requires OAuth 2.0 credentials/access tokens and transaction/terminal identifiers, and supports PAYA or CARD refund methods. That OAuth refund flow is deliberately not faked or inferred from Merchant ID authentication; it will be implemented as a separate audited refund slice when credentials and operational policy are available.
+This is not the same as Zarinpal's general refund service. The current official SDK exposes general full/partial refunds as a separate GraphQL `AddRefund` operation. That flow requires an access token and a provider `session_id`, plus the refund amount and optional method/reason fields.
+
+The application therefore uses a separate `RefundablePaymentGateway` contract for general refunds. `ReversiblePaymentGateway` does not satisfy that contract, and the Zarinpal REST reverse endpoint is never treated as proof that a general refund completed.
 
 ## Current operational decision
 
-Zarinpal remains the selected payment provider for local/staging preparation. The backend supports sandbox and production through environment configuration. Until Zarinpal GraphQL refund credentials and policy are available, admin refund completion records the operational state and payment status but does not call an automatic provider refund API.
+Zarinpal remains the selected payment provider for local/staging preparation. The backend supports sandbox and production payment request/verification through environment configuration.
+
+General Zarinpal refund completion intentionally remains fail-closed until the provider-specific GraphQL access token and stable session-ID mapping are available and validated. Admins may move an eligible paid order into `refund_pending`, but the application will not move order/payment state to `refunded` unless the active payment adapter implements `RefundablePaymentGateway` and returns a successful provider-backed result.
+
+This preserves financial correctness: no local status, operator note, or REST reversal response may be used to claim a general refund that the provider has not durably accepted or completed.

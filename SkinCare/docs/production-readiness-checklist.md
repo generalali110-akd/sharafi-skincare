@@ -26,7 +26,8 @@ Use this as the final release gate after staging has already been deployed and s
 - [ ] Zarinpal terminal domain matches `PAYMENT_CALLBACK_URL` and `PAYMENT_RESULT_URL`.
 - [ ] A controlled provider smoke validates payment initiation, callback, server-side verify, idempotent repeated callback, and payment result rendering.
 - [ ] SMS outbox retry policy is accepted operationally: max attempts, lock TTL, backoff, notification expiry, and failed-message alert threshold.
-- [ ] Refund policy is operationally clear: current automatic reverse is limited to Zarinpal's supported reverse window; general refund automation is a future audited slice.
+- [ ] Refund policy is operationally clear: `refund_pending` is allowed, but `refunded` requires a successful provider-backed `RefundablePaymentGateway` result; the REST reverse endpoint must never be used as a substitute for a general refund.
+- [ ] Before enabling general Zarinpal refunds, the GraphQL access token/session-ID mapping is implemented, audited, and validated against the authorized sandbox/production account. Until then general refund completion must remain fail-closed.
 
 ## 4. Data, jobs, and scheduler
 
