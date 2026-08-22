@@ -16,6 +16,7 @@ final class FakePaymentGateway implements PaymentGateway, RefundablePaymentGatew
     public function __construct(
         private readonly string $gatewayName = 'fake',
         private readonly bool $refundSuccessful = true,
+        private readonly bool $includeRefundProof = true,
     ) {}
 
     public function name(): string
@@ -55,7 +56,7 @@ final class FakePaymentGateway implements PaymentGateway, RefundablePaymentGatew
 
         return new PaymentRefundResult(
             successful: true,
-            providerRefundId: 'REF-'.$attempt->public_id,
+            providerRefundId: $this->includeRefundProof ? 'REF-'.$attempt->public_id : null,
             metadata: ['fake_refund' => true],
         );
     }
