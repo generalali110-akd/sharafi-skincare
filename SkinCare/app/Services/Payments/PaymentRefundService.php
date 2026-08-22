@@ -53,7 +53,20 @@ final class PaymentRefundService
             throw new CheckoutConflictException($result->failureMessage ?: 'بازپرداخت در درگاه پرداخت تأیید نشد.');
         }
 
-        return DB::transaction(function () use ($order, $attempt, $actor, $reason, $result): Order {
+        $providerRefundId = trim((string) $result->providerRefundId);
+        if ($providerRefundId === '' || mb_strlen($providerRefundId) > 190) {
+            $invalidResult = new PaymentRefundResult(
+                successful: false,
+                failureCode: 'missing_provider_refund_id',
+                failureMessage: 'Payment provider reported refund success without a valid refund identifier.',
+                metadata: $result->metadata,
+            );
+            $this->recordFailedRefund($attempt, $invalidResult);
+
+            throw new CheckoutConflictException('درگاه پرداخت شناسه قابل‌ردیابی برای بازپرداخت ارائه نکرد.');
+        }
+
+        return DB::transaction(function () use ($order, $attempt, $actor, $reason, $result, $providerRefundId): Order {
             $lockedOrder = Order::query()->whereKey($order->getKey())->lockForUpdate()->firstOrFail();
             $payment = $lockedOrder->payment()->lockForUpdate()->firstOrFail();
             $lockedAttempt = PaymentAttempt::query()->whereKey($attempt->getKey())->lockForUpdate()->firstOrFail();
@@ -70,7 +83,7 @@ final class PaymentRefundService
             $payment->save();
 
             $this->recordRefundEvent($lockedAttempt, 'refund_succeeded', [
-                'provider_refund_id' => $result->providerRefundId,
+                'provider_refund_id' => $providerRefundId,
                 ...$result->metadata,
             ]);
 
@@ -126,16 +139,22 @@ final class PaymentRefundService
 
     private function recordRefundEvent(PaymentAttempt $attempt, string $eventType, array $metadata): void
     {
+        $payloadHash = hash('sha256', json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+        $dedupeMaterial = $eventType.'|'.$attempt->provider.'|'.$attempt->transaction_id;
+        if ($eventType === 'refund_failed') {
+            $dedupeMaterial .= '|'.$payloadHash;
+        }
+
         PaymentEvent::query()->firstOrCreate(
             [
-                'dedupe_key' => hash('sha256', $eventType.'|'.$attempt->provider.'|'.$attempt->transaction_id),
+                'dedupe_key' => hash('sha256', $dedupeMaterial),
             ],
             [
                 'payment_id' => $attempt->payment_id,
                 'attempt_id' => $attempt->getKey(),
                 'provider' => $attempt->provider,
                 'event_type' => $eventType,
-                'payload_hash' => hash('sha256', json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)),
+                'payload_hash' => $payloadHash,
                 'occurred_at' => now(),
                 'metadata' => $metadata,
             ],

@@ -222,6 +222,25 @@ class AdminOrderManagementTest extends TestCase
             'event_type' => 'refund_failed',
         ]);
 
+        $unprovenGateway = new FakePaymentGateway('zarinpal', true, false);
+        $this->app->instance(PaymentGateway::class, $unprovenGateway);
+
+        $this->actingAs($manager)
+            ->patchJson('/api/v1/admin/orders/'.$order->order_number.'/status', [
+                'expected_status' => 'refund_pending',
+                'status' => 'refunded',
+                'reason' => 'provider_claimed_success_without_proof',
+            ])
+            ->assertConflict();
+
+        $this->assertSame(OrderStatus::RefundPending, $order->fresh()->status);
+        $this->assertSame(PaymentStatus::RefundPending, $order->payment()->firstOrFail()->status);
+        $this->assertDatabaseHas('payment_events', [
+            'provider' => 'zarinpal',
+            'event_type' => 'refund_failed',
+            'metadata->failure_code' => 'missing_provider_refund_id',
+        ]);
+
         $fakeGateway = new FakePaymentGateway('zarinpal');
         $this->app->instance(PaymentGateway::class, $fakeGateway);
 
