@@ -33,6 +33,40 @@ Route::get('/health', static fn () => response()->json([
 
 Route::get('/storefront/config', StorefrontConfigController::class);
 
+if (app()->environment('local')) {
+    Route::post('/local/admin-login', static function (Request $request) {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--class' => \Database\Seeders\SystemAccessSeeder::class,
+            '--force' => true,
+        ]);
+
+        $role = \App\Models\Role::query()
+            ->where('slug', 'admin')
+            ->firstOrFail();
+
+        $user = \App\Models\User::query()->updateOrCreate(
+            ['mobile' => '09120000003'],
+            [
+                'name' => 'مدیر لوکال',
+                'status' => 'active',
+                'mobile_verified_at' => now(),
+            ],
+        );
+
+        $user->roles()->syncWithoutDetaching([$role->id]);
+
+        \Illuminate\Support\Facades\Auth::guard('web')->login($user);
+        $request->session()->regenerate();
+
+        return response()->json([
+            'data' => [
+                'authenticated' => true,
+                'redirect' => '/admin/dashboard.html',
+            ],
+        ]);
+    })->middleware('throttle:10,1');
+}
+
 Route::prefix('auth/otp')->group(function (): void {
     Route::post('/request', [OtpAuthController::class, 'requestOtp'])->middleware('throttle:10,1');
     Route::post('/verify', [OtpAuthController::class, 'verifyOtp'])->middleware('throttle:20,1');
