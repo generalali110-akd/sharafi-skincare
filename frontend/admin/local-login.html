@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ورود مدیر لوکال | شرفی</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="../assets/css/admin-login.css">
+</head>
+<body class="admin-login-page">
+<main class="admin-login-shell">
+  <section class="admin-login-brand">
+    <a href="../index.html" class="logo">شرفی<span class="dot">.</span></a>
+    <h1>ورود سریع مدیر در محیط Local</h1>
+    <p>این صفحه فقط در محیط توسعه محلی فعال است و در Production endpoint مربوط به آن ثبت نمی‌شود.</p>
+    <div class="admin-login-security">
+      <div>🧪 فقط APP_ENV=local</div>
+      <div>🔐 Session واقعی Laravel</div>
+      <div>🛡️ Role و Permission واقعی پنل</div>
+    </div>
+  </section>
+
+  <section class="admin-login-form">
+    <h2>ورود مدیر لوکال</h2>
+    <p>برای ورود مستقیم به داشبورد روی دکمه زیر بزنید.</p>
+
+    <div class="admin-login-error js-local-login-error" aria-live="polite"></div>
+    <button type="button" class="btn btn-primary btn-block js-local-admin-login">
+      ورود به داشبورد مدیریت
+    </button>
+
+    <div class="admin-login-note">
+      این مسیر برای تست محلی است و ورود OTP اصلی فروشگاه را تغییر نمی‌دهد.
+    </div>
+
+    <a class="admin-login-back" href="../index.html">← بازگشت به فروشگاه</a>
+  </section>
+</main>
+
+<script src="../assets/js/api.js"></script>
+<script>
+(() => {
+  const button = document.querySelector('.js-local-admin-login');
+  const error = document.querySelector('.js-local-login-error');
+
+  button?.addEventListener('click', async () => {
+    button.disabled = true;
+    error.textContent = '';
+
+    try {
+      const response = await window.SharafiAPI.request('/local/admin-login', {
+        method: 'POST',
+        json: {},
+      });
+
+      window.SharafiAPI.clearSessionCache();
+      window.location.replace(response?.data?.redirect || '/admin/dashboard.html');
+    } catch (e) {
+      error.textContent = e?.message || 'ورود مدیر لوکال ناموفق بود.';
+      button.disabled = false;
+    }
+  });
+})();
+</script>
+</body>
+</html>
